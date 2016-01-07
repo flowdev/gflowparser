@@ -1,0 +1,39 @@
+version 0.1
+
+// -------------------------------------------------------------------------
+// Utility like parser flows
+//
+
+flow ParseSmallIdent {
+  // config: regex = "[a-z][a-zA-Z0-9]*"
+  [ParserData]-> (ParseRegexp) -> ;
+}
+
+flow ParseBigIdent {
+  // config: regex = "[A-Z][a-zA-Z0-9]+"
+  [ParserData]-> (ParseRegexp) -> ;
+}
+
+flow ParseOptSpc {
+  [ParserData]-> optSpc(ParseOptional) -> ;
+  // config: includeNewline = false
+  optSpc() subOut [ParserData]-> (ParseSpace) -> subIn optSpc() ;
+}
+
+flow ParseSpaceComment {
+  [ParserData]-> spcComs(ParseMulti0) -> ;
+  spcComs() subOut [ParserData]-> spcOrCom(ParseAlternatives) -> subIn spcComs() ;
+  // config: includeNewline = true
+  spcOrCom() subOut.0 [ParserData]-> (ParseSpace) -> subIn spcOrCom() ;
+  spcOrCom() subOut.1 [ParserData]-> (ParseLineComment) -> subIn spcOrCom() ;
+  spcOrCom() subOut.2 [ParserData]-> (ParseBlockComment) -> subIn spcOrCom() ;
+}
+
+flow ParseStatementEnd {
+  [ParserData]-> stmtEnd(ParseAll) -> ;
+
+  stmtEnd() subOut.0 [ParserData]-> optSpc1(ParseSpaceComment) -> subIn stmtEnd() ;
+  // config: literal = ";"
+  stmtEnd() subOut.1 [ParserData]-> (ParseLiteral) -> subIn stmtEnd() ;
+  stmtEnd() subOut.2 [ParserData]-> optSpc2(ParseSpaceComment) -> subIn stmtEnd() ;
+}

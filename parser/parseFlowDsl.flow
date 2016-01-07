@@ -1,0 +1,50 @@
+version 0.1
+
+flow ParseFlowFile {
+//  [String]-> (ParserManager) [FlowFile]-> ;
+//  parserManager() subOut [ParserData]-> (ReadTextFile) -> parseFlowFile(ParseAll) -> subIn parserManager() ;
+  [ParserData]-> flowFile(ParseAll) [FlowFile]-> ;
+
+  flowFile() semOut [ParserData]-> semantic(SemanticCreateFlowFileData) -> semIn flowFile() ;
+  flowFile() subOut.0 [ParserData]-> version(ParseVersion) -> subIn flowFile() ;
+  flowFile() subOut.1 [ParserData]-> flows(ParseMultiple1) -> subIn flowFile() ;
+  flowFile() subOut.2 [ParserData]-> eof(ParseEof) -> subIn flowFile() ;
+
+  flows() subOut [ParserData]-> flow(ParseFlow) -> subIn flows() ;
+}
+
+flow ParseVersion {
+  [ParserData]-> version(ParseAll) -> ;
+  version() semOut [ParserData]-> semantic(SemanticCreateVersion) -> semIn version() ;
+
+  // config: literal = "version"
+  version() subOut.0 [ParserData]-> spcComm(ParseSpaceComment) -> subIn version() ;
+  version() subOut.1 [ParserData]-> vers(ParseLiteral) -> subIn version() ;
+  // config: includeNewline = false
+  version() subOut.2 [ParserData]-> aspc(ParseSpace) -> subIn version() ;
+  version() subOut.3 [ParserData]-> political(ParseNatural) -> subIn version() ;
+  // config: literal = "."
+  version() subOut.4 [ParserData]-> dot(ParseLiteral) -> subIn version() ;
+  version() subOut.5 [ParserData]-> major(ParseNatural) -> subIn version() ;
+  version() subOut.6 [ParserData]-> spcComm(ParseSpaceComment) -> subIn version() ;
+}
+
+flow ParseFlow {
+  [ParserData]-> flow(ParseAll) -> ;
+  flow() semOut [ParserData]-> semantic(SemanticCreateFlow) -> semIn flow() ;
+
+  // config: literal = "flow"
+  flow() subOut.0 [ParserData]-> flowLiteral(ParseLiteral) -> subIn flow() ;
+  // config: includeNewline = false
+  flow() subOut.1 [ParserData]-> aspc(ParseSpace) -> subIn flow() ;
+  flow() subOut.2 [ParserData]-> name(ParseBigIdent) -> subIn flow() ;
+  flow() subOut.3 [ParserData]-> spcComm1(ParseSpaceComment) -> subIn flow() ;
+  // config: literal = "{"
+  flow() subOut.4 [ParserData]-> openFlow(ParseLiteral) -> subIn flow() ;
+  flow() subOut.5 [ParserData]-> spcComm2(ParseSpaceComment) -> subIn flow() ;
+  flow() subOut.6 [ParserData]-> connections(ParseConnections) -> subIn flow() ;
+  // config: literal = "}"
+  flow() subOut.7 [ParserData]-> closeFlow(ParseLiteral) -> subIn flow() ;
+  flow() subOut.8 [ParserData]-> spcComm3(ParseSpaceComment) -> subIn flow() ;
+}
+
