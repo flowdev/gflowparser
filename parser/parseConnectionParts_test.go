@@ -9,7 +9,10 @@ func TestParseConnectionPart(t *testing.T) {
 	p := NewParseConnectionPart()
 
 	runTest(t, p, "empty", "", nil, 3)
-	runTest(t, p, "no match 1", "()", nil, 1)
+	runTest(t, p, "no match 1", "()",
+		&data.Operation{
+			InPorts:  []*data.PortData{&data.PortData{Name: "in", CapName: "In", SrcPos: 0}},
+			OutPorts: []*data.PortData{&data.PortData{Name: "out", CapName: "Out", SrcPos: 2}}}, 1)
 	runTest(t, p, "no match 2", "bla", nil, 3)
 	runTest(t, p, "no match 3", "Bla", nil, 3)
 	runTest(t, p, "simple 1", "(Bla)",
@@ -30,7 +33,7 @@ func TestParseOperationNameParens(t *testing.T) {
 	p := NewParseOperationNameParens()
 
 	runTest(t, p, "empty", "", nil, 2)
-	runTest(t, p, "no match 1", "()", nil, 1)
+	runTest(t, p, "no match 1", "()", &data.Operation{}, 1)
 	runTest(t, p, "no match 2", "bla", nil, 2)
 	runTest(t, p, "no match 3", "Bla", nil, 2)
 	runTest(t, p, "simple 1", "(Bla)", &data.Operation{Name: "bla", Type: "Bla"}, 0)
@@ -58,9 +61,9 @@ func TestParseArrow(t *testing.T) {
 	runTest(t, p, "no match 1", "-", nil, 2)
 	runTest(t, p, "no match 3", " /* \n */ \t [Bla]>", nil, 2)
 	runTest(t, p, "simple 1", "[Bla]->", "Bla", 0)
-	runTest(t, p, "simple 2", "->", nil, 0)
+	runTest(t, p, "simple 2", "->", "", 0)
 	runTest(t, p, "simple 3", "\n \t /* Blu */ [ \t Bla \t ]->  \t   ", "Bla", 0)
-	runTest(t, p, "simple 4", " \r\n // blu \n \t -> \r\n \t", nil, 0)
+	runTest(t, p, "simple 4", " \r\n // blu \n \t -> \r\n \t", "", 0)
 }
 
 func TestParseOptPortSpc(t *testing.T) {

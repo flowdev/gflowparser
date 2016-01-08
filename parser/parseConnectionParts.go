@@ -21,12 +21,6 @@ func (op *SemanticConnectionPart) InPort(dat interface{}) {
 	res := md.ParseData.Result
 	subVals := res.Value.([]interface{})
 
-	if subVals[1] == nil { // handle semantic error gracefully
-		res.Value = nil
-		op.outPort(md)
-		return
-	}
-
 	var port1 *data.PortData
 	oper := subVals[1].(*data.Operation)
 	var port2 *data.PortData
@@ -97,28 +91,22 @@ func (op *SemanticOperationNameParens) InPort(dat interface{}) {
 	res := md.ParseData.Result
 	subVals := res.Value.([]interface{})
 	oper := &data.Operation{}
-	res.Value = oper
 
 	if subVals[0] != nil {
 		opNameVal := subVals[0].([]interface{})
 		oper.Name = opNameVal[0].(string)
-	} else {
-		oper.Name = ""
 	}
 	if subVals[3] != nil {
 		oper.Type = subVals[3].(string)
-	} else {
-		oper.Type = ""
 	}
 	if len(oper.Name) <= 0 && len(oper.Type) <= 0 {
 		errPos := md.ParseData.SubResults[0].Pos
 		gparselib.AddError(errPos, "At least an operation name or an operation type have to be provided",
 			nil, md.ParseData)
-		md.ParseData.Result.ErrPos = -1 // just a semantic error, no syntax error!
-		md.ParseData.Result.Value = nil
 	} else if len(oper.Name) <= 0 {
 		oper.Name = strings.ToLower(oper.Type[0:1]) + oper.Type[1:]
 	}
+	res.Value = oper
 
 	op.outPort(md)
 }
@@ -253,7 +241,7 @@ func (op *SemanticArrow) InPort(dat interface{}) {
 		subSubVals := subVals[1].([]interface{})
 		res.Value = subSubVals[2]
 	} else {
-		res.Value = nil
+		res.Value = ""
 	}
 
 	op.outPort(md)

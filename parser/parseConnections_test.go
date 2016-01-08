@@ -5,6 +5,25 @@ import (
 	"testing"
 )
 
+func TestParseChainMiddle(t *testing.T) {
+	p := NewParseChainMiddle()
+
+	runTest(t, p, "no match 1", "->(B)", nil, 4)
+	runTest(t, p, "no match 2", "(Bla)", nil, 3)
+	runTest(t, p, "simple 1", "->(Bla)",
+		[]interface{}{"", &data.Operation{Name: "bla", Type: "Bla",
+			InPorts:  []*data.PortData{&data.PortData{Name: "in", CapName: "In", SrcPos: 2}},
+			OutPorts: []*data.PortData{&data.PortData{Name: "out", CapName: "Out", SrcPos: 7}}}}, 0)
+	runTest(t, p, "simple 2", "-> in.2 \t bla() \t error ",
+		[]interface{}{"", &data.Operation{Name: "bla",
+			InPorts:  []*data.PortData{&data.PortData{Name: "in", CapName: "In", HasIndex: true, Index: 2, SrcPos: 3}},
+			OutPorts: []*data.PortData{&data.PortData{Name: "error", CapName: "Error", SrcPos: 18}}}}, 0)
+	runTest(t, p, "simple 3", "[DataType]-> /* comm */\n \t xIn.1   bla(Blu)outY.123",
+		[]interface{}{"DataType", &data.Operation{Name: "bla", Type: "Blu",
+			InPorts:  []*data.PortData{&data.PortData{Name: "xIn", CapName: "XIn", HasIndex: true, Index: 1, SrcPos: 27}},
+			OutPorts: []*data.PortData{&data.PortData{Name: "outY", CapName: "OutY", HasIndex: true, Index: 123, SrcPos: 43}}}}, 0)
+}
+
 func TestParseChainEnd(t *testing.T) {
 	p := NewParseChainEnd()
 

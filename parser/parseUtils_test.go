@@ -152,9 +152,3 @@ func valueTest(actual, expected interface{}) {
 		})
 	}
 }
-
-type FlowParseOp interface {
-	gparselib.Failable
-	InPort(interface{})
-	SetOutPort(func(interface{}))
-}

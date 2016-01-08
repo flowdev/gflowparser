@@ -109,33 +109,28 @@ func (f *ParseChainBegin) SetOutPort(port func(interface{})) {
 
 // ------------ ParseChainMiddle:
 type ParseChainMiddle struct {
-	chainMid *gparselib.ParseAll
-	//	semantic *SemanticCreateChainMiddle
-	arrow    *ParseArrow
-	connPart *ParseConnectionPart
-	InPort   func(interface{})
+	chainMid   *gparselib.ParseAll
+	arrow      *ParseArrow
+	connPart   *ParseConnectionPart
+	InPort     func(interface{})
+	SetOutPort func(func(interface{}))
 }
 
 func NewParseChainMiddle() *ParseChainMiddle {
 	f := &ParseChainMiddle{}
 	f.chainMid = gparselib.NewParseAll(parseData, setParseData)
-	//	f.semantic = NewSemanticCreateChainMiddle()
 	f.arrow = NewParseArrow()
 	f.connPart = NewParseConnectionPart()
 
-	//	f.chainMid.SetSemOutPort(f.semantic.InPort)
-	//	f.semantic.SetOutPort(f.chainMid.SemInPort)
 	f.chainMid.AppendSubOutPort(f.arrow.InPort)
 	f.arrow.SetOutPort(f.chainMid.SubInPort)
 	f.chainMid.AppendSubOutPort(f.connPart.InPort)
 	f.connPart.SetOutPort(f.chainMid.SubInPort)
 
 	f.InPort = f.chainMid.InPort
+	f.SetOutPort = f.chainMid.SetOutPort
 
 	return f
-}
-func (f *ParseChainMiddle) SetOutPort(port func(interface{})) {
-	f.chainMid.SetOutPort(port)
 }
 
 // ------------ ParseChainEnd:
