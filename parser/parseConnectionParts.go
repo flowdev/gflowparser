@@ -89,15 +89,20 @@ func NewSemanticOperationNameParens() *SemanticOperationNameParens {
 func (op *SemanticOperationNameParens) InPort(dat interface{}) {
 	md := dat.(*data.MainData)
 	res := md.ParseData.Result
+	subRes := md.ParseData.SubResults
 	subVals := res.Value.([]interface{})
 	oper := &data.Operation{}
 
 	if subVals[0] != nil {
 		opNameVal := subVals[0].([]interface{})
 		oper.Name = opNameVal[0].(string)
+		oper.SrcPos = subRes[0].Pos
 	}
 	if subVals[3] != nil {
 		oper.Type = subVals[3].(string)
+		if subVals[0] == nil {
+			oper.SrcPos = subRes[1].Pos
+		}
 	}
 	if len(oper.Name) <= 0 && len(oper.Type) <= 0 {
 		errPos := md.ParseData.SubResults[0].Pos

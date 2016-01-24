@@ -24,6 +24,9 @@ func NewPort(name string, srcPos int) *PortData {
 func NewIdxPort(name string, idx int, srcPos int) *PortData {
 	return newPort(name, true, idx, srcPos)
 }
+func CopyPort(port *PortData, srcPos int) *PortData {
+	return &PortData{port.Name, port.CapName, port.HasIndex, port.Index, srcPos}
+}
 func DefaultInPort(srcPos int) *PortData {
 	return NewPort("in", srcPos)
 }

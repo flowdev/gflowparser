@@ -13,9 +13,9 @@ import (
 func TestParseStatementEnd(t *testing.T) {
 	p := NewParseStatementEnd()
 
-	runTest(t, p, "empty", "", nil, 2)
-	runTest(t, p, "no match 1", "baaa", nil, 2)
-	runTest(t, p, "no match 2", " /* bla\n */ \t // com!\n \t \r\n/** blu ; */ ", nil, 2)
+	runTest(t, p, "empty", "", nil, 1)
+	runTest(t, p, "no match 1", "baaa", nil, 1)
+	runTest(t, p, "no match 2", " /* bla\n */ \t // com!\n \t \r\n/** blu ; */ ", nil, 1)
 	runTest(t, p, "simple 1", ";", ";", 0)
 	runTest(t, p, "simple 2", "\t;0", "\t;", 0)
 	runTest(t, p, "simple 3", " /* bla */; _t", " /* bla */; ", 0)

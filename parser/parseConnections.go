@@ -6,9 +6,38 @@ import (
 )
 
 // ------------ ParseConnections:
+type SemanticConnections struct {
+	outPort func(interface{})
+}
+
+func NewSemanticConnections() *SemanticConnections {
+	return &SemanticConnections{}
+}
+func (op *SemanticConnections) InPort(dat interface{}) { // This will have to become a lot bigger:
+	var port *data.PortData
+	var oper *data.Operation
+	md := dat.(*data.MainData)
+	res := md.ParseData.Result
+	subVals := res.Value.([]interface{})
+	subRes := md.ParseData.SubResults
+
+	oper = subVals[0].(*data.Operation)
+	if subVals[1] != nil {
+		port = subVals[1].(*data.PortData)
+	} else {
+		port = data.DefaultOutPort(subRes[1].Pos)
+	}
+	oper.OutPorts = append(oper.OutPorts, port)
+	md.ParseData.Result.Value = []interface{}{nil, oper}
+	op.outPort(md)
+}
+func (op *SemanticConnections) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
 type ParseConnections struct {
 	connections *gparselib.ParseMulti1
-	//	semantic    *SemanticCreateChain
+	semantic    *SemanticConnections
 	chain       *gparselib.ParseAll
 	chainBeg    *ParseChainBegin
 	chainMids   *gparselib.ParseMulti0
@@ -17,12 +46,13 @@ type ParseConnections struct {
 	chainMid    *ParseChainMiddle
 	chainEnd    *ParseChainEnd
 	InPort      func(interface{})
+	SetOutPort  func(func(interface{}))
 }
 
 func NewParseConnections() *ParseConnections {
 	f := &ParseConnections{}
 	f.connections = gparselib.NewParseMulti1(parseData, setParseData)
-	//	f.semantic = NewSemanticCreateChain()
+	f.semantic = NewSemanticConnections()
 	f.chain = gparselib.NewParseAll(parseData, setParseData)
 	f.chainBeg = NewParseChainBegin()
 	f.chainMids = gparselib.NewParseMulti0(parseData, setParseData)
@@ -31,8 +61,8 @@ func NewParseConnections() *ParseConnections {
 	f.chainMid = NewParseChainMiddle()
 	f.chainEnd = NewParseChainEnd()
 
-	//	f.connections.SetSemOutPort(f.semantic.InPort)
-	//	f.semantic.SetOutPort(f.connections.SemInPort)
+	f.connections.SetSemOutPort(f.semantic.InPort)
+	f.semantic.SetOutPort(f.connections.SemInPort)
 	f.connections.SetSubOutPort(f.chain.InPort)
 	f.chain.SetOutPort(f.connections.SubInPort)
 	f.chain.AppendSubOutPort(f.chainBeg.InPort)
@@ -49,25 +79,91 @@ func NewParseConnections() *ParseConnections {
 	f.chainEnd.SetOutPort(f.optChainEnd.SubInPort)
 
 	f.InPort = f.connections.InPort
+	f.SetOutPort = f.connections.SetOutPort
 
 	return f
 }
-func (f *ParseConnections) SetOutPort(port func(interface{})) {
-	f.connections.SetOutPort(port)
-}
 
 // ------------ ParseChainBegin:
+type SemanticChainBeginMin struct {
+	outPort func(interface{})
+}
+
+func NewSemanticChainBeginMin() *SemanticChainBeginMin {
+	return &SemanticChainBeginMin{}
+}
+func (op *SemanticChainBeginMin) InPort(dat interface{}) {
+	var port *data.PortData
+	var oper *data.Operation
+	md := dat.(*data.MainData)
+	res := md.ParseData.Result
+	subVals := res.Value.([]interface{})
+	subRes := md.ParseData.SubResults
+
+	oper = subVals[0].(*data.Operation)
+	if subVals[1] != nil {
+		port = subVals[1].(*data.PortData)
+	} else {
+		port = data.DefaultOutPort(subRes[1].Pos)
+	}
+	oper.OutPorts = append(oper.OutPorts, port)
+	md.ParseData.Result.Value = []interface{}{nil, oper}
+	op.outPort(md)
+}
+func (op *SemanticChainBeginMin) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
+type SemanticChainBeginMax struct {
+	outPort func(interface{})
+}
+
+func NewSemanticChainBeginMax() *SemanticChainBeginMax {
+	return &SemanticChainBeginMax{}
+}
+func (op *SemanticChainBeginMax) InPort(dat interface{}) {
+	var port *data.PortData
+	var oper *data.Operation
+	dataType := ""
+	md := dat.(*data.MainData)
+	res := md.ParseData.Result
+	subVals := res.Value.([]interface{})
+	subRes := md.ParseData.SubResults
+	conn := &data.Connection{}
+
+	if subVals[0] != nil {
+		port = subVals[0].(*data.PortData)
+	}
+	subSubVals := subVals[1].([]interface{})
+	dataType = subSubVals[0].(string)
+	oper = subSubVals[1].(*data.Operation)
+	if port == nil {
+		port = data.CopyPort(oper.InPorts[0], subRes[0].Pos)
+	}
+	conn.FromPort = port
+	conn.DataType = dataType
+	conn.ShowDataType = (dataType != "")
+	conn.ToPort = oper.InPorts[0]
+	conn.ToOp = oper
+	md.ParseData.Result.Value = []interface{}{conn, oper}
+	op.outPort(md)
+}
+func (op *SemanticChainBeginMax) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
 type ParseChainBegin struct {
-	chainBeg    *gparselib.ParseAny
-	chainBegMax *gparselib.ParseAll
-	chainBegMin *gparselib.ParseAll
-	//	maxSemantic  *SemanticCreateChainBegMax
-	optPortMax *ParseOptPort
-	chainMid   *ParseChainMiddle
-	//	minSemantic  *SemanticCreateChainBegMin
+	chainBeg     *gparselib.ParseAny
+	chainBegMax  *gparselib.ParseAll
+	maxSemantic  *SemanticChainBeginMax
+	optPortMax   *ParseOptPort
+	chainMid     *ParseChainMiddle
+	chainBegMin  *gparselib.ParseAll
+	minSemantic  *SemanticChainBeginMin
 	opNameParens *ParseOperationNameParens
 	optPortMin   *ParseOptPort
 	InPort       func(interface{})
+	SetOutPort   func(func(interface{}))
 }
 
 func NewParseChainBegin() *ParseChainBegin {
@@ -75,36 +171,34 @@ func NewParseChainBegin() *ParseChainBegin {
 	f.chainBeg = gparselib.NewParseAny(parseData, setParseData)
 	f.chainBegMax = gparselib.NewParseAll(parseData, setParseData)
 	f.chainBegMin = gparselib.NewParseAll(parseData, setParseData)
-	//	f.maxSemantic = NewSemanticCreateChainBegMax()
+	f.maxSemantic = NewSemanticChainBeginMax()
 	f.optPortMax = NewParseOptPort()
 	f.chainMid = NewParseChainMiddle()
-	//	f.minSemantic = NewSemanticCreateChainBegMin()
+	f.minSemantic = NewSemanticChainBeginMin()
 	f.opNameParens = NewParseOperationNameParens()
 	f.optPortMin = NewParseOptPort()
 
 	f.chainBeg.AppendSubOutPort(f.chainBegMax.InPort)
 	f.chainBegMax.SetOutPort(f.chainBeg.SubInPort)
-	f.chainBeg.AppendSubOutPort(f.chainBegMin.InPort)
-	f.chainBegMin.SetOutPort(f.chainBeg.SubInPort)
-	//	f.chainBegMax.SetSemOutPort(f.maxSemantic.InPort)
-	//	f.maxSemantic.SetOutPort(f.chainBegMax.SemInPort)
+	f.chainBegMax.SetSemOutPort(f.maxSemantic.InPort)
+	f.maxSemantic.SetOutPort(f.chainBegMax.SemInPort)
 	f.chainBegMax.AppendSubOutPort(f.optPortMax.InPort)
 	f.optPortMax.SetOutPort(f.chainBegMax.SubInPort)
 	f.chainBegMax.AppendSubOutPort(f.chainMid.InPort)
 	f.chainMid.SetOutPort(f.chainBegMax.SubInPort)
-	//	f.chainBegMin.SetSemOutPort(f.minSemantic.InPort)
-	//	f.minSemantic.SetOutPort(f.chainBegMin.SemInPort)
+	f.chainBeg.AppendSubOutPort(f.chainBegMin.InPort)
+	f.chainBegMin.SetOutPort(f.chainBeg.SubInPort)
+	f.chainBegMin.SetSemOutPort(f.minSemantic.InPort)
+	f.minSemantic.SetOutPort(f.chainBegMin.SemInPort)
 	f.chainBegMin.AppendSubOutPort(f.opNameParens.InPort)
 	f.opNameParens.SetOutPort(f.chainBegMin.SubInPort)
 	f.chainBegMin.AppendSubOutPort(f.optPortMin.InPort)
 	f.optPortMin.SetOutPort(f.chainBegMin.SubInPort)
 
 	f.InPort = f.chainBeg.InPort
+	f.SetOutPort = f.chainBeg.SetOutPort
 
 	return f
-}
-func (f *ParseChainBegin) SetOutPort(port func(interface{})) {
-	f.chainBeg.SetOutPort(port)
 }
 
 // ------------ ParseChainMiddle:
