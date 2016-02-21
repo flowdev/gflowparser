@@ -9,6 +9,13 @@ styles.css
 <html lang="en">
     <head>
 		<style>
+		  /* General stuff: */
+		  .diagram
+		  {
+		    position: absolute;
+			padding: 10px;
+			width: 100%;
+		  }
 	      .op-box
 		  {
 			position: absolute;
@@ -27,7 +34,6 @@ styles.css
 			height: 62px;
 			overflow: auto;
 			padding: 5px;
-			float: left;
 		  }
 	      .port-box
 		  {
@@ -59,67 +65,146 @@ styles.css
 			background-color: #000;
 			width: 1px;
 		  }
+
+		  /* Specific stuff: */
+		  #my-diagram
+		  {
+			height: 250px;               /* value = 40px + (110*idxMax)px + 100px */
+			background-color: #efefef;   /* just for visibility!!! */
+		  }
+		  #aName-box
+		  {
+		    left: 10px;  /* value = 10px + (250*idx)px */
+			top: 40px;   /* value = 40px + (110*idx)px */
+		  }
+		  #aName-port-out
+		  {
+		    top: 0px;    /* value = (idx*24)px */
+			border-radius-topright: 4px; /* idx=0: topright; last idx>=2: bottomright */
+		  }
+		  #bName-box
+		  {
+		    left: 260px;
+			top: 40px;
+		  }
+		  #bName-port-in
+		  {
+		    top: 0px;    /* value = (idx*24)px */
+			border-radius-topleft: 4px; /* idx=0: topleft; last idx>=2: bottomleft */
+		  }
+		  #bName-port-longInput
+		  {
+		    top: 24px;
+		  }
+		  #bName-port-in3
+		  {
+		    top: 48px;
+			border-radius-bottomleft:4px;
+		  }
+		  #bName-port-out
+		  {
+			top: 0px;
+			border-radius-topright: 4px;
+		  }
+		  #bName-port-longOutput
+		  {
+		    top: 24px;
+		  }
+		  #ccccccccccccccccccccccccccccccName-box
+		  {
+		    left:510px;
+			top:40px;
+		  }
+		  #dName-box
+		  {
+		    left: 760px;
+			top: 40px;
+		  }
+		  #eName-box
+		  {
+		    left: 10px;
+			top: 150px;
+		  }
+		  #fName-box
+		  {
+		    left: 760px;
+			top: 150px;
+		  }
+		  #aName-out-bName-in
+		  {
+		    left: 212px;  /* value = 10px + (idx*250)px + 202px */
+			top: 52px;    /* value = 40px + (idx*24)px + 12px */
+			width: 48px;  /* value = (num*250)px + 48px */
+		  }
+		  #aName-eName
+		  {
+		    left: 110px;
+			top: 114px;   /* value = 40px + (idx*110)px + 74px */
+			height:36px;  /* value = (num*110)px + 36px */
+		  }
 		</style>
 	</head>
 	<body>
-		<div class="diagram" style="position:absolute; padding:10px; width:100%; height:500px; background-color:#efefef;">
+		<div id="my-diagram" class="diagram">
 		    <stong>Testdiagramm</stong>
-			<div class="op-box" style="left:10px; top:40px;">
+			<div id="aName-box" class="op-box">
 				<div class="desc-box">
 					aName<br/>
 					AType
 				</div>
-				<div class="port-box out-port" style="top:0px; border-radius-topright:4px;">
+				<div id="aName-port-out" class="port-box out-port">
 					out
 				</div>
 			</div>
-			<div class="op-box" style="left:260px; top:40px;">
-				<div class="port-box in-port" style="top:0px; border-radius-topleft:4px;">
+			<div id="bName-box" class="op-box">
+				<div id="bName-port-in" class="port-box in-port">
 					in
 				</div>
-				<div class="port-box in-port" style="top:24px;">
+				<div id="bName-port-longInput" class="port-box in-port">
 					longInput
 				</div>
-				<div class="port-box in-port" style="top:48px; border-radius-bottomleft:4px;">
+				<div id="bName-port-in3" class="port-box in-port">
 					in3
 				</div>
 				<div class="desc-box">
 					bName<br/>
 					BType
 				</div>
-				<div class="port-box out-port" style="top:0px; border-radius-topright:4px;">
+				<div id="bName-port-out" class="port-box out-port">
 					out
 				</div>
-				<div class="port-box out-port" style="top:24px;">
+				<div id="bName-port-longOutput" class="port-box out-port">
 					longOutput
 				</div>
 			</div>
-			<div class="op-box" style="left:510px; top:40px;">
+			<div id="ccccccccccccccccccccccccccccccName-box" class="op-box">
 				<div class="desc-box">
 					ccccccccccccccccccccccccccccccName<br/>
 					CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCType
 				</div>
 			</div>
-			<div class="op-box" style="left:760px; top:40px;">
+			<a href="http://test.io">
+			<div id="dName-box" class="op-box">
 				<div class="desc-box">
 					dName<br/>
 					DType
 				</div>
 			</div>
-			<div class="op-box" style="left:10px; top:150px;">
+			</a>
+			<div id="eName-box" class="op-box">
 				<div class="desc-box">
 					eName<br/>
 					EType
 				</div>
 			</div>
-			<div class="op-box" style="left:760px; top:150px;">
+			<div id="fName-box" class="op-box">
 				<div class="desc-box">
 					fName<br/>
 					FType
 				</div>
 			</div>
-			<div class="h-line" style="left:210px; top:50px; width:50px;"></div>
-			<div class="v-line" style="left:110px; top:114px; height:36px;"></div>
+			<div id="aName-out-bName-in" class="h-line"></div>
+			<div id="aName-eName" class="v-line"></div>
 		</div>
 	</body>
 </html>
