@@ -9,6 +9,7 @@ import (
 )
 
 // ------------ ParseConnectionPart:
+// semantic result: op data.Operation{+InPorts, +OutPorts}
 type SemanticConnectionPart struct {
 	outPort func(interface{})
 }
@@ -79,6 +80,7 @@ func NewParseConnectionPart() *ParseConnectionPart {
 }
 
 // ------------ ParseOperationNameParens:
+// semantic result: op data.Operation{Name, Type, SrcPos}
 type SemanticOperationNameParens struct {
 	outPort func(interface{})
 }
@@ -178,6 +180,7 @@ func NewParseOperationNameParens() *ParseOperationNameParens {
 }
 
 // ------------ ParseOptOperationType:
+// semantic result: bigIdentOperationType string
 type SemanticOptOperationType struct {
 	outPort func(interface{})
 }
@@ -231,6 +234,7 @@ func NewParseOptOperationType() *ParseOptOperationType {
 }
 
 // ------------ ParseArrow:
+// semantic result: bigIdentDataType string
 type SemanticArrow struct {
 	outPort func(interface{})
 }
@@ -325,6 +329,7 @@ func NewParseArrow() *ParseArrow {
 }
 
 // ------------ ParseOptPortSpc:
+// semantic result: port data.Port
 type SemanticOptPortSpc struct {
 	outPort func(interface{})
 }
@@ -378,6 +383,7 @@ func NewParseOptPortSpc() *ParseOptPortSpc {
 }
 
 // ------------ ParseOptPort:
+// semantic result: port data.Port
 type ParseOptPort struct {
 	optPort    *gparselib.ParseOptional
 	pport      *ParsePort
@@ -400,6 +406,7 @@ func NewParseOptPort() *ParseOptPort {
 }
 
 // ------------ ParsePort:
+// semantic result: port data.Port
 type SemanticPort struct {
 	outPort func(interface{})
 }

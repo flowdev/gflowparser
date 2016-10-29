@@ -85,6 +85,7 @@ func NewParseConnections() *ParseConnections {
 }
 
 // ------------ ParseChainBegin:
+// semantic result: { (conn data.Connection{FromPort, DataType, ShowDataType, ToPort, ToOp}?), (oper data.Operation{Name, Type, SrcPos, OutPorts}) }
 type SemanticChainBeginMin struct {
 	outPort func(interface{})
 }
@@ -202,6 +203,7 @@ func NewParseChainBegin() *ParseChainBegin {
 }
 
 // ------------ ParseChainMiddle:
+// semantic result: { (bigIdentDataType string), (op data.Operation{Name, Type, SrcPos, InPorts, OutPorts}) }
 type ParseChainMiddle struct {
 	chainMid   *gparselib.ParseAll
 	arrow      *ParseArrow
@@ -228,6 +230,7 @@ func NewParseChainMiddle() *ParseChainMiddle {
 }
 
 // ------------ ParseChainEnd:
+// semantic result: connection data.Connection{FromPort, DataType, ToPort}
 type SemanticChainEnd struct {
 	outPort func(interface{})
 }

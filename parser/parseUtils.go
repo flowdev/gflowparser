@@ -34,6 +34,7 @@ func (f *TextSemantic) SetOutPort(port func(interface{})) {
 }
 
 // ------------ ParseSmallIdent:
+// semantic result: text string
 type ParseSmallIdent struct {
 	parseRegex *gparselib.ParseRegexp
 	InPort     func(interface{})
@@ -51,6 +52,7 @@ func NewParseSmallIdent() *ParseSmallIdent {
 }
 
 // ------------ ParseBigIdent:
+// semantic result: text string
 type ParseBigIdent struct {
 	parseRegex *gparselib.ParseRegexp
 	InPort     func(interface{})
@@ -68,6 +70,7 @@ func NewParseBigIdent() *ParseBigIdent {
 }
 
 // ------------ ParseOptSpc:
+// semantic result: text string
 type ParseOptSpc struct {
 	optSpc     *gparselib.ParseOptional
 	semantic   *TextSemantic
@@ -94,6 +97,7 @@ func NewParseOptSpc() *ParseOptSpc {
 }
 
 // ------------ ParseSpaceComment:
+// semantic result: text string
 type ParseSpaceComment struct {
 	spcComs           *gparselib.ParseMulti0
 	semantic          *TextSemantic
@@ -132,6 +136,7 @@ func NewParseSpaceComment() *ParseSpaceComment {
 }
 
 // ------------ ParseStatementEnd:
+// semantic result: text string
 type ParseStatementEnd struct {
 	stmtEnd      *gparselib.ParseAll
 	semantic     *TextSemantic

@@ -4,22 +4,26 @@ version 0.1
 // Utility like parser flows
 //
 
+// semantic result: text string
 flow ParseSmallIdent {
   // config: regex = "[a-z][a-zA-Z0-9]*"
   [ParserData]-> (ParseRegexp) -> ;
 }
 
+// semantic result: text string
 flow ParseBigIdent {
   // config: regex = "[A-Z][a-zA-Z0-9]+"
   [ParserData]-> (ParseRegexp) -> ;
 }
 
+// semantic result: text string
 flow ParseOptSpc {
   [ParserData]-> optSpc(ParseOptional) -> ;
   // config: includeNewline = false
   optSpc() subOut [ParserData]-> (ParseSpace) -> subIn optSpc() ;
 }
 
+// semantic result: text string
 flow ParseSpaceComment {
   [ParserData]-> spcComs(ParseMulti0) -> ;
   spcComs() subOut [ParserData]-> spcOrCom(ParseAlternatives) -> subIn spcComs() ;
@@ -29,6 +33,7 @@ flow ParseSpaceComment {
   spcOrCom() subOut.2 [ParserData]-> (ParseBlockComment) -> subIn spcOrCom() ;
 }
 
+// semantic result: text string
 flow ParseStatementEnd {
   [ParserData]-> stmtEnd(ParseAll) -> ;
 

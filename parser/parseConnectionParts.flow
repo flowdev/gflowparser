@@ -1,5 +1,6 @@
 version 0.1
 
+// semantic result: op data.Operation{+InPorts, +OutPorts}
 flow ParseConnectionPart {
   [ParserData]-> connPart(ParseAll) -> ;
   connPart() semOut [ParserData]-> (SemanticCreateConnectionPart) -> semIn connPart() ;
@@ -9,6 +10,7 @@ flow ParseConnectionPart {
   connPart() subOut.2 [ParserData]-> optOutPort(ParseOptPort) -> subIn connPart() ;
 }
 
+// semantic result: op data.Operation{Name, Type, SrcPos}
 flow ParseOperationNameParens {
   [ParserData]-> opNameParens(ParseAll) -> ;
   opNameParens() semOut [ParserData]-> semantic(SemanticCreateOperationNameParens) -> semIn opNameParens() ;
@@ -27,6 +29,7 @@ flow ParseOperationNameParens {
   opName() subOut.1 [ParserData]-> spc3(ParseOptSpc) -> subIn opName() ;
 }
 
+// semantic result: bigIdentOperationType string
 flow ParseOptOperationType {
   [ParserData]-> optOpType(ParseOptional) -> ;
   optOpType() subOut [ParserData]-> opType(ParseAll) -> subIn optOpType() ;
@@ -36,6 +39,7 @@ flow ParseOptOperationType {
   opType() subOut.1 [ParserData]-> (ParseOptSpc) -> subIn opType() ;
 }
 
+// semantic result: bigIdentType string
 flow ParseArrow {
   [ParserData]-> arrow(ParseAll) -> ;
   arrow() semOut [ParserData]-> (SemanticCreateArrow) -> semIn arrow() ;
@@ -61,6 +65,7 @@ flow ParseArrow {
   type() subOut.4 [ParserData]-> closeType(ParseLiteral) -> subIn type() ;
 }
 
+// semantic result: port data.Port
 flow ParseOptPortSpc {
   [ParserData]-> optPortSpc(ParseOptional) -> ;
   optPortSpc() subOut [ParserData]-> portSpc(ParseAll) -> subIn optPortSpc() ;
@@ -72,11 +77,13 @@ flow ParseOptPortSpc {
   portSpc() subOut.1 [ParserData]-> space(ParseSpace) -> subIn portSpc() ;
 }
 
+// semantic result: port data.Port
 flow ParseOptPort {
   [ParserData]-> optPort(ParseOptional) -> ;
   optPort() subOut [ParserData]-> pport(ParsePort) -> subIn optPort() ;
 }
 
+// semantic result: port data.Port
 flow ParsePort {
   [ParserData]-> port(ParseAll) -> ;
   port() semOut [ParserData]-> semantic(SemanticCreatePort) -> semIn port() ;

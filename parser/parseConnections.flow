@@ -16,21 +16,23 @@ flow ParseConnections {
   optChainEnd() subOut [ParserData]-> chainEnd(ParseChainEnd) -> subIn optChainEnd() ;
 }
 
+// semantic result: { (conn data.Connection{FromPort, DataType, ShowDataType, ToPort, ToOp}?), (oper data.Operation{Name, Type, SrcPos, OutPorts}) }
 flow ParseChainBegin {
   [ParserData]-> chainBeg(ParseAlternatives) -> ;
 
   chainBeg() subOut.0 [ParserData]-> chainBegMax(ParseAll) -> subIn chainBeg() ;
   chainBeg() subOut.1 [ParserData]-> chainBegMin(ParseAll) -> subIn chainBeg() ;
 
-  chainBegMax() semOut [ParserData]-> maxSemantic(SemanticCreateChainBegMax) -> semIn chainBegMax() ;
+  chainBegMax() semOut [ParserData]-> maxSemantic(SemanticChainBeginMax) -> semIn chainBegMax() ;
   chainBegMax() subOut.0 [ParserData]-> optPortMax(ParseOptPort) -> subIn chainBegMax() ;
   chainBegMax() subOut.1 [ParserData]-> chainMid(ParseChainMiddle) -> subIn chainBegMax() ;
 
-  chainBegMin() semOut [ParserData]-> minSemantic(SemanticCreateChainBegMin) -> semIn chainBegMin() ;
+  chainBegMin() semOut [ParserData]-> minSemantic(SemanticChainBeginMin) -> semIn chainBegMin() ;
   chainBegMin() subOut.0 [ParserData]-> opNameParens(ParseOperationNameParens) -> subIn chainBegMin() ;
   chainBegMin() subOut.1 [ParserData]-> optPortMin(ParseOptPort) -> subIn chainBegMin() ;
 }
 
+// semantic result: { (bigIdentDataType string), (op data.Operation{Name, Type, SrcPos, InPorts, OutPorts}) }
 flow ParseChainMiddle {
   [ParserData]-> chainMid(ParseAll) -> ;
   chainMid() semOut [ParserData]-> semantic(SemanticCreateChainMiddle) -> semIn chainMid() ;
@@ -39,6 +41,7 @@ flow ParseChainMiddle {
   chainMid() subOut.1 [ParserData]-> connPart(ParseConnectionPart) -> subIn chainMid() ;
 }
 
+// semantic result: connection data.Connection{FromPort, DataType, ToPort}
 flow ParseChainEnd {
   [ParserData]-> chainEnd(ParseAll) -> ;
   chainEnd() semOut [ParserData]-> semantic(SemanticCreateChainEnd) -> semIn chainEnd() ;
