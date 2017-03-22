@@ -1,11 +1,12 @@
 package parser
 
 import (
-	"github.com/flowdev/gflowparser/data"
-	"github.com/flowdev/gparselib"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/flowdev/gflowparser/data"
+	"github.com/flowdev/gparselib"
 )
 
 // ------------ ParseConnectionPart:
@@ -47,34 +48,34 @@ func (op *SemanticConnectionPart) SetOutPort(port func(interface{})) {
 }
 
 type ParseConnectionPart struct {
-	connPart     *gparselib.ParseAll
-	semantic     *SemanticConnectionPart
-	optInPort    *ParseOptPortSpc
-	opNameParens *ParseOperationNameParens
-	optOutPort   *ParseOptPort
-	InPort       func(interface{})
-	SetOutPort   func(func(interface{}))
+	//connPart     *gparselib.ParseAll
+	//semantic     *SemanticConnectionPart
+	//optInPort    *ParseOptPortSpc
+	//opNameParens *ParseOperationNameParens
+	//optOutPort   *ParseOptPort
+	InPort     func(interface{})
+	SetOutPort func(func(interface{}))
 }
 
 func NewParseConnectionPart() *ParseConnectionPart {
 	f := &ParseConnectionPart{}
-	f.connPart = gparselib.NewParseAll(parseData, setParseData)
-	f.semantic = NewSemanticConnectionPart()
-	f.optInPort = NewParseOptPortSpc()
-	f.opNameParens = NewParseOperationNameParens()
-	f.optOutPort = NewParseOptPort()
+	connPart := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticConnectionPart()
+	optInPort := NewParseOptPortSpc()
+	opNameParens := NewParseOperationNameParens()
+	optOutPort := NewParseOptPort()
 
-	f.connPart.SetSemOutPort(f.semantic.InPort)
-	f.semantic.SetOutPort(f.connPart.SemInPort)
-	f.connPart.AppendSubOutPort(f.optInPort.InPort)
-	f.optInPort.SetOutPort(f.connPart.SubInPort)
-	f.connPart.AppendSubOutPort(f.opNameParens.InPort)
-	f.opNameParens.SetOutPort(f.connPart.SubInPort)
-	f.connPart.AppendSubOutPort(f.optOutPort.InPort)
-	f.optOutPort.SetOutPort(f.connPart.SubInPort)
+	connPart.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(connPart.SemInPort)
+	connPart.AppendSubOutPort(optInPort.InPort)
+	optInPort.SetOutPort(connPart.SubInPort)
+	connPart.AppendSubOutPort(opNameParens.InPort)
+	opNameParens.SetOutPort(connPart.SubInPort)
+	connPart.AppendSubOutPort(optOutPort.InPort)
+	optOutPort.SetOutPort(connPart.SubInPort)
 
-	f.InPort = f.connPart.InPort
-	f.SetOutPort = f.connPart.SetOutPort
+	f.InPort = connPart.InPort
+	f.SetOutPort = connPart.SetOutPort
 
 	return f
 }
@@ -107,8 +108,7 @@ func (op *SemanticOperationNameParens) InPort(dat interface{}) {
 		}
 	}
 	if len(oper.Name) <= 0 && len(oper.Type) <= 0 {
-		errPos := md.ParseData.SubResults[0].Pos
-		gparselib.AddError(errPos, "At least an operation name or an operation type have to be provided",
+		gparselib.AddError(subRes[0].Pos, "At least an operation name or an operation type have to be provided",
 			nil, md.ParseData)
 	} else if len(oper.Name) <= 0 {
 		oper.Name = strings.ToLower(oper.Type[0:1]) + oper.Type[1:]
@@ -122,59 +122,58 @@ func (op *SemanticOperationNameParens) SetOutPort(port func(interface{})) {
 }
 
 type ParseOperationNameParens struct {
-	opNameParens *gparselib.ParseAll
-	semantic     *SemanticOperationNameParens
-	optOpName    *gparselib.ParseOptional
-	openType     *gparselib.ParseLiteral
-	spc1         *ParseOptSpc
-	optOpType    *ParseOptOperationType
-	closeType    *gparselib.ParseLiteral
-	spc2         *ParseOptSpc
-	opName       *gparselib.ParseAll
-	smallIdent   *ParseSmallIdent
-	spc3         *ParseOptSpc
-	InPort       func(interface{})
-	SetOutPort   func(func(interface{}))
+	//opNameParens *gparselib.ParseAll
+	//semantic     *SemanticOperationNameParens
+	//optOpName    *gparselib.ParseOptional
+	//openType     *gparselib.ParseLiteral
+	//spc1         *ParseOptSpc
+	//optOpType    *ParseOptOperationType
+	//closeType    *gparselib.ParseLiteral
+	//spc2         *ParseOptSpc
+	//opName       *gparselib.ParseAll
+	//smallIdent   *ParseSmallIdent
+	//spc3         *ParseOptSpc
+	InPort     func(interface{})
+	SetOutPort func(func(interface{}))
 }
 
 func NewParseOperationNameParens() *ParseOperationNameParens {
-
 	f := &ParseOperationNameParens{}
-	f.opNameParens = gparselib.NewParseAll(parseData, setParseData)
-	f.semantic = NewSemanticOperationNameParens()
-	f.optOpName = gparselib.NewParseOptional(parseData, setParseData)
-	f.openType = gparselib.NewParseLiteral(parseData, setParseData, "(")
-	f.spc1 = NewParseOptSpc()
-	f.optOpType = NewParseOptOperationType()
-	f.closeType = gparselib.NewParseLiteral(parseData, setParseData, ")")
-	f.spc2 = NewParseOptSpc()
-	f.opName = gparselib.NewParseAll(parseData, setParseData)
-	f.smallIdent = NewParseSmallIdent()
-	f.spc3 = NewParseOptSpc()
+	opNameParens := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticOperationNameParens()
+	optOpName := gparselib.NewParseOptional(parseData, setParseData)
+	openType := gparselib.NewParseLiteral(parseData, setParseData, "(")
+	spc1 := NewParseOptSpc()
+	optOpType := NewParseOptOperationType()
+	closeType := gparselib.NewParseLiteral(parseData, setParseData, ")")
+	spc2 := NewParseOptSpc()
+	opName := gparselib.NewParseAll(parseData, setParseData)
+	smallIdent := NewParseSmallIdent()
+	spc3 := NewParseOptSpc()
 
-	f.opNameParens.SetSemOutPort(f.semantic.InPort)
-	f.semantic.SetOutPort(f.opNameParens.SemInPort)
-	f.opNameParens.AppendSubOutPort(f.optOpName.InPort)
-	f.optOpName.SetOutPort(f.opNameParens.SubInPort)
-	f.opNameParens.AppendSubOutPort(f.openType.InPort)
-	f.openType.SetOutPort(f.opNameParens.SubInPort)
-	f.opNameParens.AppendSubOutPort(f.spc1.InPort)
-	f.spc1.SetOutPort(f.opNameParens.SubInPort)
-	f.opNameParens.AppendSubOutPort(f.optOpType.InPort)
-	f.optOpType.SetOutPort(f.opNameParens.SubInPort)
-	f.opNameParens.AppendSubOutPort(f.closeType.InPort)
-	f.closeType.SetOutPort(f.opNameParens.SubInPort)
-	f.opNameParens.AppendSubOutPort(f.spc2.InPort)
-	f.spc2.SetOutPort(f.opNameParens.SubInPort)
-	f.optOpName.SetSubOutPort(f.opName.InPort)
-	f.opName.SetOutPort(f.optOpName.SubInPort)
-	f.opName.AppendSubOutPort(f.smallIdent.InPort)
-	f.smallIdent.SetOutPort(f.opName.SubInPort)
-	f.opName.AppendSubOutPort(f.spc3.InPort)
-	f.spc3.SetOutPort(f.opName.SubInPort)
+	opNameParens.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(opNameParens.SemInPort)
+	opNameParens.AppendSubOutPort(optOpName.InPort)
+	optOpName.SetOutPort(opNameParens.SubInPort)
+	opNameParens.AppendSubOutPort(openType.InPort)
+	openType.SetOutPort(opNameParens.SubInPort)
+	opNameParens.AppendSubOutPort(spc1.InPort)
+	spc1.SetOutPort(opNameParens.SubInPort)
+	opNameParens.AppendSubOutPort(optOpType.InPort)
+	optOpType.SetOutPort(opNameParens.SubInPort)
+	opNameParens.AppendSubOutPort(closeType.InPort)
+	closeType.SetOutPort(opNameParens.SubInPort)
+	opNameParens.AppendSubOutPort(spc2.InPort)
+	spc2.SetOutPort(opNameParens.SubInPort)
+	optOpName.SetSubOutPort(opName.InPort)
+	opName.SetOutPort(optOpName.SubInPort)
+	opName.AppendSubOutPort(smallIdent.InPort)
+	smallIdent.SetOutPort(opName.SubInPort)
+	opName.AppendSubOutPort(spc3.InPort)
+	spc3.SetOutPort(opName.SubInPort)
 
-	f.InPort = f.opNameParens.InPort
-	f.SetOutPort = f.opNameParens.SetOutPort
+	f.InPort = opNameParens.InPort
+	f.SetOutPort = opNameParens.SetOutPort
 
 	return f
 }
@@ -201,34 +200,34 @@ func (op *SemanticOptOperationType) SetOutPort(port func(interface{})) {
 }
 
 type ParseOptOperationType struct {
-	optOpType     *gparselib.ParseOptional
-	opType        *gparselib.ParseAll
-	semantic      *SemanticOptOperationType
-	parseBigIdent *ParseBigIdent
-	parseOptSpc   *ParseOptSpc
-	InPort        func(interface{})
-	SetOutPort    func(func(interface{}))
+	//optOpType     *gparselib.ParseOptional
+	//opType        *gparselib.ParseAll
+	//semantic      *SemanticOptOperationType
+	//parseBigIdent *ParseBigIdent
+	//parseOptSpc   *ParseOptSpc
+	InPort     func(interface{})
+	SetOutPort func(func(interface{}))
 }
 
 func NewParseOptOperationType() *ParseOptOperationType {
 	f := &ParseOptOperationType{}
-	f.optOpType = gparselib.NewParseOptional(parseData, setParseData)
-	f.opType = gparselib.NewParseAll(parseData, setParseData)
-	f.semantic = NewSemanticOptOperationType()
-	f.parseBigIdent = NewParseBigIdent()
-	f.parseOptSpc = NewParseOptSpc()
+	optOpType := gparselib.NewParseOptional(parseData, setParseData)
+	opType := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticOptOperationType()
+	parseBigIdent := NewParseBigIdent()
+	parseOptSpc := NewParseOptSpc()
 
-	f.optOpType.SetSubOutPort(f.opType.InPort)
-	f.opType.SetOutPort(f.optOpType.SubInPort)
-	f.opType.SetSemOutPort(f.semantic.InPort)
-	f.semantic.SetOutPort(f.opType.SemInPort)
-	f.opType.AppendSubOutPort(f.parseBigIdent.InPort)
-	f.parseBigIdent.SetOutPort(f.opType.SubInPort)
-	f.opType.AppendSubOutPort(f.parseOptSpc.InPort)
-	f.parseOptSpc.SetOutPort(f.opType.SubInPort)
+	optOpType.SetSubOutPort(opType.InPort)
+	opType.SetOutPort(optOpType.SubInPort)
+	opType.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(opType.SemInPort)
+	opType.AppendSubOutPort(parseBigIdent.InPort)
+	parseBigIdent.SetOutPort(opType.SubInPort)
+	opType.AppendSubOutPort(parseOptSpc.InPort)
+	parseOptSpc.SetOutPort(opType.SubInPort)
 
-	f.InPort = f.optOpType.InPort
-	f.SetOutPort = f.optOpType.SetOutPort
+	f.InPort = optOpType.InPort
+	f.SetOutPort = optOpType.SetOutPort
 
 	return f
 }
@@ -260,70 +259,62 @@ func (op *SemanticArrow) SetOutPort(port func(interface{})) {
 }
 
 type ParseArrow struct {
-	arrow      *gparselib.ParseAll
-	semantic   *SemanticArrow
-	spcCom1    *ParseSpaceComment
-	optType    *gparselib.ParseOptional
-	optCall    *gparselib.ParseOptional
-	litArr     *gparselib.ParseLiteral
-	spcCom2    *ParseSpaceComment
-	typ        *gparselib.ParseAll
-	call       *gparselib.ParseRegexp
-	openType   *gparselib.ParseLiteral
-	spc1       *ParseOptSpc
-	typeName   *ParseBigIdent
-	spc2       *ParseOptSpc
-	closeType  *gparselib.ParseLiteral
+	//arrow      *gparselib.ParseAll
+	//semantic   *SemanticArrow
+	//spcCom1    *ParseSpaceComment
+	//optType    *gparselib.ParseOptional
+	//litArr     *gparselib.ParseLiteral
+	//spcCom2    *ParseSpaceComment
+	//typ        *gparselib.ParseAll
+	//openType   *gparselib.ParseLiteral
+	//spc1       *ParseOptSpc
+	//typeName   *ParseBigIdent
+	//spc2       *ParseOptSpc
+	//closeType  *gparselib.ParseLiteral
 	InPort     func(interface{})
 	SetOutPort func(func(interface{}))
 }
 
 func NewParseArrow() *ParseArrow {
 	f := &ParseArrow{}
-	f.arrow = gparselib.NewParseAll(parseData, setParseData)
-	f.semantic = NewSemanticArrow()
-	f.spcCom1 = NewParseSpaceComment()
-	f.optType = gparselib.NewParseOptional(parseData, setParseData)
-	f.optCall = gparselib.NewParseOptional(parseData, setParseData)
-	f.litArr = gparselib.NewParseLiteral(parseData, setParseData, "->")
-	f.spcCom2 = NewParseSpaceComment()
-	f.typ = gparselib.NewParseAll(parseData, setParseData)
-	f.call = gparselib.NewParseRegexp(parseData, setParseData, "[saip]")
-	f.openType = gparselib.NewParseLiteral(parseData, setParseData, "[")
-	f.spc1 = NewParseOptSpc()
-	f.typeName = NewParseBigIdent()
-	f.spc2 = NewParseOptSpc()
-	f.closeType = gparselib.NewParseLiteral(parseData, setParseData, "]")
+	arrow := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticArrow()
+	spcCom1 := NewParseSpaceComment()
+	optType := gparselib.NewParseOptional(parseData, setParseData)
+	litArr := gparselib.NewParseLiteral(parseData, setParseData, "->")
+	spcCom2 := NewParseSpaceComment()
+	typ := gparselib.NewParseAll(parseData, setParseData)
+	openType := gparselib.NewParseLiteral(parseData, setParseData, "[")
+	spc1 := NewParseOptSpc()
+	typeName := NewParseBigIdent()
+	spc2 := NewParseOptSpc()
+	closeType := gparselib.NewParseLiteral(parseData, setParseData, "]")
 
-	f.arrow.SetSemOutPort(f.semantic.InPort)
-	f.semantic.SetOutPort(f.arrow.SemInPort)
-	f.arrow.AppendSubOutPort(f.spcCom1.InPort)
-	f.spcCom1.SetOutPort(f.arrow.SubInPort)
-	f.arrow.AppendSubOutPort(f.optType.InPort)
-	f.optType.SetOutPort(f.arrow.SubInPort)
-	f.arrow.AppendSubOutPort(f.optCall.InPort)
-	f.optCall.SetOutPort(f.arrow.SubInPort)
-	f.arrow.AppendSubOutPort(f.litArr.InPort)
-	f.litArr.SetOutPort(f.arrow.SubInPort)
-	f.arrow.AppendSubOutPort(f.spcCom2.InPort)
-	f.spcCom2.SetOutPort(f.arrow.SubInPort)
-	f.optType.SetSubOutPort(f.typ.InPort)
-	f.typ.SetOutPort(f.optType.SubInPort)
-	f.optCall.SetSubOutPort(f.call.InPort)
-	f.call.SetOutPort(f.optCall.SubInPort)
-	f.typ.AppendSubOutPort(f.openType.InPort)
-	f.openType.SetOutPort(f.typ.SubInPort)
-	f.typ.AppendSubOutPort(f.spc1.InPort)
-	f.spc1.SetOutPort(f.typ.SubInPort)
-	f.typ.AppendSubOutPort(f.typeName.InPort)
-	f.typeName.SetOutPort(f.typ.SubInPort)
-	f.typ.AppendSubOutPort(f.spc2.InPort)
-	f.spc2.SetOutPort(f.typ.SubInPort)
-	f.typ.AppendSubOutPort(f.closeType.InPort)
-	f.closeType.SetOutPort(f.typ.SubInPort)
+	arrow.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(arrow.SemInPort)
+	arrow.AppendSubOutPort(spcCom1.InPort)
+	spcCom1.SetOutPort(arrow.SubInPort)
+	arrow.AppendSubOutPort(optType.InPort)
+	optType.SetOutPort(arrow.SubInPort)
+	arrow.AppendSubOutPort(litArr.InPort)
+	litArr.SetOutPort(arrow.SubInPort)
+	arrow.AppendSubOutPort(spcCom2.InPort)
+	spcCom2.SetOutPort(arrow.SubInPort)
+	optType.SetSubOutPort(typ.InPort)
+	typ.SetOutPort(optType.SubInPort)
+	typ.AppendSubOutPort(openType.InPort)
+	openType.SetOutPort(typ.SubInPort)
+	typ.AppendSubOutPort(spc1.InPort)
+	spc1.SetOutPort(typ.SubInPort)
+	typ.AppendSubOutPort(typeName.InPort)
+	typeName.SetOutPort(typ.SubInPort)
+	typ.AppendSubOutPort(spc2.InPort)
+	spc2.SetOutPort(typ.SubInPort)
+	typ.AppendSubOutPort(closeType.InPort)
+	closeType.SetOutPort(typ.SubInPort)
 
-	f.InPort = f.arrow.InPort
-	f.SetOutPort = f.arrow.SetOutPort
+	f.InPort = arrow.InPort
+	f.SetOutPort = arrow.SetOutPort
 
 	return f
 }
@@ -350,34 +341,34 @@ func (op *SemanticOptPortSpc) SetOutPort(port func(interface{})) {
 }
 
 type ParseOptPortSpc struct {
-	optPortSpc *gparselib.ParseOptional
-	portSpc    *gparselib.ParseAll
-	semantic   *SemanticOptPortSpc
-	pport      *ParsePort
-	space      *gparselib.ParseSpace
+	//optPortSpc *gparselib.ParseOptional
+	//portSpc    *gparselib.ParseAll
+	//semantic   *SemanticOptPortSpc
+	//pport      *ParsePort
+	//space      *gparselib.ParseSpace
 	InPort     func(interface{})
 	SetOutPort func(func(interface{}))
 }
 
 func NewParseOptPortSpc() *ParseOptPortSpc {
 	f := &ParseOptPortSpc{}
-	f.optPortSpc = gparselib.NewParseOptional(parseData, setParseData)
-	f.portSpc = gparselib.NewParseAll(parseData, setParseData)
-	f.semantic = NewSemanticOptPortSpc()
-	f.pport = NewParsePort()
-	f.space = gparselib.NewParseSpace(parseData, setParseData, false)
+	optPortSpc := gparselib.NewParseOptional(parseData, setParseData)
+	portSpc := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticOptPortSpc()
+	pport := NewParsePort()
+	space := gparselib.NewParseSpace(parseData, setParseData, false)
 
-	f.optPortSpc.SetSubOutPort(f.portSpc.InPort)
-	f.portSpc.SetOutPort(f.optPortSpc.SubInPort)
-	f.portSpc.SetSemOutPort(f.semantic.InPort)
-	f.semantic.SetOutPort(f.portSpc.SemInPort)
-	f.portSpc.AppendSubOutPort(f.pport.InPort)
-	f.pport.SetOutPort(f.portSpc.SubInPort)
-	f.portSpc.AppendSubOutPort(f.space.InPort)
-	f.space.SetOutPort(f.portSpc.SubInPort)
+	optPortSpc.SetSubOutPort(portSpc.InPort)
+	portSpc.SetOutPort(optPortSpc.SubInPort)
+	portSpc.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(portSpc.SemInPort)
+	portSpc.AppendSubOutPort(pport.InPort)
+	pport.SetOutPort(portSpc.SubInPort)
+	portSpc.AppendSubOutPort(space.InPort)
+	space.SetOutPort(portSpc.SubInPort)
 
-	f.InPort = f.optPortSpc.InPort
-	f.SetOutPort = f.optPortSpc.SetOutPort
+	f.InPort = optPortSpc.InPort
+	f.SetOutPort = optPortSpc.SetOutPort
 
 	return f
 }
@@ -385,22 +376,22 @@ func NewParseOptPortSpc() *ParseOptPortSpc {
 // ------------ ParseOptPort:
 // semantic result: port data.Port
 type ParseOptPort struct {
-	optPort    *gparselib.ParseOptional
-	pport      *ParsePort
+	//optPort    *gparselib.ParseOptional
+	//pport      *ParsePort
 	InPort     func(interface{})
 	SetOutPort func(func(interface{}))
 }
 
 func NewParseOptPort() *ParseOptPort {
 	f := &ParseOptPort{}
-	f.optPort = gparselib.NewParseOptional(parseData, setParseData)
-	f.pport = NewParsePort()
+	optPort := gparselib.NewParseOptional(parseData, setParseData)
+	pport := NewParsePort()
 
-	f.optPort.SetSubOutPort(f.pport.InPort)
-	f.pport.SetOutPort(f.optPort.SubInPort)
+	optPort.SetSubOutPort(pport.InPort)
+	pport.SetOutPort(optPort.SubInPort)
 
-	f.InPort = f.optPort.InPort
-	f.SetOutPort = f.optPort.SetOutPort
+	f.InPort = optPort.InPort
+	f.SetOutPort = optPort.SetOutPort
 
 	return f
 }
@@ -440,42 +431,42 @@ func (op *SemanticPort) SetOutPort(port func(interface{})) {
 }
 
 type ParsePort struct {
-	port       *gparselib.ParseAll
-	semantic   *SemanticPort
-	portName   *ParseSmallIdent
-	optPortNum *gparselib.ParseOptional
-	portNum    *gparselib.ParseAll
-	dot        *gparselib.ParseLiteral
-	num        *gparselib.ParseNatural
+	//port       *gparselib.ParseAll
+	//semantic   *SemanticPort
+	//portName   *ParseSmallIdent
+	//optPortNum *gparselib.ParseOptional
+	//portNum    *gparselib.ParseAll
+	//dot        *gparselib.ParseLiteral
+	//num        *gparselib.ParseNatural
 	InPort     func(interface{})
 	SetOutPort func(func(interface{}))
 }
 
 func NewParsePort() *ParsePort {
 	f := &ParsePort{}
-	f.port = gparselib.NewParseAll(parseData, setParseData)
-	f.semantic = NewSemanticPort()
-	f.portName = NewParseSmallIdent()
-	f.optPortNum = gparselib.NewParseOptional(parseData, setParseData)
-	f.portNum = gparselib.NewParseAll(parseData, setParseData)
-	f.dot = gparselib.NewParseLiteral(parseData, setParseData, ".")
-	f.num = gparselib.NewParseNatural(parseData, setParseData, 10)
+	port := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticPort()
+	portName := NewParseSmallIdent()
+	optPortNum := gparselib.NewParseOptional(parseData, setParseData)
+	portNum := gparselib.NewParseAll(parseData, setParseData)
+	dot := gparselib.NewParseLiteral(parseData, setParseData, ".")
+	num := gparselib.NewParseNatural(parseData, setParseData, 10)
 
-	f.port.SetSemOutPort(f.semantic.InPort)
-	f.semantic.SetOutPort(f.port.SemInPort)
-	f.port.AppendSubOutPort(f.portName.InPort)
-	f.portName.SetOutPort(f.port.SubInPort)
-	f.port.AppendSubOutPort(f.optPortNum.InPort)
-	f.optPortNum.SetOutPort(f.port.SubInPort)
-	f.optPortNum.SetSubOutPort(f.portNum.InPort)
-	f.portNum.SetOutPort(f.optPortNum.SubInPort)
-	f.portNum.AppendSubOutPort(f.dot.InPort)
-	f.dot.SetOutPort(f.portNum.SubInPort)
-	f.portNum.AppendSubOutPort(f.num.InPort)
-	f.num.SetOutPort(f.portNum.SubInPort)
+	port.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(port.SemInPort)
+	port.AppendSubOutPort(portName.InPort)
+	portName.SetOutPort(port.SubInPort)
+	port.AppendSubOutPort(optPortNum.InPort)
+	optPortNum.SetOutPort(port.SubInPort)
+	optPortNum.SetSubOutPort(portNum.InPort)
+	portNum.SetOutPort(optPortNum.SubInPort)
+	portNum.AppendSubOutPort(dot.InPort)
+	dot.SetOutPort(portNum.SubInPort)
+	portNum.AppendSubOutPort(num.InPort)
+	num.SetOutPort(portNum.SubInPort)
 
-	f.InPort = f.port.InPort
-	f.SetOutPort = f.port.SetOutPort
+	f.InPort = port.InPort
+	f.SetOutPort = port.SetOutPort
 
 	return f
 }

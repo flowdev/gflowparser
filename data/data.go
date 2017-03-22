@@ -1,8 +1,9 @@
 package data
 
 import (
-	"github.com/flowdev/gparselib"
 	"strings"
+
+	"github.com/flowdev/gparselib"
 )
 
 type Version struct {
@@ -65,9 +66,9 @@ type Connection struct {
 }
 
 type Flow struct {
-	Name        string
-	operations  []*Operation
-	connections []*Connection
+	Name  string
+	Ops   []*Operation
+	Conns []*Connection
 }
 
 type FlowFile struct {
