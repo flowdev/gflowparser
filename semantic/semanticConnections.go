@@ -34,14 +34,13 @@ type AddOpResult struct {
 // semantic input:
 // Multi1[
 //   All[
-//     { (conn data.Connection{FromPort, DataType, ShowDataType, ToPort, ToOp}?), (oper data.Operation{Name, Type, SrcPos, OutPorts}) },
-//     { (bigIdentDataType string), (op data.Operation{Name, Type, SrcPos, InPorts, OutPorts}) }*,
+//     [ (conn data.Connection{FromPort, DataType, ShowDataType, ToPort, ToOp}?), (oper data.Operation{Name, Type, SrcPos, OutPorts}) ],
+//     [ (bigIdentDataType string), (op data.Operation{Name, Type, SrcPos, InPorts, OutPorts}) ]*,
 //     (connection data.Connection{FromPort{}, DataType, ToPort})?
 //   ]
 // ]
 //
 // semantic result: (flow data.Flow{})
-
 type SemanticConnections struct {
 	/*
 		createConns     *CreateConnections
@@ -82,6 +81,64 @@ func NewSemanticConnections() *SemanticConnections {
 	*/
 
 	return f
+}
+
+// ------------ CreateConnections:
+// semantic input:
+// Multi1[
+//   All[
+//     [ (conn data.Connection{FromPort, DataType, ShowDataType, ToPort, ToOp}?), (oper data.Operation{Name, Type, SrcPos, OutPorts}) ],
+//     [ (bigIdentDataType string), (op data.Operation{Name, Type, SrcPos, InPorts, OutPorts}) ]*,
+//     (connection data.Connection{FromPort{}, DataType, ToPort})?
+//   ]
+// ]
+//
+// semantic result: (flow data.Flow{Conns, Ops})
+type CreateConnections struct {
+	chainOutPort func(*SemanticConnectionsData)
+	outPort      func(interface{})
+}
+
+func NewCreateConnections() *CreateConnections {
+	return &CreateConnections{}
+}
+func (op *CreateConnections) InPort(dat interface{}) {
+	md := dat.(*data.MainData)
+	connsData := &SemanticConnectionsData{
+		mainData: md,
+		ops:      make([]*data.Operation, 0, 32),
+		conns:    make([]*data.Connection, 0, 32),
+		opMap:    make(map[string]*data.Operation),
+	}
+
+	for _, subResult := range md.ParseData.SubResults {
+		chain := subResult.Value.([]interface{})
+		chainBeg := chain[0].([]interface{})
+		connsData.addOpResult = &AddOpResult{}
+		connsData.chainBegConn = chainBeg[0].(*data.Connection)
+		connsData.chainBegOp = chainBeg[1].(*data.Operation)
+		connsData.chainMids = chain[1].([]interface{})
+		connsData.chainEnd = chain[2].(*data.Connection)
+
+		op.chainOutPort(connsData)
+	}
+	md.ParseData.Result.Value = nil
+
+	if md.ParseData.Result.ErrPos < 0 {
+		flow := &data.Flow{
+			Conns: connsData.conns[:],
+			Ops:   connsData.ops[:],
+		}
+		md.ParseData.Result.Value = flow
+	}
+	op.outPort(md)
+}
+func (op *CreateConnections) ChainInPort(dat *SemanticConnectionsData) {
+	// WARNING: We make use of the knowledge that all calls in this subflow (package semantic) are synchronous!
+	// On the other hand this means that this method needn't do anything at all and we save quite some stack space. :-)
+}
+func (op *CreateConnections) SetOutPort(port func(interface{})) {
+	op.outPort = port
 }
 
 // ------------ HandleChainBeg:
@@ -170,7 +227,7 @@ func (op *HandleChainMids) InPort(dat *SemanticConnectionsData) {
 }
 func (op *HandleChainMids) AddOpInPort(dat *SemanticConnectionsData) {
 	// WARNING: We make use of the knowledge that all calls in this subflow (package semantic) are synchronous!
-	// On the other hand this means that this method needn't do anything at all and save quite some stack space. :-)
+	// On the other hand this means that this method needn't do anything at all and we save quite some stack space. :-)
 }
 func (op *HandleChainMids) SetAddOpOutPort(port func(*SemanticConnectionsData)) {
 	op.addOpOutPort = port
