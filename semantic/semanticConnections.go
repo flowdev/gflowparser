@@ -6,15 +6,18 @@ import (
 )
 
 type SemanticConnectionsData struct {
-	mainData    *data.MainData
-	ops         []*data.Operation
-	conns       []*data.Connection
-	opMap       map[string]*data.Operation
-	chainBeg    []interface{}
-	chainMids   []interface{}
-	chainEnd    *data.Connection
-	addOpResult *AddOpResult
-	newOp       *data.Operation
+	mainData *data.MainData
+	// stuff needed for flow:
+	ops   []*data.Operation
+	conns []*data.Connection
+	opMap map[string]*data.Operation
+	// intermediate stuff:
+	chainBegOp   *data.Operation
+	chainBegConn *data.Connection
+	chainMids    []interface{}
+	chainEnd     *data.Connection
+	addOpResult  *AddOpResult
+	newOp        *data.Operation
 }
 
 type AddOpResult struct {
@@ -79,6 +82,38 @@ func NewSemanticConnections() *SemanticConnections {
 	*/
 
 	return f
+}
+
+// ------------ HandleChainBeg:
+type HandleChainBeg struct {
+	//begAddLastOp *AddLastOp
+	addOpOutPort func(*SemanticConnectionsData)
+	outPort      func(*SemanticConnectionsData)
+}
+
+func (op *HandleChainBeg) InPort(dat *SemanticConnectionsData) {
+	// first add the operation:
+	dat.newOp = dat.chainBegOp
+	op.addOpOutPort(dat)
+}
+func (op *HandleChainBeg) AddOpInPort(dat *SemanticConnectionsData) {
+	lastOp := dat.addOpResult.op
+	connBeg := dat.chainBegConn
+
+	// now add the connection if it exists:
+	if connBeg != nil {
+		connBeg.ToOp = lastOp
+		correctToPort(connBeg, lastOp)
+		dat.conns = append(dat.conns, connBeg)
+	}
+
+	op.outPort(dat)
+}
+func (op *HandleChainBeg) SetAddOpOutPort(port func(*SemanticConnectionsData)) {
+	op.addOpOutPort = port
+}
+func (op *HandleChainBeg) SetOutPort(port func(*SemanticConnectionsData)) {
+	op.outPort = port
 }
 
 // ------------ AddLastOp:
@@ -172,6 +207,23 @@ func addPort(op *data.Operation, newPort *data.PortData, pd *gparselib.ParseData
 		op.OutPorts = append(ports, newPort)
 		result.outPort = newPort
 		result.outPortAdded = true
+	}
+}
+func correctFromPort(conn *data.Connection, op *data.Operation) {
+	for _, p := range op.OutPorts {
+		c := comparePorts(p, conn.FromPort)
+		if c != PortsDiffer {
+			conn.FromPort = p
+			break
+		}
+	}
+}
+func correctToPort(conn *data.Connection, op *data.Operation) {
+	for _, p := range op.InPorts {
+		c := comparePorts(p, conn.ToPort)
+		if c != PortsDiffer {
+			conn.ToPort = p
+		}
 	}
 }
 func comparePorts(p1, p2 *data.PortData) int {
