@@ -85,6 +85,8 @@ func NewSemanticConnections() *SemanticConnections {
 }
 
 // ------------ HandleChainBeg:
+// semantic input: dat.chainBegOp, dat.chainBegConn plus dat.opMap has to be up to date
+// semantic result: dat.conns is updated (if dat.chainBegConn != nil) plus dat.ops and dat.opMap are updated as necessary
 type HandleChainBeg struct {
 	//begAddLastOp *AddLastOp
 	addOpOutPort func(*SemanticConnectionsData)
