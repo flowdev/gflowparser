@@ -86,13 +86,16 @@ func NewSemanticConnections() *SemanticConnections {
 
 // ------------ HandleChainBeg:
 // semantic input: dat.chainBegOp, dat.chainBegConn plus dat.opMap has to be up to date
-// semantic result: dat.conns is updated (if dat.chainBegConn != nil) plus dat.ops and dat.opMap are updated as necessary
+// semantic result: dat.addOpResult, dat.conns is updated (if dat.chainBegConn != nil)
+//                  plus dat.ops and dat.opMap are updated as necessary
 type HandleChainBeg struct {
-	//begAddLastOp *AddLastOp
 	addOpOutPort func(*SemanticConnectionsData)
 	outPort      func(*SemanticConnectionsData)
 }
 
+func NewHandleChainBeg() *HandleChainBeg {
+	return &HandleChainBeg{}
+}
 func (op *HandleChainBeg) InPort(dat *SemanticConnectionsData) {
 	// first add the operation:
 	dat.newOp = dat.chainBegOp
@@ -115,6 +118,64 @@ func (op *HandleChainBeg) SetAddOpOutPort(port func(*SemanticConnectionsData)) {
 	op.addOpOutPort = port
 }
 func (op *HandleChainBeg) SetOutPort(port func(*SemanticConnectionsData)) {
+	op.outPort = port
+}
+
+// ------------ HandleChainMids:
+// semantic input: dat.chainMids plus dat.opMap has to be up to date
+// semantic result: dat.conns is updated plus dat.ops and dat.opMap are updated as necessary
+type HandleChainMids struct {
+	addOpOutPort func(*SemanticConnectionsData)
+	outPort      func(*SemanticConnectionsData)
+}
+
+func NewHandleChainMids() *HandleChainMids {
+	return &HandleChainMids{}
+}
+func (op *HandleChainMids) InPort(dat *SemanticConnectionsData) {
+	if len(dat.chainMids) <= 0 {
+		op.outPort(dat)
+		return
+	}
+	fromOp := dat.addOpResult.op
+
+	for _, chainMidIf := range dat.chainMids {
+		chainMid := chainMidIf.([]interface{})
+		arrowType := chainMid[0].(string)
+		fromPort := dat.addOpResult.outPort
+		toOp := chainMid[1].(*data.Operation)
+		toPort := toOp.InPorts[0]
+
+		// add the operation:
+		dat.newOp = toOp
+		op.addOpOutPort(dat)
+		toOp = dat.addOpResult.op
+
+		// now add the connection:
+		connMid := &data.Connection{
+			DataType:     arrowType,
+			ShowDataType: (arrowType != ""),
+			FromOp:       fromOp,
+			FromPort:     fromPort,
+			ToOp:         toOp,
+			ToPort:       toPort,
+		}
+		correctToPort(connMid, toOp)
+		dat.conns = append(dat.conns, connMid)
+
+		fromOp = toOp
+	}
+
+	op.outPort(dat)
+}
+func (op *HandleChainMids) AddOpInPort(dat *SemanticConnectionsData) {
+	// WARNING: We make use of the knowledge that all calls in this subflow (package semantic) are synchronous!
+	// On the other hand this means that this method needn't do anything at all and save quite some stack space. :-)
+}
+func (op *HandleChainMids) SetAddOpOutPort(port func(*SemanticConnectionsData)) {
+	op.addOpOutPort = port
+}
+func (op *HandleChainMids) SetOutPort(port func(*SemanticConnectionsData)) {
 	op.outPort = port
 }
 
