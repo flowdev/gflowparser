@@ -122,8 +122,8 @@ func (op *HandleChainBeg) SetOutPort(port func(*SemanticConnectionsData)) {
 }
 
 // ------------ HandleChainMids:
-// semantic input: dat.chainMids plus dat.opMap has to be up to date
-// semantic result: dat.conns is updated plus dat.ops and dat.opMap are updated as necessary
+// semantic input: dat.chainMids, dat.addOpResult plus dat.opMap has to be up to date
+// semantic result: dat.addOpResult, dat.conns is updated plus dat.ops and dat.opMap are updated as necessary
 type HandleChainMids struct {
 	addOpOutPort func(*SemanticConnectionsData)
 	outPort      func(*SemanticConnectionsData)
@@ -144,7 +144,7 @@ func (op *HandleChainMids) InPort(dat *SemanticConnectionsData) {
 		arrowType := chainMid[0].(string)
 		fromPort := dat.addOpResult.outPort
 		toOp := chainMid[1].(*data.Operation)
-		toPort := toOp.InPorts[0]
+		toPort := toOp.InPorts[0] // TODO: Should this line be executed after the op is added???
 
 		// add the operation:
 		dat.newOp = toOp
@@ -176,6 +176,47 @@ func (op *HandleChainMids) SetAddOpOutPort(port func(*SemanticConnectionsData)) 
 	op.addOpOutPort = port
 }
 func (op *HandleChainMids) SetOutPort(port func(*SemanticConnectionsData)) {
+	op.outPort = port
+}
+
+// ------------ HandleChainEnd:
+// semantic input: dat.chainEnd, dat.addOpResult plus dat.opMap has to be up to date
+// semantic result: dat.addOpResult, dat.conns is updated plus dat.ops and dat.opMap are updated as necessary
+type HandleChainEnd struct {
+	outPort func(*SemanticConnectionsData)
+}
+
+func NewHandleChainEnd() *HandleChainEnd {
+	return &HandleChainEnd{}
+}
+func (op *HandleChainEnd) InPort(dat *SemanticConnectionsData) {
+	chainEnd := dat.chainEnd
+	addOpResult := dat.addOpResult
+	lastOp := addOpResult.op
+
+	if chainEnd != nil {
+		chainEnd.FromOp = lastOp
+		if addOpResult.outPort != nil {
+			chainEnd.FromPort = addOpResult.outPort
+		}
+		if chainEnd.FromPort.Name == "" && chainEnd.ToPort.Name == "" {
+			chainEnd.FromPort = data.DefaultOutPort(chainEnd.FromPort.SrcPos)
+			chainEnd.ToPort = data.CopyPort(chainEnd.FromPort, chainEnd.ToPort.SrcPos)
+		} else if chainEnd.ToPort.Name == "" {
+			chainEnd.ToPort = data.CopyPort(chainEnd.FromPort, chainEnd.ToPort.SrcPos)
+		} else if chainEnd.FromPort.Name == "" {
+			chainEnd.FromPort = data.DefaultOutPort(chainEnd.FromPort.SrcPos)
+			addPort(lastOp, chainEnd.FromPort, dat.mainData.ParseData, addOpResult)
+		}
+		correctFromPort(chainEnd, lastOp)
+		dat.conns = append(dat.conns, chainEnd)
+	} else if addOpResult.outPortAdded {
+		lastOp.OutPorts = lastOp.OutPorts[:len(lastOp.OutPorts)-1]
+	}
+
+	op.outPort(dat)
+}
+func (op *HandleChainEnd) SetOutPort(port func(*SemanticConnectionsData)) {
 	op.outPort = port
 }
 

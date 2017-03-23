@@ -103,7 +103,6 @@ func (op *SemanticChainBeginMax) InPort(dat interface{}) {
 	res := md.ParseData.Result
 	subVals := res.Value.([]interface{})
 	subRes := md.ParseData.SubResults
-	conn := &data.Connection{}
 
 	if subVals[0] != nil {
 		port = subVals[0].(*data.PortData)
@@ -114,11 +113,13 @@ func (op *SemanticChainBeginMax) InPort(dat interface{}) {
 	if port == nil {
 		port = data.CopyPort(oper.InPorts[0], subRes[0].Pos)
 	}
-	conn.FromPort = port
-	conn.DataType = dataType
-	conn.ShowDataType = (dataType != "")
-	conn.ToPort = oper.InPorts[0]
-	conn.ToOp = oper
+	conn := &data.Connection{
+		FromPort:     port,
+		DataType:     dataType,
+		ShowDataType: (dataType != ""),
+		ToPort:       oper.InPorts[0],
+		ToOp:         oper,
+	}
 	md.ParseData.Result.Value = []interface{}{conn, oper}
 	op.outPort(md)
 }
