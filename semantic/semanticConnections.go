@@ -1,6 +1,8 @@
 package semantic
 
 import (
+	"strconv"
+
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 )
@@ -138,6 +140,47 @@ func (op *CreateConnections) ChainInPort(dat *SemanticConnectionsData) {
 	// On the other hand this means that this method needn't do anything at all and we save quite some stack space. :-)
 }
 func (op *CreateConnections) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
+// ------------ VerifyOutPortsUsedOnlyOnce:
+// semantic input: (flow data.Flow{Conns, Ops})
+// semantic result: (flow data.Flow{Conns, Ops}) only possible changes are added errors
+type VerifyOutPortsUsedOnlyOnce struct {
+	outPort func(interface{})
+}
+
+func NewVerifyOutPortsUsedOnlyOnce() *VerifyOutPortsUsedOnlyOnce {
+	return &VerifyOutPortsUsedOnlyOnce{}
+}
+func (op *VerifyOutPortsUsedOnlyOnce) InPort(dat interface{}) {
+	md := dat.(*data.MainData)
+	flow := md.ParseData.Result.Value.(*data.Flow)
+	if flow == nil {
+		op.outPort(md)
+		return
+	}
+	// check for output ports that are connected to multiple input ports:
+	connMap := make(map[string]map[string]int)
+	for _, conn := range flow.Conns {
+		fromPort := describePort(conn.FromOp, conn.FromPort)
+		toPort := describePort(conn.ToOp, conn.ToPort)
+		toPorts, ok := connMap[fromPort]
+		if !ok {
+			toPorts = make(map[string]int)
+			connMap[fromPort] = toPorts
+		}
+		toPorts[toPort] = max(toPorts[toPort], conn.ToPort.SrcPos)
+	}
+
+	for fromPort, toPorts := range connMap {
+		if len(toPorts) > 1 {
+			gparselib.AddError(lastSrcPos(toPorts), "The output port '"+fromPort+"' is connected to multiple input ports: "+enumeratePorts(toPorts), nil, md.ParseData)
+		}
+	}
+	op.outPort(md)
+}
+func (op *VerifyOutPortsUsedOnlyOnce) SetOutPort(port func(interface{})) {
 	op.outPort = port
 }
 
@@ -407,6 +450,39 @@ func comparePorts(p1, p2 *data.PortData) int {
 		return PortsEqual
 	}
 	return PortsDiffer
+}
+func describePort(op *data.Operation, port *data.PortData) string {
+	var desc string
+	if op == nil {
+		desc = "<FLOW>"
+	} else {
+		desc = op.Name
+	}
+	desc += ":" + port.Name
+
+	if port.HasIndex {
+		desc += "." + strconv.Itoa(port.Index)
+	}
+	return desc
+}
+func lastSrcPos(pMap map[string]int) int {
+	lastPos := -1
+	for _, pos := range pMap {
+		if pos > lastPos {
+			lastPos = pos
+		}
+	}
+	return lastPos
+}
+func enumeratePorts(pMap map[string]int) string {
+	enum := ""
+	for p := range pMap {
+		if enum != "" {
+			enum += ", "
+		}
+		enum += p
+	}
+	return enum
 }
 func max(a, b int) int {
 	if a >= b {
