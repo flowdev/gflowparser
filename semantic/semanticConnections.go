@@ -44,43 +44,39 @@ type AddOpResult struct {
 //
 // semantic result: (flow data.Flow{})
 type SemanticConnections struct {
-	/*
-		createConns     *CreateConnections
-		verifyOutPorts  *VerifyOutPortsUsedOnlyOnce
-		handleChainBeg  *HandleChainBeg
-		handleChainMids *HandleChainMids
-		handleChainEnd  *HandleChainEnd
-		begAddLastOp    *AddLastOp
-		midAddLastOp    *AddLastOp
-	*/
+	//createConns     *CreateConnections
+	//verifyOutPorts  *VerifyOutPortsUsedOnlyOnce
+	//handleChainBeg  *HandleChainBeg
+	//handleChainMids *HandleChainMids
+	//handleChainEnd  *HandleChainEnd
+	//begAddLastOp    *AddLastOp
+	//midAddLastOp    *AddLastOp
 	InPort     func(interface{})
 	SetOutPort func(func(interface{}))
 }
 
 func NewSemanticConnections() *SemanticConnections {
 	f := &SemanticConnections{}
-	/*
-		f.createConns = NewCreateConnections()
-		f.verifyOutPorts = NewVerifyOutPortsUsedOnlyOnce()
-		f.handleChainBeg = NewHandleChainBeg()
-		f.handleChainMids = NewHandleChainMids()
-		f.handleChainEnd = NewHandleChainEnd()
-		f.begAddLastOp = NewAddLastOp()
-		f.midAddLastOp = NewAddLastOp()
+	createConns := NewCreateConnections()
+	verifyOutPorts := NewVerifyOutPortsUsedOnlyOnce()
+	handleChainBeg := NewHandleChainBeg()
+	handleChainMids := NewHandleChainMids()
+	handleChainEnd := NewHandleChainEnd()
+	begAddLastOp := NewAddLastOp()
+	midAddLastOp := NewAddLastOp()
 
-		f.createConns.SetOutPort(f.verifyOutPorts.InPort)
-		f.createConns.SetChainOutPort(f.handleChainBeg.InPort)
-		f.handleChainBeg.SetOutPort(f.handleChainMids.InPort)
-		f.handleChainMids.SetOutPort(f.handleChainEnd.InPort)
-		f.handleChainEnd.SetOutPort(f.createConns.ChainInPort)
-		f.handleChainBeg.SetAddOpOutPort(f.begAddLastOp.InPort)
-		f.begAddLastOp.SetOutPort(f.handleChainBeg.AddOpInPort)
-		f.handleChainMids.SetAddOpOutPort(f.midAddLastOp.InPort)
-		f.midAddLastOp.SetOutPort(f.handleChainMids.AddOpInPort)
+	createConns.SetOutPort(verifyOutPorts.InPort)
+	createConns.SetChainOutPort(handleChainBeg.InPort)
+	handleChainBeg.SetOutPort(handleChainMids.InPort)
+	handleChainMids.SetOutPort(handleChainEnd.InPort)
+	handleChainEnd.SetOutPort(createConns.ChainInPort)
+	handleChainBeg.SetAddOpOutPort(begAddLastOp.InPort)
+	begAddLastOp.SetOutPort(handleChainBeg.AddOpInPort)
+	handleChainMids.SetAddOpOutPort(midAddLastOp.InPort)
+	midAddLastOp.SetOutPort(handleChainMids.AddOpInPort)
 
-		f.InPort = f.createConns.InPort
-		f.SetOutPort = f.verifyOutPorts.SetOutPort
-	*/
+	f.InPort = createConns.InPort
+	f.SetOutPort = verifyOutPorts.SetOutPort
 
 	return f
 }
@@ -138,6 +134,9 @@ func (op *CreateConnections) InPort(dat interface{}) {
 func (op *CreateConnections) ChainInPort(dat *SemanticConnectionsData) {
 	// WARNING: We make use of the knowledge that all calls in this subflow (package semantic) are synchronous!
 	// On the other hand this means that this method needn't do anything at all and we save quite some stack space. :-)
+}
+func (op *CreateConnections) SetChainOutPort(port func(*SemanticConnectionsData)) {
+	op.chainOutPort = port
 }
 func (op *CreateConnections) SetOutPort(port func(interface{})) {
 	op.outPort = port
@@ -328,6 +327,9 @@ type AddLastOp struct {
 	outPort func(*SemanticConnectionsData)
 }
 
+func NewAddLastOp() *AddLastOp {
+	return &AddLastOp{}
+}
 func (op *AddLastOp) InPort(dat *SemanticConnectionsData) {
 	newOp := dat.newOp
 	result := &AddOpResult{}
