@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/flowdev/gflowparser/data"
+	"github.com/flowdev/gflowparser/semantic"
 	"github.com/flowdev/gparselib"
 )
 
@@ -108,8 +109,7 @@ func (op *SemanticOperationNameParens) InPort(dat interface{}) {
 		}
 	}
 	if len(oper.Name) <= 0 && len(oper.Type) <= 0 {
-		gparselib.AddError(subRes[0].Pos, "At least an operation name or an operation type have to be provided",
-			nil, md.ParseData)
+		semantic.AddSemanticError(subRes[0].Pos, "At least an operation name or an operation type have to be provided", nil, md.ParseData)
 	} else if len(oper.Name) <= 0 {
 		oper.Name = strings.ToLower(oper.Type[0:1]) + oper.Type[1:]
 	}
@@ -417,9 +417,7 @@ func (op *SemanticPort) InPort(dat interface{}) {
 		idx64 := val.([]interface{})[1].(uint64)
 		if idx64 > uint64(math.MaxInt32) {
 			errPos := pd.SubResults[1].Pos + 1
-			gparselib.AddError(errPos, "Ridiculous large port index "+strconv.FormatUint(idx64, 10), nil, pd)
-			md.ParseData.Result.ErrPos = -1 // just a semantic error, no syntax error!
-			md.ParseData.Result.Value = nil
+			semantic.AddSemanticError(errPos, "Ridiculous large port index "+strconv.FormatUint(idx64, 10), nil, pd)
 		} else {
 			md.ParseData.Result.Value = data.NewIdxPort(nameRes.Text, int(idx64), nameRes.Pos)
 		}

@@ -14,12 +14,11 @@ type SemanticConnectionsData struct {
 	conns []*data.Connection
 	opMap map[string]*data.Operation
 	// intermediate stuff:
-	chainBegOp   *data.Operation
-	chainBegConn *data.Connection
-	chainMids    []interface{}
-	chainEnd     *data.Connection
-	addOpResult  *AddOpResult
-	newOp        *data.Operation
+	chainBeg    []interface{}
+	chainMids   []interface{}
+	chainEnd    *data.Connection
+	addOpResult *AddOpResult
+	newOp       *data.Operation
 }
 
 type AddOpResult struct {
@@ -111,12 +110,14 @@ func (op *CreateConnections) InPort(dat interface{}) {
 
 	for _, subResult := range md.ParseData.SubResults {
 		chain := subResult.Value.([]interface{})
-		chainBeg := chain[0].([]interface{})
 		connsData.addOpResult = &AddOpResult{}
-		connsData.chainBegConn = chainBeg[0].(*data.Connection)
-		connsData.chainBegOp = chainBeg[1].(*data.Operation)
+		connsData.chainBeg = chain[0].([]interface{})
 		connsData.chainMids = chain[1].([]interface{})
-		connsData.chainEnd = chain[2].(*data.Connection)
+		if chain[2] == nil {
+			connsData.chainEnd = nil
+		} else {
+			connsData.chainEnd = chain[2].(*data.Connection)
+		}
 
 		op.chainOutPort(connsData)
 	}
@@ -174,7 +175,7 @@ func (op *VerifyOutPortsUsedOnlyOnce) InPort(dat interface{}) {
 
 	for fromPort, toPorts := range connMap {
 		if len(toPorts) > 1 {
-			gparselib.AddError(lastSrcPos(toPorts), "The output port '"+fromPort+"' is connected to multiple input ports: "+enumeratePorts(toPorts), nil, md.ParseData)
+			AddSemanticError(lastSrcPos(toPorts), "The output port '"+fromPort+"' is connected to multiple input ports: "+enumeratePorts(toPorts), nil, md.ParseData)
 		}
 	}
 	op.outPort(md)
@@ -184,7 +185,7 @@ func (op *VerifyOutPortsUsedOnlyOnce) SetOutPort(port func(interface{})) {
 }
 
 // ------------ HandleChainBeg:
-// semantic input: dat.chainBegOp, dat.chainBegConn plus dat.opMap has to be up to date
+// semantic input: dat.chainBeg plus dat.opMap has to be up to date
 // semantic result: dat.addOpResult, dat.conns is updated (if dat.chainBegConn != nil)
 //                  plus dat.ops and dat.opMap are updated as necessary
 type HandleChainBeg struct {
@@ -197,15 +198,15 @@ func NewHandleChainBeg() *HandleChainBeg {
 }
 func (op *HandleChainBeg) InPort(dat *SemanticConnectionsData) {
 	// first add the operation:
-	dat.newOp = dat.chainBegOp
+	dat.newOp = dat.chainBeg[1].(*data.Operation)
 	op.addOpOutPort(dat)
 }
 func (op *HandleChainBeg) AddOpInPort(dat *SemanticConnectionsData) {
 	lastOp := dat.addOpResult.op
-	connBeg := dat.chainBegConn
 
 	// now add the connection if it exists:
-	if connBeg != nil {
+	if dat.chainBeg[0] != nil {
+		connBeg := dat.chainBeg[0].(*data.Connection)
 		connBeg.ToOp = lastOp
 		correctToPort(connBeg, lastOp)
 		dat.conns = append(dat.conns, connBeg)
@@ -352,7 +353,7 @@ func updateExistingOp(existingOp *data.Operation, newOp *data.Operation, pd *gpa
 	if existingOp.Type == "" {
 		existingOp.Type = newOp.Type
 	} else if newOp.Type != "" && newOp.Type != existingOp.Type {
-		gparselib.AddError(newOp.SrcPos, "The operation '"+newOp.Name+"' has got two different types '"+existingOp.Type+"' and '"+newOp.Type+"'!", nil, pd)
+		AddSemanticError(newOp.SrcPos, "The operation '"+newOp.Name+"' has got two different types '"+existingOp.Type+"' and '"+newOp.Type+"'!", nil, pd)
 	}
 	if len(newOp.InPorts) > 0 {
 		addPort(existingOp, newOp.InPorts[0], pd, nil)
@@ -394,7 +395,7 @@ func addPort(op *data.Operation, newPort *data.PortData, pd *gparselib.ParseData
 	for _, oldPort := range ports {
 		c := comparePorts(oldPort, newPort)
 		if c == PortsConflict {
-			gparselib.AddError(max(newPort.SrcPos, oldPort.SrcPos),
+			AddSemanticError(max(newPort.SrcPos, oldPort.SrcPos),
 				"The "+portType+" port '"+newPort.Name+"' of the operation '"+op.Name+"' is used as indexed and unindexed port in the same flow!", nil, pd)
 			return
 		}
@@ -491,4 +492,11 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// AddSemanticError resets any result and adds the error message of course but doesn't set the error position. So parsing can go on.
+func AddSemanticError(errPos int, msg string, baseError error, pd *gparselib.ParseData) {
+	gparselib.AddError(errPos, msg, baseError, pd)
+	pd.Result.Value = nil
+	pd.Result.Text = ""
 }
