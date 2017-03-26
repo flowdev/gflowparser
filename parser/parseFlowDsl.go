@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 )
 
@@ -44,108 +45,151 @@ func (f *ParseFlowFile) SetOutPort(port func(interface{})) { // datatype: FlowFi
 }
 
 // ------------ ParseVersion:
+// semantic result: vers data.Version{Politica, Major}
+type SemanticVersion struct {
+	outPort func(interface{})
+}
+
+func NewSemanticVersion() *SemanticVersion {
+	return &SemanticVersion{}
+}
+func (op *SemanticVersion) InPort(dat interface{}) {
+	md := dat.(*data.MainData)
+	res := md.ParseData.Result
+	subVals := res.Value.([]interface{})
+
+	political := subVals[3].(uint64)
+	major := subVals[5].(uint64)
+
+	res.Value = &data.Version{Political: int(political), Major: int(major)}
+	op.outPort(md)
+}
+func (op *SemanticVersion) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
 type ParseVersion struct {
 	version *gparselib.ParseAll
-	//	semantic  *SemanticCreateVersion
-	spcComm   *ParseSpaceComment
-	vers      *gparselib.ParseLiteral
-	aspc      *gparselib.ParseSpace
-	political *gparselib.ParseNatural
-	dot       *gparselib.ParseLiteral
-	major     *gparselib.ParseNatural
-	InPort    func(interface{})
+	//semantic   *SemanticVersion
+	//spcCommBeg *ParseSpaceComment
+	//vers       *gparselib.ParseLiteral
+	//aspc       *gparselib.ParseSpace
+	//political  *gparselib.ParseNatural
+	//dot        *gparselib.ParseLiteral
+	//major      *gparselib.ParseNatural
+	//spcCommEnd *ParseSpaceComment
+	InPort func(interface{})
 }
 
 func NewParseVersion() *ParseVersion {
-	f := &ParseVersion{}
-	f.version = gparselib.NewParseAll(parseData, setParseData)
-	//	f.semantic = NewSemanticCreateVersion()
-	f.spcComm = NewParseSpaceComment()
-	f.vers = gparselib.NewParseLiteral(parseData, setParseData, "version")
-	f.aspc = gparselib.NewParseSpace(parseData, setParseData, false)
-	f.political = gparselib.NewParseNatural(parseData, setParseData, 10)
-	f.dot = gparselib.NewParseLiteral(parseData, setParseData, ".")
-	f.major = gparselib.NewParseNatural(parseData, setParseData, 10)
+	version := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticVersion()
+	spcCommBeg := NewParseSpaceComment()
+	vers := gparselib.NewParseLiteral(parseData, setParseData, "version")
+	aspc := gparselib.NewParseSpace(parseData, setParseData, false)
+	political := gparselib.NewParseNatural(parseData, setParseData, 10)
+	dot := gparselib.NewParseLiteral(parseData, setParseData, ".")
+	major := gparselib.NewParseNatural(parseData, setParseData, 10)
+	spcCommEnd := NewParseSpaceComment()
 
-	//	f.version.SetSemOutPort(f.semantic.InPort)
-	//	f.semantic.SetOutPort(f.version.SemInPort)
-	f.version.AppendSubOutPort(f.spcComm.InPort)
-	f.spcComm.SetOutPort(f.version.SubInPort)
-	f.version.AppendSubOutPort(f.vers.InPort)
-	f.vers.SetOutPort(f.version.SubInPort)
-	f.version.AppendSubOutPort(f.aspc.InPort)
-	f.aspc.SetOutPort(f.version.SubInPort)
-	f.version.AppendSubOutPort(f.political.InPort)
-	f.political.SetOutPort(f.version.SubInPort)
-	f.version.AppendSubOutPort(f.dot.InPort)
-	f.dot.SetOutPort(f.version.SubInPort)
-	f.version.AppendSubOutPort(f.major.InPort)
-	f.major.SetOutPort(f.version.SubInPort)
-	f.version.AppendSubOutPort(f.spcComm.InPort)
-	f.spcComm.SetOutPort(f.version.SubInPort)
+	version.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(version.SemInPort)
+	version.AppendSubOutPort(spcCommBeg.InPort)
+	spcCommBeg.SetOutPort(version.SubInPort)
+	version.AppendSubOutPort(vers.InPort)
+	vers.SetOutPort(version.SubInPort)
+	version.AppendSubOutPort(aspc.InPort)
+	aspc.SetOutPort(version.SubInPort)
+	version.AppendSubOutPort(political.InPort)
+	political.SetOutPort(version.SubInPort)
+	version.AppendSubOutPort(dot.InPort)
+	dot.SetOutPort(version.SubInPort)
+	version.AppendSubOutPort(major.InPort)
+	major.SetOutPort(version.SubInPort)
+	version.AppendSubOutPort(spcCommEnd.InPort)
+	spcCommEnd.SetOutPort(version.SubInPort)
 
-	f.InPort = f.version.InPort
-
-	return f
+	return &ParseVersion{version: version, InPort: version.InPort}
 }
 func (f *ParseVersion) SetOutPort(port func(interface{})) {
 	f.version.SetOutPort(port)
 }
 
 // ------------ ParseFlow:
+// semantic result: flow data.Flow including name
+type SemanticFlow struct {
+	outPort func(interface{})
+}
+
+func NewSemanticFlow() *SemanticFlow {
+	return &SemanticFlow{}
+}
+func (op *SemanticFlow) InPort(dat interface{}) {
+	md := dat.(*data.MainData)
+	res := md.ParseData.Result
+	subVals := res.Value.([]interface{})
+
+	name := subVals[2].(string)
+	flow := subVals[6].(*data.Flow)
+	flow.Name = name
+
+	res.Value = flow
+	op.outPort(md)
+}
+func (op *SemanticFlow) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
 type ParseFlow struct {
 	flow *gparselib.ParseAll
-	//	semantic    *SemanticCreateFlow
-	flowLiteral *gparselib.ParseLiteral
-	aspc        *gparselib.ParseSpace
-	name        *ParseBigIdent
-	spcComm1    *ParseSpaceComment
-	openFlow    *gparselib.ParseLiteral
-	spcComm2    *ParseSpaceComment
-	connections *ParseConnections
-	closeFlow   *gparselib.ParseLiteral
-	spcComm3    *ParseSpaceComment
-	InPort      func(interface{})
+	//semantic    *SemanticFlow
+	//flowLiteral *gparselib.ParseLiteral
+	//aspc        *gparselib.ParseSpace
+	//name        *ParseBigIdent
+	//spcComm1    *ParseSpaceComment
+	//openFlow    *gparselib.ParseLiteral
+	//spcComm2    *ParseSpaceComment
+	//connections *ParseConnections
+	//closeFlow   *gparselib.ParseLiteral
+	//spcComm3    *ParseSpaceComment
+	InPort func(interface{})
 }
 
 func NewParseFlow() *ParseFlow {
-	f := &ParseFlow{}
-	f.flow = gparselib.NewParseAll(parseData, setParseData)
-	//	f.semantic = NewSemanticCreateFlow()
-	f.flowLiteral = gparselib.NewParseLiteral(parseData, setParseData, "flow")
-	f.aspc = gparselib.NewParseSpace(parseData, setParseData, false)
-	f.name = NewParseBigIdent()
-	f.spcComm1 = NewParseSpaceComment()
-	f.openFlow = gparselib.NewParseLiteral(parseData, setParseData, "{")
-	f.spcComm2 = NewParseSpaceComment()
-	f.connections = NewParseConnections()
-	f.closeFlow = gparselib.NewParseLiteral(parseData, setParseData, "}")
-	f.spcComm3 = NewParseSpaceComment()
+	flow := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticFlow()
+	flowLiteral := gparselib.NewParseLiteral(parseData, setParseData, "flow")
+	aspc := gparselib.NewParseSpace(parseData, setParseData, false)
+	name := NewParseBigIdent()
+	spcComm1 := NewParseSpaceComment()
+	openFlow := gparselib.NewParseLiteral(parseData, setParseData, "{")
+	spcComm2 := NewParseSpaceComment()
+	connections := NewParseConnections()
+	closeFlow := gparselib.NewParseLiteral(parseData, setParseData, "}")
+	spcComm3 := NewParseSpaceComment()
 
-	//	f.flow.SetSemOutPort(f.semantic.InPort)
-	//	f.semantic.SetOutPort(f.flow.SemInPort)
-	f.flow.AppendSubOutPort(f.flowLiteral.InPort)
-	f.flowLiteral.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.aspc.InPort)
-	f.aspc.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.name.InPort)
-	f.name.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.spcComm1.InPort)
-	f.spcComm1.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.openFlow.InPort)
-	f.openFlow.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.spcComm2.InPort)
-	f.spcComm2.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.connections.InPort)
-	f.connections.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.closeFlow.InPort)
-	f.closeFlow.SetOutPort(f.flow.SubInPort)
-	f.flow.AppendSubOutPort(f.spcComm3.InPort)
-	f.spcComm3.SetOutPort(f.flow.SubInPort)
+	flow.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(flow.SemInPort)
+	flow.AppendSubOutPort(flowLiteral.InPort)
+	flowLiteral.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(aspc.InPort)
+	aspc.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(name.InPort)
+	name.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(spcComm1.InPort)
+	spcComm1.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(openFlow.InPort)
+	openFlow.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(spcComm2.InPort)
+	spcComm2.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(connections.InPort)
+	connections.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(closeFlow.InPort)
+	closeFlow.SetOutPort(flow.SubInPort)
+	flow.AppendSubOutPort(spcComm3.InPort)
+	spcComm3.SetOutPort(flow.SubInPort)
 
-	f.InPort = f.flow.InPort
-
-	return f
+	return &ParseFlow{flow: flow, InPort: flow.InPort}
 }
 func (f *ParseFlow) SetOutPort(port func(interface{})) {
 	f.flow.SetOutPort(port)
