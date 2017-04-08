@@ -78,9 +78,10 @@ type FlowFile struct {
 }
 
 type MainData struct {
-	ParseData     *gparselib.ParseData
-	FlowFile      FlowFile
-	Format        string
-	OutputName    string
-	OutputContent string
+	ParseData       *gparselib.ParseData
+	FlowFile        FlowFile
+	SelectedFormats []string
+	CurrentFormat   string
+	OutputName      string
+	OutputContent   string
 }
