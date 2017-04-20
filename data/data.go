@@ -79,7 +79,7 @@ type FlowFile struct {
 
 type MainData struct {
 	ParseData       *gparselib.ParseData
-	FlowFile        FlowFile
+	FlowFile        *FlowFile
 	SelectedFormats []string
 	CurrentFormat   string
 	OutputName      string

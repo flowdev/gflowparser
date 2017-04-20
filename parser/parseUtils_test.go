@@ -2,12 +2,13 @@ package parser
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/davecgh/go-spew/spew"
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 	. "github.com/smartystreets/goconvey/convey"
-	"reflect"
-	"testing"
 )
 
 func TestParseStatementEnd(t *testing.T) {
@@ -88,20 +89,20 @@ func runTest(t *testing.T, fp interface{}, name string, content string, ev inter
 		})
 		valueTest(mainData2.ParseData.Result.Value, ev)
 		Convey(`... should give the right number of errors.`, func() {
-			errs := mainData2.ParseData.Result.Feedback.Errors
+			r := mainData2.ParseData.Result
 			if errCount <= 0 {
-				So(errs, ShouldBeNil)
+				So(r.HasError(), ShouldBeFalse)
 			} else {
-				So(len(errs), ShouldEqual, errCount)
+				So(len(r.Feedback), ShouldEqual, errCount)
 			}
 		})
 		Convey(`... should give the right error text.`, func() {
-			errs := mainData2.ParseData.Result.Feedback.Errors
+			errs := mainData2.ParseData.Result.Feedback
 			if errCount > 0 {
 				if len(errs) != errCount {
 					So(printErrors(errs), ShouldBeBlank)
 				} else {
-					So(errs[errCount-1].Error(), ShouldNotBeNil)
+					So(errs[errCount-1].Msg.String(), ShouldNotBeBlank)
 				}
 			}
 		})
@@ -119,10 +120,12 @@ func callWithInterfaceFunc(p interface{}, method string, value func(interface{})
 		fVal.Call([]reflect.Value{reflect.ValueOf(value)})
 	}
 }
-func printErrors(errs []*gparselib.ParseError) string {
+func printErrors(errs []*gparselib.FeedbackItem) string {
 	result := ""
 	for _, err := range errs {
-		result += err.Error() + "\n"
+		if err.Kind == gparselib.FeedbackError {
+			result += err.String() + "\n"
+		}
 	}
 	if result == "" {
 		result = "<EMPTY>"

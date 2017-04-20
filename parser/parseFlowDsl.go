@@ -6,46 +6,66 @@ import (
 )
 
 // ------------ ParseFlowFile:
+// semantic result: flowFile &data.FlowFile{FileName, Version, Flows}
+type SemanticFlowFile struct {
+	outPort func(interface{})
+}
+
+func NewSemanticFlowFile() *SemanticFlowFile {
+	return &SemanticFlowFile{}
+}
+func (op *SemanticFlowFile) InPort(dat interface{}) {
+	md := dat.(*data.MainData)
+	res := md.ParseData.Result
+	subVals := res.Value.([]interface{})
+
+	version := subVals[0].(data.Version)
+	flows := subVals[1].([]*data.Flow)
+
+	res.Value = &data.FlowFile{FileName: md.ParseData.Source.Name, Version: version, Flows: flows}
+	op.outPort(md)
+}
+func (op *SemanticFlowFile) SetOutPort(port func(interface{})) {
+	op.outPort = port
+}
+
 type ParseFlowFile struct {
 	flowFile *gparselib.ParseAll
-	//	semantic *SemanticCreateFlowFileData
-	version *ParseVersion
-	flows   *gparselib.ParseMulti1
-	eof     *gparselib.ParseEof
-	flow    *ParseFlow
-	InPort  func(interface{})
+	//	semantic *SemanticFlowFile
+	//version *ParseVersion
+	//flows   *gparselib.ParseMulti1
+	//eof     *gparselib.ParseEof
+	//flow    *ParseFlow
+	InPort func(interface{})
 }
 
 func NewParseFlowFile() *ParseFlowFile {
-	f := &ParseFlowFile{}
-	f.flowFile = gparselib.NewParseAll(parseData, setParseData)
-	//	f.semantic = NewSemanticCreateFlowFileData()
-	f.version = NewParseVersion()
-	f.flows = gparselib.NewParseMulti1(parseData, setParseData)
-	f.eof = gparselib.NewParseEof(parseData, setParseData)
-	f.flow = NewParseFlow()
+	flowFile := gparselib.NewParseAll(parseData, setParseData)
+	semantic := NewSemanticFlowFile()
+	version := NewParseVersion()
+	flows := gparselib.NewParseMulti1(parseData, setParseData)
+	eof := gparselib.NewParseEof(parseData, setParseData)
+	flow := NewParseFlow()
 
-	//	f.flowFile.SetSemOutPort(f.semantic.InPort)
-	//	f.semantic.SetOutPort(f.flowFile.SemInPort)
-	f.flowFile.AppendSubOutPort(f.version.InPort)
-	f.version.SetOutPort(f.flowFile.SubInPort)
-	f.flowFile.AppendSubOutPort(f.flows.InPort)
-	f.flows.SetOutPort(f.flowFile.SubInPort)
-	f.flowFile.AppendSubOutPort(f.eof.InPort)
-	f.eof.SetOutPort(f.flowFile.SubInPort)
-	f.flows.SetSubOutPort(f.flow.InPort)
-	f.flow.SetOutPort(f.flows.SubInPort)
+	flowFile.SetSemOutPort(semantic.InPort)
+	semantic.SetOutPort(flowFile.SemInPort)
+	flowFile.AppendSubOutPort(version.InPort)
+	version.SetOutPort(flowFile.SubInPort)
+	flowFile.AppendSubOutPort(flows.InPort)
+	flows.SetOutPort(flowFile.SubInPort)
+	flowFile.AppendSubOutPort(eof.InPort)
+	eof.SetOutPort(flowFile.SubInPort)
+	flows.SetSubOutPort(flow.InPort)
+	flow.SetOutPort(flows.SubInPort)
 
-	f.InPort = f.flowFile.InPort
-
-	return f
+	return &ParseFlowFile{flowFile: flowFile, InPort: flowFile.InPort}
 }
-func (f *ParseFlowFile) SetOutPort(port func(interface{})) { // datatype: FlowFile ?
+func (f *ParseFlowFile) SetOutPort(port func(interface{})) {
 	f.flowFile.SetOutPort(port)
 }
 
 // ------------ ParseVersion:
-// semantic result: vers data.Version{Politica, Major}
+// semantic result: vers &data.Version{Political, Major}
 type SemanticVersion struct {
 	outPort func(interface{})
 }
@@ -116,7 +136,7 @@ func (f *ParseVersion) SetOutPort(port func(interface{})) {
 }
 
 // ------------ ParseFlow:
-// semantic result: flow data.Flow including name
+// semantic result: flow *data.Flow including name
 type SemanticFlow struct {
 	outPort func(interface{})
 }
