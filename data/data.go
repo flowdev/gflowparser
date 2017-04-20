@@ -80,6 +80,7 @@ type FlowFile struct {
 type MainData struct {
 	ParseData       *gparselib.ParseData
 	FlowFile        *FlowFile
+	Horizontal      bool
 	SelectedFormats []string
 	CurrentFormat   string
 	OutputName      string
