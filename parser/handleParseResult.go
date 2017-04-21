@@ -22,6 +22,7 @@ func (op *HandleParseResult) InPort(dat interface{}) {
 	md := dat.(*data.MainData)
 	r := md.ParseData.Result
 
+	// TODO: Better error handling with error port, ... for wiki
 	if !r.HasError() {
 		outputFeedback(os.Stdout, r.Feedback)
 		md.FlowFile = r.Value.(*data.FlowFile)
