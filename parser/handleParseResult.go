@@ -27,7 +27,7 @@ func (op *HandleParseResult) InPort(dat interface{}) {
 		md.FlowFile = r.Value.(*data.FlowFile)
 		op.outPort(md)
 	} else {
-		outputFeedback(os.Stdout, r.Feedback)
+		outputFeedback(os.Stderr, r.Feedback)
 	}
 }
 func (op *HandleParseResult) SetOutPort(port func(interface{})) {
