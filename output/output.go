@@ -2,10 +2,8 @@ package output
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"log"
-	"os"
 
 	"github.com/flowdev/gflowparser/data"
 )
@@ -117,43 +115,32 @@ const templateDot string = `digraph {{.flow.Name}} {
 	{{- if .ShowDataType}} [label="{{.DataType}}"]{{end}} ;
   {{end}}
 }`
-const templateGo string = `type {{.flow.Name}} struct {
-  {{range .flow.Conns -}}
-    {{if .FromOp}}{{.FromOp.Name}}:{{with .FromPort}}{{.Name}}{{if .HasIndex}}.{{.Index}}{{end}}{{end}} {{end -}}
-	{{else}}{{with .FromPort}}"{{.Name}}{{if .HasIndex}}.{{.Index}}{{end}}"{{end}} {{end -}}
-    ->
-	{{- if .ToOp}} {{.ToOp.Name}}:{{with .ToPort}}{{.Name}}{{if .HasIndex}}.{{.Index}}{{end}}{{end}}{{end}}
-	{{else}} {{with .ToPort}}"{{.Name}}{{if .HasIndex}}.{{.Index}}{{end}}"{{end}}{{end}}
-	{{- if .ShowDataType}} [label="{{.DataType}}"]{{end}} ;
-  {{end}}
-}
-
-package main
+const templateGo string = `package main
 
 
 {{with .flow -}}
 type {{.Name}} struct {
-{{#operations}} {{name}} *{{type}}
-{{/operations}}
-{{#connections}}{{^fromOp}}	{{fromPort.capName}}Port func({{dataType}})
-{{/fromOp}}{{/connections}}
+{{range .Ops}}	{{.Name}} *{{.Type}}
+{{end}}
+{{range Conns}}{{if not .FromOp}}	{{.FromPort.CapName}}Port func({{.DataType}})
+{{end}}{{end}}
 }
 
-func New{{name}}() *{{name}} {
-    f := &{{name}}{}
-{{#operations}} f.{{name}} = New{{type}}()
-{{/operations}}
+func New{{.Name}}() *{{.Name}} {
+	f := &{{.Name}}{}
+{{range .Ops}}	f.{{.Name}} = New{{.Type}}()
+{{end}}
 
-{{#connections}}{{#fromOp}}{{#toOp}}    f.{{fromOp.name}}.Set{{fromPort.capName}}Port({{#fromPort.hasIndex}}{{fromPort.index}}, {{/fromPort.hasIndex}}f.{{toOp.name}}.{{toPort.capName}}Port{{#toPort.hasIndex}}[{{toPort.index}}]{{/toPort.hasIndex}})
-{{/toOp}}{{/fromOp}}{{/connections}}
+{{range .Conns}}{{if .FromOp}}{{if .ToOp}}	f.{{.FromOp.Name}}.Set{{.FromPort.CapName}}Port({{if .FromPort.HasIndex}}{{.FromPort.Index}}, {{end}}f.{{.ToOp.Name}}.{{.ToPort.CapName}}Port{{if .ToPort.HasIndex}}[{{.ToPort.Index}}]{{end}})
+{{end}}{{end}}{{end}}
 
-{{#connections}}{{^fromOp}}	f.{{fromPort.capName}}Port = f.{{toOp.name}}.{{toPort.capName}}Port
-{{/fromOp}}{{/connections}}
+{{range .Conns}}{{if not .FromOp}}	f.{{.FromPort.CapName}}Port = f.{{.ToOp.Name}}.{{.ToPort.CapName}}Port
+{{end}}{{end}}
 
     return f
 }
-{{range .Connections}}{{if not .ToOp}}func (f *{{$.flow.Name}}) Set{{.ToPort.CapName}}Port(port func({{.DataType}})) {
-	f.{{.FromOp.Name}}.Set{{.FromPort.CapName}}Port(port)
+{{range .Connections}}{{if not .ToOp}}func (f *{{$.flow.Name}}) Set{{.ToPort.CapName}}Port(p func({{.DataType}})) {
+	f.{{.FromOp.Name}}.Set{{.FromPort.CapName}}Port(p)
 }
 {{end}}{{end}}
 
@@ -166,7 +153,6 @@ type FillTemplate struct {
 }
 
 func NewFillTemplate() *FillTemplate {
-	// TODO: Compile all templates:
 	tmpls := make(map[string]*template.Template)
 	tmpls["dot"] = template.Must(template.New("dot").Parse(templateDot))
 	tmpls["go"] = template.Must(template.New("go").Parse(templateGo))
@@ -178,15 +164,15 @@ func (op *FillTemplate) InPort(md *data.MainData) {
 	}
 	t := op.templates[md.CurrentFormat]
 	var b bytes.Buffer // A Buffer needs no initialization.
-	fmt.Fprintf(&b, "world!")
 	for i, flow := range md.FlowFile.Flows {
 		if i > 0 {
-			b.Write([]byte("\n"))
+			b.WriteRune('\n')
 		}
-		err := t.Execute(os.Stdout, tplData)
+		tplData["flow"] = flow
+		err := t.Execute(&b, tplData)
 		if err != nil {
 			// TODO: use error port instead!
-			log.Println("executing template:", err)
+			log.Printf("ERROR: Executing template (format: %s): %s\n", md.CurrentFormat, err)
 		}
 	}
 	op.outPort(md)
