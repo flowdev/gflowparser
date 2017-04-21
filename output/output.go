@@ -117,7 +117,6 @@ const templateDot string = `digraph {{.flow.Name}} {
 }`
 const templateGo string = `package main
 
-
 {{with .flow -}}
 type {{.Name}} struct {
 {{range .Ops}}	{{.Name}} *{{.Type}}
