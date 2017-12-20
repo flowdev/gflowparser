@@ -17,17 +17,6 @@ func setParseData(dat interface{}, subData *gparselib.ParseData) interface{} {
 	return md
 }
 
-// TextSemantic returns the successfully parsed text as semantic value.
-// Semantics are called by gparselib and thus have to accept the empty interface.
-func TextSemantic(portOut func(interface{})) (portIn func(interface{})) {
-	portIn = func(dat interface{}) {
-		md := dat.(*data.MainData)
-		md.ParseData.Result.Value = md.ParseData.Result.Text
-		portOut(md)
-	}
-	return
-}
-
 // ParseSmallIdent parses an identifier that starts with a lower case character
 // (a - z).  The semantic result is the parsed text.
 func ParseSmallIdent(portOut func(interface{})) (portIn func(interface{})) {
@@ -48,7 +37,7 @@ func ParseBigIdent(portOut func(interface{})) (portIn func(interface{})) {
 	ptIn, err := gparselib.ParseRegexp(
 		portOut, TextSemantic,
 		getParseData, setParseData,
-		`[A-Z][a-zA-Z0-9]*`,
+		`[A-Z][a-zA-Z0-9]+`,
 	)
 	if err != nil {
 		panic(err)
@@ -106,8 +95,14 @@ func ParseSpaceComment(portOut func(interface{})) (portIn func(interface{})) {
 		}
 		return ptIn
 	}
-	portIn = gparselib.ParseAny(
-		portOut, []gparselib.SubparserOp{pSpc, pLnCmnt, pBlkCmnt}, TextSemantic,
+	pAny := func(portOut func(interface{})) (portIn func(interface{})) {
+		return gparselib.ParseAny(
+			portOut, []gparselib.SubparserOp{pSpc, pLnCmnt, pBlkCmnt}, TextSemantic,
+			getParseData, setParseData,
+		)
+	}
+	portIn = gparselib.ParseMulti0(
+		portOut, pAny, TextSemantic,
 		getParseData, setParseData,
 	)
 	return
@@ -130,5 +125,16 @@ func ParseStatementEnd(portOut func(interface{})) (portIn func(interface{})) {
 		TextSemantic,
 		getParseData, setParseData,
 	)
+	return
+}
+
+// TextSemantic returns the successfully parsed text as semantic value.
+// Semantics are called by gparselib and thus have to accept the empty interface.
+func TextSemantic(portOut func(interface{})) (portIn func(interface{})) {
+	portIn = func(dat interface{}) {
+		md := dat.(*data.MainData)
+		md.ParseData.Result.Value = md.ParseData.Result.Text
+		portOut(md)
+	}
 	return
 }
