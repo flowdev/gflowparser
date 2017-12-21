@@ -1,12 +1,12 @@
 <?xml version="1.0" ?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="360px" height="90px">
 	<!--
 		 Text: char = 12 x 24 (position = rect position + 18 x (12+24 - 6))
 			   that is its Y position is: Y position of rect + 12 (for inner rect space) +
 			   24 (for height of text) - 6 (to go back to the text base line)
 		 Rect: text + (2*18) x (2*12) (position = upper left corner + 6 x 12)
 	 -->
-	<rect fill="rgb(255,255,255)" fill-opacity="1" height="144" stroke="none" stroke-opacity="1" stroke-width="0.0" width="360" x="0" y="0"/>
+	<rect fill="rgb(255,255,255)" fill-opacity="1" stroke="none" stroke-opacity="1" stroke-width="0.0" width="360" height="90" x="0" y="0"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="24" x2="66" y1="36" y2="36"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="56" x2="66" y1="30" y2="36"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="56" x2="66" y1="42" y2="36"/>

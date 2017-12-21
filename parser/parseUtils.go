@@ -1,3 +1,8 @@
+// Utilities for the Flow Parser
+//
+// This file contains some utilities that help building the flow parser.
+// Most of them are themself simple parsers.
+
 package parser
 
 import (
@@ -18,7 +23,17 @@ func setParseData(dat interface{}, subData *gparselib.ParseData) interface{} {
 }
 
 // ParseSmallIdent parses an identifier that starts with a lower case character
-// (a - z).  The semantic result is the parsed text.
+// (a - z). Potentially followed by more valid identifier characters
+// (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
+//
+// flow:
+//     MainData-> p(gparselib.ParseRegexp) ->
+//     p MainData=> (TextSemantic) => p
+//
+// Details:
+//  - [MainData](../data/data.md#maindata)
+//  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
+//  - [TextSemantic](./parseUtils.md#textsemantic)
 func ParseSmallIdent(portOut func(interface{})) (portIn func(interface{})) {
 	ptIn, err := gparselib.ParseRegexp(
 		portOut, TextSemantic,
@@ -31,8 +46,13 @@ func ParseSmallIdent(portOut func(interface{})) (portIn func(interface{})) {
 	return ptIn
 }
 
-// ParseBigIdent parses an identifier that starts with a upper case character
-// (A - Z).  The semantic result is the parsed text.
+// ParseBigIdent parses an identifier that starts with an upper case character
+// (A - Z) followed by at least one other valid identifier character
+// (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
+//
+// flow:
+//   MainData->p(gparselib.ParseRegexp)->
+//   p MainData=> (TextSemantic) => p
 func ParseBigIdent(portOut func(interface{})) (portIn func(interface{})) {
 	ptIn, err := gparselib.ParseRegexp(
 		portOut, TextSemantic,
@@ -134,6 +154,7 @@ func TextSemantic(portOut func(interface{})) (portIn func(interface{})) {
 	portIn = func(dat interface{}) {
 		md := dat.(*data.MainData)
 		md.ParseData.Result.Value = md.ParseData.Result.Text
+		md.ParseData.SubResults = nil
 		portOut(md)
 	}
 	return
