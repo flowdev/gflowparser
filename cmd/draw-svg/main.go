@@ -25,7 +25,7 @@ const svgDiagram = `<?xml version="1.0" ?>
 {{- end}}
 {{range .Lines}}
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="{{.X1}}" y1="{{.Y1}}" x2="{{.X2}}" y2="{{.Y2}}"/>
-{{end}}
+{{- end}}
 {{range .Texts}}
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="{{.X}}" y="{{.Y}}" textLength="{{.Width}}" lengthAdjust="spacingAndGlyphs">{{.Text}}</text>
 {{- end}}
