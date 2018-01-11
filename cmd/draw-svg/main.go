@@ -91,7 +91,7 @@ type op struct {
 }
 
 type flow struct {
-	shapes []interface{}
+	shapes [][]interface{}
 }
 
 func flowDataToSVG(f *flow) *svgFlow {
@@ -99,23 +99,27 @@ func flowDataToSVG(f *flow) *svgFlow {
 	srs := make([]*svgRect, 0, len(f.shapes))
 	sls := make([]*svgLine, 0, 64)
 	sts := make([]*svgText, 0, 64)
-	x0 := 2 // don't start directly at the edge
 	y0 := 0 // the shapes leave head room themself
-	var y, ymax int
+	var y, xmax, ymax int
 
-	for _, is := range f.shapes {
-		switch s := is.(type) {
-		case *arrow:
-			sas, sts, x0, y = arrowDataToSVG(s, sas, sts, x0, y0)
-		case *op:
-			srs, sls, sts, x0, y = opDataToSVG(s, srs, sls, sts, x0, y0)
-		default:
-			panic(fmt.Sprintf("unsupported type: %T", is))
+	for _, ss := range f.shapes {
+		x0 := 2 // don't start directly at the edge
+		for _, is := range ss {
+			switch s := is.(type) {
+			case *arrow:
+				sas, sts, x0, y = arrowDataToSVG(s, sas, sts, x0, y0)
+			case *op:
+				srs, sls, sts, x0, y = opDataToSVG(s, srs, sls, sts, x0, y0)
+			default:
+				panic(fmt.Sprintf("unsupported type: %T", is))
+			}
+			ymax = max(ymax, y)
 		}
-		ymax = max(ymax, y)
+		xmax = max(xmax, x0)
+		y0 = ymax
 	}
 	return &svgFlow{
-		TotalWidth: x0 + 2, TotalHeight: ymax,
+		TotalWidth: xmax + 2, TotalHeight: ymax,
 		Arrows: sas, Rects: srs, Lines: sls, Texts: sts,
 	}
 }
@@ -320,46 +324,7 @@ func fillDimensions(f *fill) (width int, height int) {
 }
 
 func main() {
-	flow := &flow{
-		shapes: []interface{}{
-			&arrow{
-				dataType: "",
-				hasSrcOp: false, srcPort: "in",
-				hasDstOp: true, dstPort: "",
-			},
-			&op{
-				main: &rect{
-					text: []string{"do"},
-				},
-				fills: []*fill{
-					{
-						title: "semantics:",
-						rects: []*rect{
-							{text: []string{"TextSemantics"}},
-						},
-					},
-					{
-						title: "subParser:",
-						rects: []*rect{
-							{text: []string{"LitralParser"}},
-							{text: []string{"NaturalParser"}},
-						},
-					},
-				},
-			},
-			&arrow{
-				dataType: "Data",
-				hasSrcOp: true, srcPort: "out",
-				hasDstOp: true, dstPort: "in",
-			},
-			&op{
-				main: &rect{
-					text: []string{"ra", "(MiSo)"},
-				},
-			},
-		},
-	}
-	svgflow := flowDataToSVG(flow)
+	svgflow := flowDataToSVG(flowData)
 
 	// compile and execute template
 	t := template.Must(template.New("diagram").Parse(svgDiagram))
