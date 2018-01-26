@@ -9,8 +9,7 @@ ParseSmallIdent parses an identifier that starts with a lower case character
 (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
 
 ### Flow
-     MainData-> p(gparselib.ParseRegexp) ->
-     p MainData=> (TextSemantic) => p
+     (MainData)-> p:gparselib.ParseRegexp[semantics: TextSemantic] ->
 
 ### Details
 - [MainData](../data/data.md#maindata)
