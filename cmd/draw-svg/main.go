@@ -95,14 +95,25 @@ type split struct {
 }
 
 type merge struct {
-	ID    string
-	idx   int
-	count int
+	ID   string
+	size int
 }
 
 type flow struct {
 	shapes [][]interface{}
 }
+
+type myMergeData struct {
+	sas     []*svgArrow
+	curSize int
+	x0, y0  int
+	height  int
+}
+
+var (
+	allMerges      = make(map[string]*myMergeData)
+	completedMerge *myMergeData
+)
 
 func flowDataToSVG(f *flow) *svgFlow {
 	sas := make([]*svgArrow, 0, len(f.shapes))
@@ -126,6 +137,8 @@ func shapesToSVG(
 	x0, y0 int,
 ) ([]*svgArrow, []*svgRect, []*svgLine, []*svgText, int, int) {
 	var y, xmax, ymax int
+	var minOpHeight int
+	var lsa *svgArrow
 	var lsr *svgRect
 
 	for _, ss := range shapes {
@@ -135,13 +148,21 @@ func shapesToSVG(
 			switch s := is.(type) {
 			case *arrow:
 				sas, sts, x, y = arrowDataToSVG(s, sas, sts, x, y0)
+				lsa = sas[len(sas)-1]
 				lsr = nil
 			case *op:
-				srs, sls, sts, x, y = opDataToSVG(s, srs, sls, sts, x, y0)
+				srs, sls, sts, x, y = opDataToSVG(s, srs, sls, sts, x, y0, minOpHeight)
+				lsa = nil
 				lsr = srs[len(srs)-1]
 			case *split:
 				sas, srs, sls, sts, x, y = splitDataToSVG(s, sas, srs, sls, sts, lsr, x, y0)
+				lsa = nil
 				lsr = nil
+			case *merge:
+				x, y = mergeDataToSVG(s, lsa, x, y0, y-y0)
+				lsa = nil
+				lsr = nil
+				minOpHeight = y - y0
 			default:
 				panic(fmt.Sprintf("unsupported type: %T", is))
 			}
@@ -152,6 +173,31 @@ func shapesToSVG(
 	}
 	return sas, srs, sls, sts, xmax, ymax
 }
+func mergeDataToSVG(
+	m *merge,
+	lsa *svgArrow,
+	x0, y0 int,
+	minHeight int,
+) (int, int) {
+	md := allMerges[m.ID]
+	if md == nil { // first merge
+		md = &myMergeData{
+			x0:      x0,
+			y0:      y0,
+			height:  minHeight,
+			curSize: 1,
+		}
+		allMerges[m.ID] = md
+	} else if md.curSize < m.size-1 { // middle merge
+		md.x0 = max(md.x0, x0)
+		md.y0 = min(md.y0, y0)
+		md.height = max(md.height, y0+minHeight-md.y0)
+		md.curSize++
+	} else { // merge is comleted!
+	}
+	return x0, y0
+}
+
 func splitDataToSVG(
 	s *split,
 	sas []*svgArrow,
@@ -260,6 +306,7 @@ func opDataToSVG(
 	sls []*svgLine,
 	sts []*svgText,
 	x0, y0 int,
+	minHeight int,
 ) ([]*svgRect, []*svgLine, []*svgText, int, int) {
 	var xn, yn int
 	opW, opH := textDimensions(op.main)
@@ -270,6 +317,7 @@ func opDataToSVG(
 		opH += l
 		opW = max(opW, w)
 	}
+	opH = max(opH, minHeight)
 	srs, sts, y0, xn, yn = outerOpToSVG(op.main, opW, opH, srs, sts, x0, y0)
 	for _, f := range op.fills {
 		srs, sls, sts, y0 = fillDataToSVG(f, xn-x0, srs, sls, sts, x0, y0)
@@ -387,6 +435,12 @@ func maxLen(ss []string) int {
 		m = max(m, len(s))
 	}
 	return m
+}
+func min(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
 }
 func max(a, b int) int {
 	if a >= b {
