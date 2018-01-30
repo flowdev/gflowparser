@@ -90,6 +90,16 @@ type op struct {
 	fills []*fill
 }
 
+type split struct {
+	shapes [][]interface{}
+}
+
+type merge struct {
+	ID    string
+	idx   int
+	count int
+}
+
 type flow struct {
 	shapes [][]interface{}
 }
@@ -99,30 +109,67 @@ func flowDataToSVG(f *flow) *svgFlow {
 	srs := make([]*svgRect, 0, len(f.shapes))
 	sls := make([]*svgLine, 0, 64)
 	sts := make([]*svgText, 0, 64)
-	y0 := 0 // the shapes leave head room themself
-	var y, xmax, ymax int
+	var x, y int
+	sas, srs, sls, sts, x, y = shapesToSVG(f.shapes, sas, srs, sls, sts, 2, 0)
 
-	for _, ss := range f.shapes {
-		x0 := 2 // don't start directly at the edge
+	return &svgFlow{
+		TotalWidth: x + 2, TotalHeight: y,
+		Arrows: sas, Rects: srs, Lines: sls, Texts: sts,
+	}
+}
+func shapesToSVG(
+	shapes [][]interface{},
+	sas []*svgArrow,
+	srs []*svgRect,
+	sls []*svgLine,
+	sts []*svgText,
+	x0, y0 int,
+) ([]*svgArrow, []*svgRect, []*svgLine, []*svgText, int, int) {
+	var y, xmax, ymax int
+	var lsr *svgRect
+
+	for _, ss := range shapes {
+		x := x0
+		lsr = nil
 		for _, is := range ss {
 			switch s := is.(type) {
 			case *arrow:
-				sas, sts, x0, y = arrowDataToSVG(s, sas, sts, x0, y0)
+				sas, sts, x, y = arrowDataToSVG(s, sas, sts, x, y0)
+				lsr = nil
 			case *op:
-				srs, sls, sts, x0, y = opDataToSVG(s, srs, sls, sts, x0, y0)
+				srs, sls, sts, x, y = opDataToSVG(s, srs, sls, sts, x, y0)
+				lsr = srs[len(srs)-1]
+			case *split:
+				sas, srs, sls, sts, x, y = splitDataToSVG(s, sas, srs, sls, sts, lsr, x, y0)
+				lsr = nil
 			default:
 				panic(fmt.Sprintf("unsupported type: %T", is))
 			}
 			ymax = max(ymax, y)
 		}
-		xmax = max(xmax, x0)
-		y0 = ymax
+		xmax = max(xmax, x)
+		y0 = ymax + 5
 	}
-	return &svgFlow{
-		TotalWidth: xmax + 2, TotalHeight: ymax,
-		Arrows: sas, Rects: srs, Lines: sls, Texts: sts,
-	}
+	return sas, srs, sls, sts, xmax, ymax
 }
+func splitDataToSVG(
+	s *split,
+	sas []*svgArrow,
+	srs []*svgRect,
+	sls []*svgLine,
+	sts []*svgText,
+	lsr *svgRect,
+	x0, y0 int,
+) ([]*svgArrow, []*svgRect, []*svgLine, []*svgText, int, int) {
+	sas, srs, sls, sts, x0, y0 = shapesToSVG(s.shapes, sas, srs, sls, sts, x0, y0)
+	if lsr != nil {
+		if lsr.Y+lsr.Height < y0 {
+			lsr.Height = y0 - lsr.Y
+		}
+	}
+	return sas, srs, sls, sts, x0, y0
+}
+
 func arrowDataToSVG(
 	a *arrow,
 	sas []*svgArrow,
