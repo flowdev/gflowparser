@@ -41,6 +41,15 @@ var flowData = &flow{
 								},
 							},
 						},
+						&arrow{
+							dataType: "BigDataType",
+							hasSrcOp: true, srcPort: "out",
+							hasDstOp: true, dstPort: "in1",
+						},
+						&merge{
+							id:   "BigMerge",
+							size: 3,
+						},
 					}, {
 						&arrow{
 							dataType: "Data",
@@ -74,6 +83,15 @@ var flowData = &flow{
 								text: []string{"bla", "(Blue)"},
 							},
 						},
+						&arrow{
+							dataType: "Data",
+							hasSrcOp: true, srcPort: "out",
+							hasDstOp: true, dstPort: "in2",
+						},
+						&merge{
+							id:   "BigMerge",
+							size: 3,
+						},
 					}, {
 						&arrow{
 							dataType: "Data3",
@@ -100,7 +118,22 @@ var flowData = &flow{
 								},
 							},
 						},
+						&arrow{
+							dataType: "Data",
+							hasSrcOp: true, srcPort: "out",
+							hasDstOp: true, dstPort: "in3",
+						},
+						&merge{
+							id:   "BigMerge",
+							size: 3,
+						},
 					},
+				},
+			},
+		}, {
+			&op{
+				main: &rect{
+					text: []string{"BigMerge"},
 				},
 			},
 		},

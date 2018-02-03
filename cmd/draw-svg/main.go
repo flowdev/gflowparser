@@ -95,7 +95,7 @@ type split struct {
 }
 
 type merge struct {
-	ID   string
+	id   string
 	size int
 }
 
@@ -104,10 +104,15 @@ type flow struct {
 }
 
 type myMergeData struct {
-	sas     []*svgArrow
-	curSize int
-	x0, y0  int
-	height  int
+	moveData []*moveData
+	curSize  int
+	x0, y0   int
+	yn       int
+}
+type moveData struct {
+	arrow       *svgArrow
+	dataText    *svgText
+	dstPortText *svgText
 }
 
 var (
@@ -137,8 +142,7 @@ func shapesToSVG(
 	x0, y0 int,
 ) ([]*svgArrow, []*svgRect, []*svgLine, []*svgText, int, int) {
 	var y, xmax, ymax int
-	var minOpHeight int
-	var lsa *svgArrow
+	var mod *moveData
 	var lsr *svgRect
 
 	for _, ss := range shapes {
@@ -147,22 +151,20 @@ func shapesToSVG(
 		for _, is := range ss {
 			switch s := is.(type) {
 			case *arrow:
-				sas, sts, x, y = arrowDataToSVG(s, sas, sts, x, y0)
-				lsa = sas[len(sas)-1]
+				sas, sts, x, y, mod = arrowDataToSVG(s, sas, sts, x, y0)
 				lsr = nil
 			case *op:
-				srs, sls, sts, x, y = opDataToSVG(s, srs, sls, sts, x, y0, minOpHeight)
-				lsa = nil
+				srs, sls, sts, x, y = opDataToSVG(s, srs, sls, sts, x, y0)
+				mod = nil
 				lsr = srs[len(srs)-1]
 			case *split:
 				sas, srs, sls, sts, x, y = splitDataToSVG(s, sas, srs, sls, sts, lsr, x, y0)
-				lsa = nil
+				mod = nil
 				lsr = nil
 			case *merge:
-				x, y = mergeDataToSVG(s, lsa, x, y0, y-y0)
-				lsa = nil
+				x, y = mergeDataToSVG(s, mod, x, y0, y)
+				mod = nil
 				lsr = nil
-				minOpHeight = y - y0
 			default:
 				panic(fmt.Sprintf("unsupported type: %T", is))
 			}
@@ -175,27 +177,47 @@ func shapesToSVG(
 }
 func mergeDataToSVG(
 	m *merge,
-	lsa *svgArrow,
-	x0, y0 int,
-	minHeight int,
+	mod *moveData,
+	x0, y0, yn int,
 ) (int, int) {
-	md := allMerges[m.ID]
+	md := allMerges[m.id]
 	if md == nil { // first merge
 		md = &myMergeData{
-			x0:      x0,
-			y0:      y0,
-			height:  minHeight,
-			curSize: 1,
+			x0:       x0,
+			y0:       y0,
+			yn:       yn,
+			curSize:  1,
+			moveData: []*moveData{mod},
 		}
-		allMerges[m.ID] = md
-	} else if md.curSize < m.size-1 { // middle merge
+		allMerges[m.id] = md
+	} else { // additional merge
 		md.x0 = max(md.x0, x0)
 		md.y0 = min(md.y0, y0)
-		md.height = max(md.height, y0+minHeight-md.y0)
+		md.yn = max(md.yn, yn)
 		md.curSize++
-	} else { // merge is comleted!
+		md.moveData = append(md.moveData, mod)
 	}
-	return x0, y0
+	if md.curSize >= m.size { // merge is comleted!
+		moveXTo(md, md.x0)
+		completedMerge = md
+	}
+	return x0, yn
+}
+func moveXTo(med *myMergeData, newX int) {
+	for _, mod := range med.moveData {
+		xShift := newX - mod.arrow.X2
+
+		mod.arrow.X2 = newX
+		mod.arrow.XTip1 = newX - 8
+		mod.arrow.XTip2 = newX - 8
+
+		if mod.dstPortText != nil {
+			mod.dstPortText.X += xShift
+		}
+		if mod.dataText != nil {
+			mod.dataText.X += xShift / 2
+		}
+	}
 }
 
 func splitDataToSVG(
@@ -221,7 +243,8 @@ func arrowDataToSVG(
 	sas []*svgArrow,
 	sts []*svgText,
 	x0, y0 int,
-) ([]*svgArrow, []*svgText, int, int) {
+) ([]*svgArrow, []*svgText, int, int, *moveData) {
+	var dstPortText, dataText *svgText
 	x := x0
 	y := y0 + 24
 	portLen := 0 // length in chars NOT pixels
@@ -238,11 +261,12 @@ func arrowDataToSVG(
 		12 // last 12 is for tip of arrow
 
 	if a.dataType != "" {
-		sts = append(sts, &svgText{
+		dataText = &svgText{
 			X: x + ((width-12)-len(a.dataType)*12)/2, Y: y - 8,
 			Width: len(a.dataType) * 12,
 			Text:  a.dataType,
-		})
+		}
+		sts = append(sts, dataText)
 	}
 
 	sas = append(sas, &svgArrow{
@@ -254,8 +278,15 @@ func arrowDataToSVG(
 	x += width
 
 	sts, x = addDstPort(a, sts, x, y)
+	if a.dstPort != "" {
+		dstPortText = sts[len(sts)-1]
+	}
 
-	return sas, sts, x, y + 36
+	return sas, sts, x, y + 36, &moveData{
+		arrow:       sas[len(sas)-1],
+		dstPortText: dstPortText,
+		dataText:    dataText,
+	}
 }
 func addSrcPort(a *arrow, sts []*svgText, x, y int) ([]*svgText, int, int) {
 	portLen := 0
@@ -306,7 +337,6 @@ func opDataToSVG(
 	sls []*svgLine,
 	sts []*svgText,
 	x0, y0 int,
-	minHeight int,
 ) ([]*svgRect, []*svgLine, []*svgText, int, int) {
 	var xn, yn int
 	opW, opH := textDimensions(op.main)
@@ -317,7 +347,12 @@ func opDataToSVG(
 		opH += l
 		opW = max(opW, w)
 	}
-	opH = max(opH, minHeight)
+	if completedMerge != nil {
+		x0 = completedMerge.x0
+		y0 = completedMerge.y0
+		opH = max(opH, completedMerge.yn-completedMerge.y0)
+		completedMerge = nil
+	}
 	srs, sts, y0, xn, yn = outerOpToSVG(op.main, opW, opH, srs, sts, x0, y0)
 	for _, f := range op.fills {
 		srs, sls, sts, y0 = fillDataToSVG(f, xn-x0, srs, sls, sts, x0, y0)
