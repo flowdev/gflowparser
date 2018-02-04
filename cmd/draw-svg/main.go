@@ -121,26 +121,19 @@ var (
 )
 
 func flowDataToSVG(f *flow) *svgFlow {
-	sas := make([]*svgArrow, 0, len(f.shapes))
-	srs := make([]*svgRect, 0, len(f.shapes))
-	sls := make([]*svgLine, 0, 64)
-	sts := make([]*svgText, 0, 64)
-	var x, y int
-	sas, srs, sls, sts, x, y = shapesToSVG(f.shapes, sas, srs, sls, sts, 2, 0)
-
-	return &svgFlow{
-		TotalWidth: x + 2, TotalHeight: y,
-		Arrows: sas, Rects: srs, Lines: sls, Texts: sts,
+	sf := &svgFlow{
+		Arrows: make([]*svgArrow, 0, len(f.shapes)),
+		Rects:  make([]*svgRect, 0, len(f.shapes)),
+		Lines:  make([]*svgLine, 0, 64),
+		Texts:  make([]*svgText, 0, 64),
 	}
+	x, y := shapesToSVG(f.shapes, sf, 2, 0)
+
+	sf.TotalWidth = x + 2
+	sf.TotalHeight = y
+	return sf
 }
-func shapesToSVG(
-	shapes [][]interface{},
-	sas []*svgArrow,
-	srs []*svgRect,
-	sls []*svgLine,
-	sts []*svgText,
-	x0, y0 int,
-) ([]*svgArrow, []*svgRect, []*svgLine, []*svgText, int, int) {
+func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 	var y, xmax, ymax int
 	var mod *moveData
 	var lsr *svgRect
@@ -151,14 +144,13 @@ func shapesToSVG(
 		for _, is := range ss {
 			switch s := is.(type) {
 			case *arrow:
-				sas, sts, x, y, mod = arrowDataToSVG(s, sas, sts, x, y0)
+				x, y, mod = arrowDataToSVG(s, sf, x, y0)
 				lsr = nil
 			case *op:
-				srs, sls, sts, x, y = opDataToSVG(s, srs, sls, sts, x, y0)
+				x, y, lsr = opDataToSVG(s, sf, x, y0)
 				mod = nil
-				lsr = srs[len(srs)-1]
 			case *split:
-				sas, srs, sls, sts, x, y = splitDataToSVG(s, sas, srs, sls, sts, lsr, x, y0)
+				x, y = splitDataToSVG(s, sf, lsr, x, y0)
 				mod = nil
 				lsr = nil
 			case *merge:
@@ -173,7 +165,7 @@ func shapesToSVG(
 		xmax = max(xmax, x)
 		y0 = ymax + 5
 	}
-	return sas, srs, sls, sts, xmax, ymax
+	return xmax, ymax
 }
 func mergeDataToSVG(
 	m *merge,
@@ -220,36 +212,23 @@ func moveXTo(med *myMergeData, newX int) {
 	}
 }
 
-func splitDataToSVG(
-	s *split,
-	sas []*svgArrow,
-	srs []*svgRect,
-	sls []*svgLine,
-	sts []*svgText,
-	lsr *svgRect,
-	x0, y0 int,
-) ([]*svgArrow, []*svgRect, []*svgLine, []*svgText, int, int) {
-	sas, srs, sls, sts, x0, y0 = shapesToSVG(s.shapes, sas, srs, sls, sts, x0, y0)
+func splitDataToSVG(s *split, sf *svgFlow, lsr *svgRect, x0, y0 int) (int, int) {
+	x0, y0 = shapesToSVG(s.shapes, sf, x0, y0)
 	if lsr != nil {
 		if lsr.Y+lsr.Height < y0 {
 			lsr.Height = y0 - lsr.Y
 		}
 	}
-	return sas, srs, sls, sts, x0, y0
+	return x0, y0
 }
 
-func arrowDataToSVG(
-	a *arrow,
-	sas []*svgArrow,
-	sts []*svgText,
-	x0, y0 int,
-) ([]*svgArrow, []*svgText, int, int, *moveData) {
+func arrowDataToSVG(a *arrow, sf *svgFlow, x0, y0 int) (int, int, *moveData) {
 	var dstPortText, dataText *svgText
 	x := x0
 	y := y0 + 24
 	portLen := 0 // length in chars NOT pixels
 
-	sts, x, portLen = addSrcPort(a, sts, x, y)
+	sf.Texts, x, portLen = addSrcPort(a, sf.Texts, x, y)
 
 	if a.hasDstOp {
 		portLen += len(a.dstPort)
@@ -266,10 +245,10 @@ func arrowDataToSVG(
 			Width: len(a.dataType) * 12,
 			Text:  a.dataType,
 		}
-		sts = append(sts, dataText)
+		sf.Texts = append(sf.Texts, dataText)
 	}
 
-	sas = append(sas, &svgArrow{
+	sf.Arrows = append(sf.Arrows, &svgArrow{
 		X1: x, Y1: y,
 		X2: x + width, Y2: y,
 		XTip1: x + width - 8, YTip1: y - 8,
@@ -277,13 +256,13 @@ func arrowDataToSVG(
 	})
 	x += width
 
-	sts, x = addDstPort(a, sts, x, y)
+	sf.Texts, x = addDstPort(a, sf.Texts, x, y)
 	if a.dstPort != "" {
-		dstPortText = sts[len(sts)-1]
+		dstPortText = sf.Texts[len(sf.Texts)-1]
 	}
 
-	return sas, sts, x, y + 36, &moveData{
-		arrow:       sas[len(sas)-1],
+	return x, y + 36, &moveData{
+		arrow:       sf.Arrows[len(sf.Arrows)-1],
 		dstPortText: dstPortText,
 		dataText:    dataText,
 	}
@@ -331,13 +310,7 @@ func addDstPort(a *arrow, sts []*svgText, x, y int) ([]*svgText, int) {
 	return sts, x
 }
 
-func opDataToSVG(
-	op *op,
-	srs []*svgRect,
-	sls []*svgLine,
-	sts []*svgText,
-	x0, y0 int,
-) ([]*svgRect, []*svgLine, []*svgText, int, int) {
+func opDataToSVG(op *op, sf *svgFlow, x0, y0 int) (int, int, *svgRect) {
 	var xn, yn int
 	opW, opH := textDimensions(op.main)
 	opW += 2 * 12
@@ -353,11 +326,12 @@ func opDataToSVG(
 		opH = max(opH, completedMerge.yn-completedMerge.y0)
 		completedMerge = nil
 	}
-	srs, sts, y0, xn, yn = outerOpToSVG(op.main, opW, opH, srs, sts, x0, y0)
+	y0, xn, yn = outerOpToSVG(op.main, opW, opH, sf, x0, y0)
+	lsr := sf.Rects[len(sf.Rects)-1]
 	for _, f := range op.fills {
-		srs, sls, sts, y0 = fillDataToSVG(f, xn-x0, srs, sls, sts, x0, y0)
+		y0 = fillDataToSVG(f, xn-x0, sf, x0, y0)
 	}
-	return srs, sls, sts, xn, yn
+	return xn, yn, lsr
 }
 func textDimensions(r *rect) (width int, height int) {
 	width = maxLen(r.text) * 12
@@ -365,19 +339,13 @@ func textDimensions(r *rect) (width int, height int) {
 	return
 }
 
-func outerOpToSVG(
-	r *rect,
-	w int,
-	h int,
-	srs []*svgRect,
-	sts []*svgText,
-	x0, y0 int,
-) (srs2 []*svgRect, sts2 []*svgText, y02 int, xn int, yn int) {
+func outerOpToSVG(r *rect, w int, h int, sf *svgFlow, x0, y0 int,
+) (y02 int, xn int, yn int) {
 	x := x0
 	y := y0 + 6
 	h0 := len(r.text)*24 + 6*2
 
-	srs = append(srs, &svgRect{
+	sf.Rects = append(sf.Rects, &svgRect{
 		X: x, Y: y,
 		Width:  w,
 		Height: h,
@@ -386,7 +354,7 @@ func outerOpToSVG(
 
 	y += 6
 	for _, t := range r.text {
-		sts = append(sts, &svgText{
+		sf.Texts = append(sf.Texts, &svgText{
 			X: x + 12, Y: y + 24 - 6,
 			Width: len(t) * 12,
 			Text:  t,
@@ -394,22 +362,20 @@ func outerOpToSVG(
 		y += 24
 	}
 
-	return srs, sts, y0 + 6 + h0, x + w, y0 + h + 2*6
+	return y0 + 6 + h0, x + w, y0 + h + 2*6
 }
 
 func fillDataToSVG(
 	f *fill,
 	width int,
-	srs []*svgRect,
-	sls []*svgLine,
-	sts []*svgText,
+	sf *svgFlow,
 	x0, y0 int,
-) (srs2 []*svgRect, sls2 []*svgLine, sts2 []*svgText, yn int) {
+) (yn int) {
 	x := x0
 	y := y0
 
 	y += 3
-	sts = append(sts, &svgText{
+	sf.Texts = append(sf.Texts, &svgText{
 		X: x + 6, Y: y + 24 - 6,
 		Width: len(f.title) * 12,
 		Text:  f.title,
@@ -417,13 +383,13 @@ func fillDataToSVG(
 	y += 24
 
 	for _, r := range f.rects {
-		sls = append(sls, &svgLine{
+		sf.Lines = append(sf.Lines, &svgLine{
 			X1: x0, Y1: y,
 			X2: x0 + width, Y2: y,
 		})
 		y += 3
 		for _, t := range r.text {
-			sts = append(sts, &svgText{
+			sf.Texts = append(sf.Texts, &svgText{
 				X: x + 6, Y: y + 24 - 6,
 				Width: len(t) * 12,
 				Text:  t,
@@ -433,14 +399,14 @@ func fillDataToSVG(
 	}
 
 	y += 3
-	srs = append(srs, &svgRect{
+	sf.Rects = append(sf.Rects, &svgRect{
 		X: x0, Y: y0,
 		Width:  width,
 		Height: y - y0,
 		IsFill: true,
 	})
 
-	return srs, sls, sts, y
+	return y
 }
 func fillDimensions(f *fill) (width int, height int) {
 	height = 24 + 2*3             // title text and padding
