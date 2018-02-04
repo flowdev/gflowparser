@@ -154,7 +154,7 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 				mod = nil
 				lsr = nil
 			case *merge:
-				x, y = mergeDataToSVG(s, mod, x, y0, y)
+				mergeDataToSVG(s, mod, x, y0, y)
 				mod = nil
 				lsr = nil
 			default:
@@ -167,11 +167,7 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 	}
 	return xmax, ymax
 }
-func mergeDataToSVG(
-	m *merge,
-	mod *moveData,
-	x0, y0, yn int,
-) (int, int) {
+func mergeDataToSVG(m *merge, mod *moveData, x0, y0, yn int) {
 	md := allMerges[m.id]
 	if md == nil { // first merge
 		md = &myMergeData{
@@ -193,7 +189,6 @@ func mergeDataToSVG(
 		moveXTo(md, md.x0)
 		completedMerge = md
 	}
-	return x0, yn
 }
 func moveXTo(med *myMergeData, newX int) {
 	for _, mod := range med.moveData {

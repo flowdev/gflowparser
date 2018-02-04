@@ -1,0 +1,92 @@
+package main
+
+var flowData = &flow{
+	shapes: [][]interface{}{
+		{
+			&arrow{
+				dataType: "(shapes, *svgFlow, *x, *y)",
+				hasSrcOp: false, srcPort: "in",
+				hasDstOp: true, dstPort: "in",
+			},
+			&merge{
+				id:   "shapesToSVG",
+				size: 2,
+			},
+		}, {
+			&arrow{
+				hasSrcOp: false, srcPort: "...backFrom 'splitDataToSVG' [new]",
+				hasDstOp: true, dstPort: "in",
+			},
+			&merge{
+				id:   "shapesToSVG",
+				size: 2,
+			},
+		}, {
+			&op{
+				main: &rect{
+					text: []string{"shapesToSVG", "[synchronous]"},
+				},
+			},
+			&split{
+				shapes: [][]interface{}{
+					{
+						&arrow{
+							dataType: "(svgFlow, xmax, ymax)",
+							hasSrcOp: true, srcPort: "out",
+							hasDstOp: false, dstPort: "out",
+						},
+					}, {
+						&arrow{
+							dataType: "(arrow, *svgFlow, *x, *y, *moveData)",
+							hasSrcOp: true, srcPort: "arrowOut",
+							hasDstOp: true, dstPort: "in",
+						},
+						&op{
+							main: &rect{
+								text: []string{"arrowDataToSVG"},
+							},
+						},
+					}, {
+						&arrow{
+							dataType: "(op, *svgFlow, *x, *y, *svgMainRect)",
+							hasSrcOp: true, srcPort: "opOut",
+							hasDstOp: true, dstPort: "in",
+						},
+						&op{
+							main: &rect{
+								text: []string{"opDataToSVG"},
+							},
+						},
+					}, {
+						&arrow{
+							dataType: "(merge, moveData, x, y, yn)",
+							hasSrcOp: true, srcPort: "mergeOut",
+							hasDstOp: true, dstPort: "in",
+						},
+						&op{
+							main: &rect{
+								text: []string{"mergeDataToSVG", "[GLOBALS]"},
+							},
+						},
+					}, {
+						&arrow{
+							dataType: "(merge, moveData, x, y, yn)",
+							hasSrcOp: true, srcPort: "splitOut",
+							hasDstOp: true, dstPort: "in",
+						},
+						&op{
+							main: &rect{
+								text: []string{"splitDataToSVG"},
+							},
+						},
+						&arrow{
+							dataType: "(shapes, *svgFlow, *x, *y)",
+							hasSrcOp: true, srcPort: "splitOut",
+							hasDstOp: true, dstPort: "...backTo 'shapesToSVG'",
+						},
+					},
+				},
+			},
+		},
+	},
+}
