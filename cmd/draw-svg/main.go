@@ -147,7 +147,7 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 				x, y, mod = arrowDataToSVG(s, sf, x, y0)
 				lsr = nil
 			case *op:
-				x, y, lsr = opDataToSVG(s, sf, x, y0)
+				y0, x, y, lsr = opDataToSVG(s, sf, x, y0)
 				mod = nil
 			case *split:
 				x, y = splitDataToSVG(s, sf, lsr, x, y0)
@@ -229,7 +229,7 @@ func arrowDataToSVG(a *arrow, sf *svgFlow, x0, y0 int) (int, int, *moveData) {
 		portLen += len(a.dstPort)
 	}
 	width := max(
-		portLen+1,
+		portLen+2,
 		len(a.dataType)+2,
 	)*12 + 6 + // 6 so the source port text isn't glued to the op
 		12 // last 12 is for tip of arrow
@@ -305,8 +305,8 @@ func addDstPort(a *arrow, sts []*svgText, x, y int) ([]*svgText, int) {
 	return sts, x
 }
 
-func opDataToSVG(op *op, sf *svgFlow, x0, y0 int) (int, int, *svgRect) {
-	var xn, yn int
+func opDataToSVG(op *op, sf *svgFlow, x0, y0 int) (int, int, int, *svgRect) {
+	var y, xn, yn int
 	opW, opH := textDimensions(op.main)
 	opW += 2 * 12
 	opH += 6 + 10
@@ -321,12 +321,12 @@ func opDataToSVG(op *op, sf *svgFlow, x0, y0 int) (int, int, *svgRect) {
 		opH = max(opH, completedMerge.yn-completedMerge.y0)
 		completedMerge = nil
 	}
-	y0, xn, yn = outerOpToSVG(op.main, opW, opH, sf, x0, y0)
+	y, xn, yn = outerOpToSVG(op.main, opW, opH, sf, x0, y0)
 	lsr := sf.Rects[len(sf.Rects)-1]
 	for _, f := range op.fills {
-		y0 = fillDataToSVG(f, xn-x0, sf, x0, y0)
+		y = fillDataToSVG(f, xn-x0, sf, x0, y)
 	}
-	return xn, yn, lsr
+	return y0, xn, yn, lsr
 }
 func textDimensions(r *rect) (width int, height int) {
 	width = maxLen(r.text) * 12

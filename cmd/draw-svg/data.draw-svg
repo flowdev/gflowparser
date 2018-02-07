@@ -14,7 +14,7 @@ var flowData = &flow{
 			},
 		}, {
 			&arrow{
-				hasSrcOp: false, srcPort: "...backFrom 'splitDataToSVG' [new]",
+				hasSrcOp: false, srcPort: "...backFrom 'splitDataToSVG'",
 				hasDstOp: true, dstPort: "in",
 			},
 			&merge{
@@ -81,8 +81,8 @@ var flowData = &flow{
 						},
 						&arrow{
 							dataType: "(shapes, *svgFlow, *x, *y)",
-							hasSrcOp: true, srcPort: "splitOut",
-							hasDstOp: true, dstPort: "...backTo 'shapesToSVG'",
+							hasSrcOp: true, srcPort: "out",
+							hasDstOp: false, dstPort: "...backTo 'shapesToSVG'",
 						},
 					},
 				},
