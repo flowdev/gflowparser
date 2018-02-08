@@ -48,7 +48,7 @@ var flowData = &flow{
 						},
 					}, {
 						&arrow{
-							dataType: "(op, *svgFlow, completedMerge, *y0, *x, *y, *svgMainRect)",
+							dataType: "(op, *svgFlow, completedMerge, *svgMainRect, *y0, *x, *y)",
 							hasSrcOp: true, srcPort: "opOut",
 							hasDstOp: true, dstPort: "in",
 						},
@@ -76,7 +76,7 @@ var flowData = &flow{
 						},
 						&op{
 							main: &rect{
-								text: []string{"splitDataToSVG"},
+								text: []string{"splitDataToSVG", "[synchronous]"},
 							},
 						},
 						&arrow{
