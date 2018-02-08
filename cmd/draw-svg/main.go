@@ -120,7 +120,8 @@ var (
 	completedMerge *myMergeData
 	adts           func(*arrow, *svgFlow, *int, *int, *moveData)
 	odts           func(*op, *svgFlow, *myMergeData, *int, *int, *int, **svgRect)
-	mdts           func(*merge, *moveData, int, int)
+	mdts           func(*merge, *moveData, **myMergeData, int, int)
+	sdts           func(*split, *svgFlow, *svgRect, *int, *int)
 )
 
 func flowDataToSVG(f *flow) *svgFlow {
@@ -156,11 +157,11 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 				completedMerge = nil
 				mod = nil
 			case *split:
-				x, y = splitDataToSVG(s, sf, lsr, x, y0)
+				sdts(s, sf, lsr, &x, &y)
 				mod = nil
 				lsr = nil
 			case *merge:
-				mdts(s, mod, x, y)
+				mdts(s, mod, &completedMerge, x, y)
 				mod = nil
 				lsr = nil
 			default:
@@ -174,9 +175,9 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 	return xmax, ymax
 }
 
-func mergeDataToSVG() (portIn func(*merge, *moveData, int, int)) {
+func mergeDataToSVG() (portIn func(*merge, *moveData, **myMergeData, int, int)) {
 	allMerges := make(map[string]*myMergeData)
-	portIn = func(m *merge, mod *moveData, x0, y0 int) {
+	portIn = func(m *merge, mod *moveData, completedMerge **myMergeData, x0, y0 int) {
 		md := allMerges[m.id]
 		if md == nil { // first merge
 			md = &myMergeData{
@@ -196,7 +197,7 @@ func mergeDataToSVG() (portIn func(*merge, *moveData, int, int)) {
 		}
 		if md.curSize >= m.size { // merge is comleted!
 			moveXTo(md, md.x0)
-			completedMerge = md
+			*completedMerge = md
 		}
 	}
 	return
@@ -218,14 +219,16 @@ func moveXTo(med *myMergeData, newX int) {
 	}
 }
 
-func splitDataToSVG(s *split, sf *svgFlow, lsr *svgRect, x0, y0 int) (int, int) {
-	x0, y0 = shapesToSVG(s.shapes, sf, x0, y0)
-	if lsr != nil {
-		if lsr.Y+lsr.Height < y0 {
-			lsr.Height = y0 - lsr.Y
+func splitDataToSVG() (portIn func(*split, *svgFlow, *svgRect, *int, *int)) {
+	portIn = func(s *split, sf *svgFlow, lsr *svgRect, px *int, py *int) {
+		*px, *py = shapesToSVG(s.shapes, sf, *px, *py)
+		if lsr != nil {
+			if lsr.Y+lsr.Height < *py {
+				lsr.Height = *py - lsr.Y
+			}
 		}
 	}
-	return x0, y0
+	return
 }
 
 func arrowDataToSVG() (portIn func(*arrow, *svgFlow, *int, *int, *moveData)) {
@@ -304,12 +307,12 @@ func addDstPort(a *arrow, sts []*svgText, x, y int) ([]*svgText, int) {
 	if !a.hasDstOp {
 		if a.dstPort != "" { // text after the arrow
 			sts = append(sts, &svgText{
-				X: x + 1, Y: y + 6,
+				X: x + 3, Y: y + 6,
 				Width: len(a.dstPort)*12 - 2,
 				Text:  a.dstPort,
 			})
 		}
-		x += 12 * len(a.dstPort)
+		x += 3 + 12*len(a.dstPort)
 	} else if a.dstPort != "" { // text under the arrow
 		sts = append(sts, &svgText{
 			X: x - len(a.dstPort)*12 - 12, Y: y + 20,
@@ -344,7 +347,7 @@ func opDataToSVG() (portIn func(*op, *svgFlow, *myMergeData, *int, *int, *int, *
 		if completedMerge != nil {
 			x0 = completedMerge.x0
 			y0 = completedMerge.y0
-			*py = y0
+			*py0 = y0
 			opH = max(opH, completedMerge.yn-y0)
 			completedMerge = nil
 		}
@@ -450,6 +453,7 @@ func main() {
 	adts = arrowDataToSVG()
 	odts = opDataToSVG()
 	mdts = mergeDataToSVG()
+	sdts = splitDataToSVG()
 	svgflow := flowDataToSVG(flowData)
 
 	// compile and execute template
