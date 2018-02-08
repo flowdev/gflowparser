@@ -117,10 +117,10 @@ type moveData struct {
 }
 
 var (
-	allMerges      = make(map[string]*myMergeData)
 	completedMerge *myMergeData
 	adts           func(*arrow, *svgFlow, *int, *int, *moveData)
 	odts           func(*op, *svgFlow, *myMergeData, *int, *int, *int, **svgRect)
+	mdts           func(*merge, *moveData, int, int)
 )
 
 func flowDataToSVG(f *flow) *svgFlow {
@@ -160,7 +160,7 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 				mod = nil
 				lsr = nil
 			case *merge:
-				mergeDataToSVG(s, mod, x, y0)
+				mdts(s, mod, x, y)
 				mod = nil
 				lsr = nil
 			default:
@@ -173,28 +173,33 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 	}
 	return xmax, ymax
 }
-func mergeDataToSVG(m *merge, mod *moveData, x0, y0 int) {
-	md := allMerges[m.id]
-	if md == nil { // first merge
-		md = &myMergeData{
-			x0:       x0,
-			y0:       y0,
-			yn:       mod.yn,
-			curSize:  1,
-			moveData: []*moveData{mod},
+
+func mergeDataToSVG() (portIn func(*merge, *moveData, int, int)) {
+	allMerges := make(map[string]*myMergeData)
+	portIn = func(m *merge, mod *moveData, x0, y0 int) {
+		md := allMerges[m.id]
+		if md == nil { // first merge
+			md = &myMergeData{
+				x0:       x0,
+				y0:       y0,
+				yn:       mod.yn,
+				curSize:  1,
+				moveData: []*moveData{mod},
+			}
+			allMerges[m.id] = md
+		} else { // additional merge
+			md.x0 = max(md.x0, x0)
+			md.y0 = min(md.y0, y0)
+			md.yn = max(md.yn, mod.yn)
+			md.curSize++
+			md.moveData = append(md.moveData, mod)
 		}
-		allMerges[m.id] = md
-	} else { // additional merge
-		md.x0 = max(md.x0, x0)
-		md.y0 = min(md.y0, y0)
-		md.yn = max(md.yn, mod.yn)
-		md.curSize++
-		md.moveData = append(md.moveData, mod)
+		if md.curSize >= m.size { // merge is comleted!
+			moveXTo(md, md.x0)
+			completedMerge = md
+		}
 	}
-	if md.curSize >= m.size { // merge is comleted!
-		moveXTo(md, md.x0)
-		completedMerge = md
-	}
+	return
 }
 func moveXTo(med *myMergeData, newX int) {
 	for _, mod := range med.moveData {
@@ -444,6 +449,7 @@ func fillDimensions(f *fill) (width int, height int) {
 func main() {
 	adts = arrowDataToSVG()
 	odts = opDataToSVG()
+	mdts = mergeDataToSVG()
 	svgflow := flowDataToSVG(flowData)
 
 	// compile and execute template
