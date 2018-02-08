@@ -113,11 +113,13 @@ type moveData struct {
 	arrow       *svgArrow
 	dataText    *svgText
 	dstPortText *svgText
+	yn          int
 }
 
 var (
 	allMerges      = make(map[string]*myMergeData)
 	completedMerge *myMergeData
+	adts           func(*arrow, *svgFlow, *int, *int, *moveData)
 )
 
 func flowDataToSVG(f *flow) *svgFlow {
@@ -130,11 +132,11 @@ func flowDataToSVG(f *flow) *svgFlow {
 	x, y := shapesToSVG(f.shapes, sf, 2, 0)
 
 	sf.TotalWidth = x + 2
-	sf.TotalHeight = y
+	sf.TotalHeight = y + 3
 	return sf
 }
 func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
-	var y, xmax, ymax int
+	var xmax, ymax int
 	var mod *moveData
 	var lsr *svgRect
 
@@ -142,9 +144,11 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 		x := x0
 		lsr = nil
 		for _, is := range ss {
+			y := y0
 			switch s := is.(type) {
 			case *arrow:
-				x, y, mod = arrowDataToSVG(s, sf, x, y0)
+				mod = &moveData{}
+				adts(s, sf, &x, &y, mod)
 				lsr = nil
 			case *op:
 				y0, x, y, lsr = opDataToSVG(s, sf, x, y0)
@@ -154,7 +158,7 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 				mod = nil
 				lsr = nil
 			case *merge:
-				mergeDataToSVG(s, mod, x, y0, y)
+				mergeDataToSVG(s, mod, x, y0)
 				mod = nil
 				lsr = nil
 			default:
@@ -167,13 +171,13 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 	}
 	return xmax, ymax
 }
-func mergeDataToSVG(m *merge, mod *moveData, x0, y0, yn int) {
+func mergeDataToSVG(m *merge, mod *moveData, x0, y0 int) {
 	md := allMerges[m.id]
 	if md == nil { // first merge
 		md = &myMergeData{
 			x0:       x0,
 			y0:       y0,
-			yn:       yn,
+			yn:       mod.yn,
 			curSize:  1,
 			moveData: []*moveData{mod},
 		}
@@ -181,7 +185,7 @@ func mergeDataToSVG(m *merge, mod *moveData, x0, y0, yn int) {
 	} else { // additional merge
 		md.x0 = max(md.x0, x0)
 		md.y0 = min(md.y0, y0)
-		md.yn = max(md.yn, yn)
+		md.yn = max(md.yn, mod.yn)
 		md.curSize++
 		md.moveData = append(md.moveData, mod)
 	}
@@ -217,50 +221,54 @@ func splitDataToSVG(s *split, sf *svgFlow, lsr *svgRect, x0, y0 int) (int, int) 
 	return x0, y0
 }
 
-func arrowDataToSVG(a *arrow, sf *svgFlow, x0, y0 int) (int, int, *moveData) {
-	var dstPortText, dataText *svgText
-	x := x0
-	y := y0 + 24
-	portLen := 0 // length in chars NOT pixels
+func arrowDataToSVG() (portIn func(*arrow, *svgFlow, *int, *int, *moveData)) {
+	portIn = func(a *arrow, sf *svgFlow, px *int, py *int, mod *moveData) {
+		var dstPortText, dataText *svgText
+		x := *px
+		y := *py + 24
+		portLen := 0 // length in chars NOT pixels
 
-	sf.Texts, x, portLen = addSrcPort(a, sf.Texts, x, y)
+		sf.Texts, x, portLen = addSrcPort(a, sf.Texts, x, y)
 
-	if a.hasDstOp {
-		portLen += len(a.dstPort)
-	}
-	width := max(
-		portLen+2,
-		len(a.dataType)+2,
-	)*12 + 6 + // 6 so the source port text isn't glued to the op
-		12 // last 12 is for tip of arrow
-
-	if a.dataType != "" {
-		dataText = &svgText{
-			X: x + ((width-12)-len(a.dataType)*12)/2, Y: y - 8,
-			Width: len(a.dataType) * 12,
-			Text:  a.dataType,
+		if a.hasDstOp {
+			portLen += len(a.dstPort)
 		}
-		sf.Texts = append(sf.Texts, dataText)
-	}
+		width := max(
+			portLen+2,
+			len(a.dataType)+2,
+		)*12 + 6 + // 6 so the source port text isn't glued to the op
+			12 // last 12 is for tip of arrow
 
-	sf.Arrows = append(sf.Arrows, &svgArrow{
-		X1: x, Y1: y,
-		X2: x + width, Y2: y,
-		XTip1: x + width - 8, YTip1: y - 8,
-		XTip2: x + width - 8, YTip2: y + 8,
-	})
-	x += width
+		if a.dataType != "" {
+			dataText = &svgText{
+				X: x + ((width-12)-len(a.dataType)*12)/2, Y: y - 8,
+				Width: len(a.dataType) * 12,
+				Text:  a.dataType,
+			}
+			sf.Texts = append(sf.Texts, dataText)
+		}
 
-	sf.Texts, x = addDstPort(a, sf.Texts, x, y)
-	if a.dstPort != "" {
-		dstPortText = sf.Texts[len(sf.Texts)-1]
-	}
+		sf.Arrows = append(sf.Arrows, &svgArrow{
+			X1: x, Y1: y,
+			X2: x + width, Y2: y,
+			XTip1: x + width - 8, YTip1: y - 8,
+			XTip2: x + width - 8, YTip2: y + 8,
+		})
+		x += width
 
-	return x, y + 36, &moveData{
-		arrow:       sf.Arrows[len(sf.Arrows)-1],
-		dstPortText: dstPortText,
-		dataText:    dataText,
+		sf.Texts, x = addDstPort(a, sf.Texts, x, y)
+		if a.dstPort != "" {
+			dstPortText = sf.Texts[len(sf.Texts)-1]
+		}
+
+		*px = x
+		*py = y + 36
+		mod.arrow = sf.Arrows[len(sf.Arrows)-1]
+		mod.dstPortText = dstPortText
+		mod.dataText = dataText
+		mod.yn = y + 24
 	}
+	return
 }
 func addSrcPort(a *arrow, sts []*svgText, x, y int) ([]*svgText, int, int) {
 	portLen := 0
@@ -318,7 +326,7 @@ func opDataToSVG(op *op, sf *svgFlow, x0, y0 int) (int, int, int, *svgRect) {
 	if completedMerge != nil {
 		x0 = completedMerge.x0
 		y0 = completedMerge.y0
-		opH = max(opH, completedMerge.yn-completedMerge.y0)
+		opH = max(opH, completedMerge.yn-y0)
 		completedMerge = nil
 	}
 	y, xn, yn = outerOpToSVG(op.main, opW, opH, sf, x0, y0)
@@ -415,6 +423,7 @@ func fillDimensions(f *fill) (width int, height int) {
 }
 
 func main() {
+	adts = arrowDataToSVG()
 	svgflow := flowDataToSVG(flowData)
 
 	// compile and execute template

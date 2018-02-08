@@ -48,7 +48,7 @@ var flowData = &flow{
 						},
 					}, {
 						&arrow{
-							dataType: "(op, *svgFlow, *x, *y, *svgMainRect)",
+							dataType: "(op, *svgFlow, *y0, *x, *y, *svgMainRect)",
 							hasSrcOp: true, srcPort: "opOut",
 							hasDstOp: true, dstPort: "in",
 						},
