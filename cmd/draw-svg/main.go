@@ -119,7 +119,7 @@ type moveData struct {
 var (
 	completedMerge *myMergeData
 	adts           func(*arrow, *svgFlow, *int, *int, *moveData)
-	odts           func(*op, *svgFlow, *myMergeData, *int, *int, *int, **svgRect)
+	odts           func(*op, *svgFlow, *myMergeData, *svgRect, *int, *int, *int)
 	mdts           func(*merge, *moveData, **myMergeData, int, int)
 	sdts           func(*split, *svgFlow, *svgRect, *int, *int)
 )
@@ -153,7 +153,8 @@ func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
 				adts(s, sf, &x, &y, mod)
 				lsr = nil
 			case *op:
-				odts(s, sf, completedMerge, &y0, &x, &y, &lsr)
+				lsr = &svgRect{}
+				odts(s, sf, completedMerge, lsr, &y0, &x, &y)
 				completedMerge = nil
 				mod = nil
 			case *split:
@@ -323,13 +324,13 @@ func addDstPort(a *arrow, sts []*svgText, x, y int) ([]*svgText, int) {
 	return sts, x
 }
 
-func opDataToSVG() (portIn func(*op, *svgFlow, *myMergeData, *int, *int, *int, **svgRect)) {
+func opDataToSVG() (portIn func(*op, *svgFlow, *myMergeData, *svgRect, *int, *int, *int)) {
 	portIn = func(
 		op *op,
 		sf *svgFlow,
 		completedMerge *myMergeData,
+		lsr *svgRect,
 		py0, px, py *int,
-		lsr **svgRect,
 	) {
 		var y, xn, yn int
 		x0 := *px
@@ -352,8 +353,7 @@ func opDataToSVG() (portIn func(*op, *svgFlow, *myMergeData, *int, *int, *int, *
 			completedMerge = nil
 		}
 
-		y, xn, yn = outerOpToSVG(op.main, opW, opH, sf, x0, y0)
-		*lsr = sf.Rects[len(sf.Rects)-1]
+		y, xn, yn = outerOpToSVG(op.main, opW, opH, sf, lsr, x0, y0)
 		for _, f := range op.fills {
 			y = fillDataToSVG(f, xn-x0, sf, x0, y)
 		}
@@ -369,18 +369,19 @@ func textDimensions(r *rect) (width int, height int) {
 	return
 }
 
-func outerOpToSVG(r *rect, w int, h int, sf *svgFlow, x0, y0 int,
+func outerOpToSVG(
+	r *rect, w int, h int, sf *svgFlow, svgMainRect *svgRect, x0, y0 int,
 ) (y02 int, xn int, yn int) {
 	x := x0
 	y := y0 + 6
 	h0 := len(r.text)*24 + 6*2
 
-	sf.Rects = append(sf.Rects, &svgRect{
-		X: x, Y: y,
-		Width:  w,
-		Height: h,
-		IsFill: false,
-	})
+	svgMainRect.X = x
+	svgMainRect.Y = y
+	svgMainRect.Width = w
+	svgMainRect.Height = h
+	svgMainRect.IsFill = false
+	sf.Rects = append(sf.Rects, svgMainRect)
 
 	y += 6
 	for _, t := range r.text {

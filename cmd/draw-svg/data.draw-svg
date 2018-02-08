@@ -48,7 +48,7 @@ var flowData = &flow{
 						},
 					}, {
 						&arrow{
-							dataType: "(op, *svgFlow, *y0, *x, *y, *svgMainRect)",
+							dataType: "(op, *svgFlow, completedMerge, *y0, *x, *y, *svgMainRect)",
 							hasSrcOp: true, srcPort: "opOut",
 							hasDstOp: true, dstPort: "in",
 						},
@@ -59,18 +59,18 @@ var flowData = &flow{
 						},
 					}, {
 						&arrow{
-							dataType: "(merge, moveData, x, y, yn)",
+							dataType: "(merge, moveData, *completedMerge, x, y)",
 							hasSrcOp: true, srcPort: "mergeOut",
 							hasDstOp: true, dstPort: "in",
 						},
 						&op{
 							main: &rect{
-								text: []string{"mergeDataToSVG", "[GLOBALS]"},
+								text: []string{"mergeDataToSVG"},
 							},
 						},
 					}, {
 						&arrow{
-							dataType: "(merge, moveData, x, y, yn)",
+							dataType: "(split, *svgFlow, *svgMainRect, *x, *y)",
 							hasSrcOp: true, srcPort: "splitOut",
 							hasDstOp: true, dstPort: "in",
 						},
