@@ -4,13 +4,35 @@ var flowData = &flow{
 	shapes: [][]interface{}{
 		{
 			&arrow{
-				dataType: "(shapes, *svgFlow, *x, *y)",
+				dataType: "flowData",
 				hasSrcOp: false, srcPort: "in",
 				hasDstOp: true, dstPort: "in",
 			},
-			&merge{
-				id:   "shapesToSVG",
-				size: 2,
+			&op{
+				main: &rect{
+					text: []string{"flowDataToSVGOp", "[synchronous]"},
+				},
+			},
+			&split{
+				shapes: [][]interface{}{
+					{
+						&arrow{
+							dataType: "(shapes, *svgFlow, *x, *y)",
+							hasSrcOp: true, srcPort: "shapesOut",
+							hasDstOp: true, dstPort: "in",
+						},
+						&merge{
+							id:   "shapesToSVG",
+							size: 2,
+						},
+					}, {
+						&arrow{
+							dataType: "svgFlow",
+							hasSrcOp: true, srcPort: "out",
+							hasDstOp: false, dstPort: "out",
+						},
+					},
+				},
 			},
 		}, {
 			&arrow{
@@ -31,12 +53,6 @@ var flowData = &flow{
 				shapes: [][]interface{}{
 					{
 						&arrow{
-							dataType: "(svgFlow, xmax, ymax)",
-							hasSrcOp: true, srcPort: "out",
-							hasDstOp: false, dstPort: "out",
-						},
-					}, {
-						&arrow{
 							dataType: "(arrow, *svgFlow, *x, *y, *moveData)",
 							hasSrcOp: true, srcPort: "arrowOut",
 							hasDstOp: true, dstPort: "in",
@@ -45,6 +61,10 @@ var flowData = &flow{
 							main: &rect{
 								text: []string{"arrowDataToSVG"},
 							},
+						},
+						&arrow{
+							hasSrcOp: true, srcPort: "",
+							hasDstOp: false, dstPort: "RETURN",
 						},
 					}, {
 						&arrow{
@@ -57,6 +77,10 @@ var flowData = &flow{
 								text: []string{"opDataToSVG"},
 							},
 						},
+						&arrow{
+							hasSrcOp: true, srcPort: "",
+							hasDstOp: false, dstPort: "RETURN",
+						},
 					}, {
 						&arrow{
 							dataType: "(merge, moveData, *completedMerge, x, y)",
@@ -67,6 +91,10 @@ var flowData = &flow{
 							main: &rect{
 								text: []string{"mergeDataToSVG"},
 							},
+						},
+						&arrow{
+							hasSrcOp: true, srcPort: "",
+							hasDstOp: false, dstPort: "RETURN",
 						},
 					}, {
 						&arrow{
@@ -79,10 +107,26 @@ var flowData = &flow{
 								text: []string{"splitDataToSVG", "[synchronous]"},
 							},
 						},
+						&split{
+							shapes: [][]interface{}{
+								{
+									&arrow{
+										dataType: "(shapes, *svgFlow, *x, *y)",
+										hasSrcOp: true, srcPort: "out",
+										hasDstOp: false, dstPort: "...backTo 'shapesToSVG'",
+									},
+								}, {
+									&arrow{
+										hasSrcOp: true, srcPort: "",
+										hasDstOp: false, dstPort: "RETURN",
+									},
+								},
+							},
+						},
+					}, {
 						&arrow{
-							dataType: "(shapes, *svgFlow, *x, *y)",
-							hasSrcOp: true, srcPort: "out",
-							hasDstOp: false, dstPort: "...backTo 'shapesToSVG'",
+							hasSrcOp: true, srcPort: "",
+							hasDstOp: false, dstPort: "RETURN",
 						},
 					},
 				},

@@ -116,64 +116,87 @@ type moveData struct {
 	yn          int
 }
 
-var (
-	completedMerge *myMergeData
-	adts           func(*arrow, *svgFlow, *int, *int, *moveData)
-	odts           func(*op, *svgFlow, *myMergeData, *svgRect, *int, *int, *int)
-	mdts           func(*merge, *moveData, **myMergeData, int, int)
-	sdts           func(*split, *svgFlow, *svgRect, *int, *int)
-)
-
-func flowDataToSVG(f *flow) *svgFlow {
-	sf := &svgFlow{
-		Arrows: make([]*svgArrow, 0, len(f.shapes)),
-		Rects:  make([]*svgRect, 0, len(f.shapes)),
-		Lines:  make([]*svgLine, 0, 64),
-		Texts:  make([]*svgText, 0, 64),
-	}
-	x, y := shapesToSVG(f.shapes, sf, 2, 0)
-
-	sf.TotalWidth = x + 2
-	sf.TotalHeight = y + 3
-	return sf
+func flowDataToSVGFlow(portOut func(*svgFlow)) (portIn func(*flow)) {
+	adts := arrowDataToSVG()
+	odts := opDataToSVG()
+	mdts := mergeDataToSVG()
+	sdts, setShapesOut := splitDataToSVG()
+	sts := shapesToSVG(adts, odts, mdts, sdts)
+	setShapesOut(sts)
+	fdts := flowDataToSVGOp(portOut, sts)
+	return fdts
 }
-func shapesToSVG(shapes [][]interface{}, sf *svgFlow, x0, y0 int) (int, int) {
-	var xmax, ymax int
-	var mod *moveData
-	var lsr *svgRect
 
-	for _, ss := range shapes {
-		x := x0
-		lsr = nil
-		for _, is := range ss {
-			y := y0
-			switch s := is.(type) {
-			case *arrow:
-				mod = &moveData{}
-				adts(s, sf, &x, &y, mod)
-				lsr = nil
-			case *op:
-				lsr = &svgRect{}
-				odts(s, sf, completedMerge, lsr, &y0, &x, &y)
-				completedMerge = nil
-				mod = nil
-			case *split:
-				sdts(s, sf, lsr, &x, &y)
-				mod = nil
-				lsr = nil
-			case *merge:
-				mdts(s, mod, &completedMerge, x, y)
-				mod = nil
-				lsr = nil
-			default:
-				panic(fmt.Sprintf("unsupported type: %T", is))
-			}
-			ymax = max(ymax, y)
+func flowDataToSVGOp(
+	portOut func(*svgFlow),
+	portShapesOut func([][]interface{}, *svgFlow, *int, *int),
+) (portIn func(*flow)) {
+	portIn = func(f *flow) {
+		x := 2
+		y := 1 // we rarely need space at the top
+		sf := &svgFlow{
+			Arrows: make([]*svgArrow, 0, len(f.shapes)),
+			Rects:  make([]*svgRect, 0, len(f.shapes)),
+			Lines:  make([]*svgLine, 0, 64),
+			Texts:  make([]*svgText, 0, 64),
 		}
-		xmax = max(xmax, x)
-		y0 = ymax + 5
+		portShapesOut(f.shapes, sf, &x, &y)
+		sf.TotalWidth = x + 2
+		sf.TotalHeight = y + 3
+		portOut(sf)
 	}
-	return xmax, ymax
+	return
+}
+
+func shapesToSVG(
+	portArrowOut func(*arrow, *svgFlow, *int, *int, *moveData),
+	portOpOut func(*op, *svgFlow, *myMergeData, *svgRect, *int, *int, *int),
+	portMergeOut func(*merge, *moveData, **myMergeData, int, int),
+	portSplitOut func(*split, *svgFlow, *svgRect, *int, *int),
+) (portIn func([][]interface{}, *svgFlow, *int, *int)) {
+	var completedMerge *myMergeData
+	portIn = func(shapes [][]interface{}, sf *svgFlow, px, py *int) {
+		var xmax, ymax int
+		var mod *moveData
+		var lsr *svgRect
+		y0 := *py
+
+		for _, ss := range shapes {
+			x := *px
+			lsr = nil
+			for _, is := range ss {
+				y := y0
+				switch s := is.(type) {
+				case *arrow:
+					mod = &moveData{}
+					portArrowOut(s, sf, &x, &y, mod)
+					lsr = nil
+				case *op:
+					lsr = &svgRect{}
+					portOpOut(s, sf, completedMerge, lsr, &y0, &x, &y)
+					completedMerge = nil
+					mod = nil
+				case *split:
+					portSplitOut(s, sf, lsr, &x, &y)
+					mod = nil
+					lsr = nil
+				case *merge:
+					portMergeOut(s, mod, &completedMerge, x, y)
+					mod = nil
+					lsr = nil
+				default:
+					panic(fmt.Sprintf("unsupported type: %T", is))
+				}
+
+				ymax = max(ymax, y)
+			}
+			xmax = max(xmax, x)
+			y0 = ymax + 5
+		}
+		*px = xmax
+		*py = ymax
+	}
+	return
 }
 
 func mergeDataToSVG() (portIn func(*merge, *moveData, **myMergeData, int, int)) {
@@ -220,14 +243,21 @@ func moveXTo(med *myMergeData, newX int) {
 	}
 }
 
-func splitDataToSVG() (portIn func(*split, *svgFlow, *svgRect, *int, *int)) {
+func splitDataToSVG() (
+	portIn func(*split, *svgFlow, *svgRect, *int, *int),
+	setPortOut func(func([][]interface{}, *svgFlow, *int, *int)),
+) {
+	var portOut func([][]interface{}, *svgFlow, *int, *int)
 	portIn = func(s *split, sf *svgFlow, lsr *svgRect, px *int, py *int) {
-		*px, *py = shapesToSVG(s.shapes, sf, *px, *py)
+		portOut(s.shapes, sf, px, py)
 		if lsr != nil {
 			if lsr.Y+lsr.Height < *py {
 				lsr.Height = *py - lsr.Y
 			}
 		}
+	}
+	setPortOut = func(po func([][]interface{}, *svgFlow, *int, *int)) {
+		portOut = po
 	}
 	return
 }
@@ -451,15 +481,13 @@ func fillDimensions(f *fill) (width int, height int) {
 }
 
 func main() {
-	adts = arrowDataToSVG()
-	odts = opDataToSVG()
-	mdts = mergeDataToSVG()
-	sdts = splitDataToSVG()
-	svgflow := flowDataToSVG(flowData)
+	var svgFlw *svgFlow
+	flow := flowDataToSVGFlow(func(sf *svgFlow) { svgFlw = sf })
+	flow(flowData)
 
 	// compile and execute template
 	t := template.Must(template.New("diagram").Parse(svgDiagram))
-	err := t.Execute(os.Stdout, svgflow)
+	err := t.Execute(os.Stdout, svgFlw)
 	if err != nil {
 		log.Println("executing template:", err)
 	}
