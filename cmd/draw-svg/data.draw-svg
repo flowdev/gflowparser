@@ -1,132 +1,134 @@
 package main
 
-var flowData = &flow{
-	shapes: [][]interface{}{
+import "github.com/flowdev/gflowparser/svg"
+
+var flowData = &svg.Flow{
+	Shapes: [][]interface{}{
 		{
-			&arrow{
-				dataType: "flowData",
-				hasSrcOp: false, srcPort: "in",
-				hasDstOp: true, dstPort: "in",
+			&svg.Arrow{
+				DataType: "flowData",
+				HasSrcOp: false, SrcPort: "in",
+				HasDstOp: true, DstPort: "in",
 			},
-			&op{
-				main: &rect{
-					text: []string{"flowDataToSVGOp", "[synchronous]"},
+			&svg.Op{
+				Main: &svg.Rect{
+					Text: []string{"flowDataToSVGOp", "[synchronous]"},
 				},
 			},
-			&split{
-				shapes: [][]interface{}{
+			&svg.Split{
+				Shapes: [][]interface{}{
 					{
-						&arrow{
-							dataType: "(shapes, *svgFlow, *x, *y)",
-							hasSrcOp: true, srcPort: "shapesOut",
-							hasDstOp: true, dstPort: "in",
+						&svg.Arrow{
+							DataType: "(shapes, *svgFlow, *x, *y)",
+							HasSrcOp: true, SrcPort: "shapesOut",
+							HasDstOp: true, DstPort: "in",
 						},
-						&merge{
-							id:   "shapesToSVG",
-							size: 2,
+						&svg.Merge{
+							ID:   "shapesToSVG",
+							Size: 2,
 						},
 					}, {
-						&arrow{
-							dataType: "svgFlow",
-							hasSrcOp: true, srcPort: "out",
-							hasDstOp: false, dstPort: "out",
+						&svg.Arrow{
+							DataType: "svgFlow",
+							HasSrcOp: true, SrcPort: "out",
+							HasDstOp: false, DstPort: "out",
 						},
 					},
 				},
 			},
 		}, {
-			&arrow{
-				hasSrcOp: false, srcPort: "...backFrom 'splitDataToSVG'",
-				hasDstOp: true, dstPort: "in",
+			&svg.Arrow{
+				HasSrcOp: false, SrcPort: "...backFrom 'splitDataToSVG'",
+				HasDstOp: true, DstPort: "in",
 			},
-			&merge{
-				id:   "shapesToSVG",
-				size: 2,
+			&svg.Merge{
+				ID:   "shapesToSVG",
+				Size: 2,
 			},
 		}, {
-			&op{
-				main: &rect{
-					text: []string{"shapesToSVG", "[synchronous]"},
+			&svg.Op{
+				Main: &svg.Rect{
+					Text: []string{"shapesToSVG", "[synchronous]"},
 				},
 			},
-			&split{
-				shapes: [][]interface{}{
+			&svg.Split{
+				Shapes: [][]interface{}{
 					{
-						&arrow{
-							dataType: "(arrow, *svgFlow, *x, *y, *moveData)",
-							hasSrcOp: true, srcPort: "arrowOut",
-							hasDstOp: true, dstPort: "in",
+						&svg.Arrow{
+							DataType: "(arrow, *svgFlow, *x, *y, *moveData)",
+							HasSrcOp: true, SrcPort: "arrowOut",
+							HasDstOp: true, DstPort: "in",
 						},
-						&op{
-							main: &rect{
-								text: []string{"arrowDataToSVG"},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"arrowDataToSVG"},
 							},
 						},
-						&arrow{
-							hasSrcOp: true, srcPort: "",
-							hasDstOp: false, dstPort: "RETURN",
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "",
+							HasDstOp: false, DstPort: "RETURN",
 						},
 					}, {
-						&arrow{
-							dataType: "(op, *svgFlow, completedMerge, *svgMainRect, *y0, *x, *y)",
-							hasSrcOp: true, srcPort: "opOut",
-							hasDstOp: true, dstPort: "in",
+						&svg.Arrow{
+							DataType: "(op, *svgFlow, completedMerge, *svgMainRect, *y0, *x, *y)",
+							HasSrcOp: true, SrcPort: "opOut",
+							HasDstOp: true, DstPort: "in",
 						},
-						&op{
-							main: &rect{
-								text: []string{"opDataToSVG"},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"opDataToSVG"},
 							},
 						},
-						&arrow{
-							hasSrcOp: true, srcPort: "",
-							hasDstOp: false, dstPort: "RETURN",
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "",
+							HasDstOp: false, DstPort: "RETURN",
 						},
 					}, {
-						&arrow{
-							dataType: "(merge, moveData, *completedMerge, x, y)",
-							hasSrcOp: true, srcPort: "mergeOut",
-							hasDstOp: true, dstPort: "in",
+						&svg.Arrow{
+							DataType: "(merge, moveData, *completedMerge, x, y)",
+							HasSrcOp: true, SrcPort: "mergeOut",
+							HasDstOp: true, DstPort: "in",
 						},
-						&op{
-							main: &rect{
-								text: []string{"mergeDataToSVG"},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"mergeDataToSVG"},
 							},
 						},
-						&arrow{
-							hasSrcOp: true, srcPort: "",
-							hasDstOp: false, dstPort: "RETURN",
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "",
+							HasDstOp: false, DstPort: "RETURN",
 						},
 					}, {
-						&arrow{
-							dataType: "(split, *svgFlow, *svgMainRect, *x, *y)",
-							hasSrcOp: true, srcPort: "splitOut",
-							hasDstOp: true, dstPort: "in",
+						&svg.Arrow{
+							DataType: "(split, *svgFlow, *svgMainRect, *x, *y)",
+							HasSrcOp: true, SrcPort: "splitOut",
+							HasDstOp: true, DstPort: "in",
 						},
-						&op{
-							main: &rect{
-								text: []string{"splitDataToSVG", "[synchronous]"},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"splitDataToSVG", "[synchronous]"},
 							},
 						},
-						&split{
-							shapes: [][]interface{}{
+						&svg.Split{
+							Shapes: [][]interface{}{
 								{
-									&arrow{
-										dataType: "(shapes, *svgFlow, *x, *y)",
-										hasSrcOp: true, srcPort: "out",
-										hasDstOp: false, dstPort: "...backTo 'shapesToSVG'",
+									&svg.Arrow{
+										DataType: "(shapes, *svgFlow, *x, *y)",
+										HasSrcOp: true, SrcPort: "out",
+										HasDstOp: false, DstPort: "...backTo 'shapesToSVG'",
 									},
 								}, {
-									&arrow{
-										hasSrcOp: true, srcPort: "",
-										hasDstOp: false, dstPort: "RETURN",
+									&svg.Arrow{
+										HasSrcOp: true, SrcPort: "",
+										HasDstOp: false, DstPort: "RETURN",
 									},
 								},
 							},
 						},
 					}, {
-						&arrow{
-							hasSrcOp: true, srcPort: "",
-							hasDstOp: false, dstPort: "RETURN",
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "",
+							HasDstOp: false, DstPort: "RETURN",
 						},
 					},
 				},
