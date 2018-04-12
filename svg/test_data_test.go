@@ -25,7 +25,7 @@ var BigTestFlowData = &Flow{
 							Main: &Rect{
 								Text: []string{"do"},
 							},
-							Fills: []*Fill{
+							Plugins: []*Plugin{
 								{
 									Title: "semantics:",
 									Rects: []*Rect{
@@ -102,7 +102,7 @@ var BigTestFlowData = &Flow{
 							Main: &Rect{
 								Text: []string{"megaParser", "(MegaParser)"},
 							},
-							Fills: []*Fill{
+							Plugins: []*Plugin{
 								{
 									Title: "semantics:",
 									Rects: []*Rect{

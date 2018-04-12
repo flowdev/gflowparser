@@ -16,7 +16,7 @@ const svgDiagram = `<?xml version="1.0" ?>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="{{.XTip2}}" y1="{{.YTip2}}" x2="{{.X2}}" y2="{{.Y2}}"/>
 {{end}}
 {{- range .Rects}}
-{{- if .IsFill}}
+{{- if .IsPlugin}}
 	<rect fill="rgb(32,224,32)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="{{.Width}}" height="{{.Height}}" x="{{.X}}" y="{{.Y}}"/>
 {{- else}}
 	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="{{.Width}}" height="{{.Height}}" x="{{.X}}" y="{{.Y}}" rx="10" ry="10"/>
@@ -46,16 +46,16 @@ type Rect struct {
 	Text []string
 }
 
-// Fill is a helper operation that is used inside a proper operation.
-type Fill struct {
+// Plugin is a helper operation that is used inside a proper operation.
+type Plugin struct {
 	Title string
 	Rects []*Rect
 }
 
-// Op holds all data to describe a single operation including possible fills.
+// Op holds all data to describe a single operation including possible plugins.
 type Op struct {
-	Main  *Rect
-	Fills []*Fill
+	Main    *Rect
+	Plugins []*Plugin
 }
 
 // Split contains data for multiple paths/arrows originating from a single Op.
@@ -77,10 +77,10 @@ type svgArrow struct {
 }
 
 type svgRect struct {
-	X, Y   int
-	Width  int
-	Height int
-	IsFill bool
+	X, Y     int
+	Width    int
+	Height   int
+	IsPlugin bool
 }
 
 type svgLine struct {
@@ -129,7 +129,8 @@ var tmpl = template.Must(template.New("diagram").Parse(svgDiagram))
 // If the flow data isn't valid or the SVG diagram can't be created with its
 // template, an error is returned.
 func FromFlowData(f *Flow) ([]byte, error) {
-	err := validateFlowData(f)
+	var err error
+	f, err = validateFlowData(f)
 	if err != nil {
 		return nil, err
 	}
@@ -139,26 +140,26 @@ func FromFlowData(f *Flow) ([]byte, error) {
 	return svgFlowToBytes(sf)
 }
 
-func validateFlowData(f *Flow) error {
+func validateFlowData(f *Flow) (*Flow, error) {
 	if f == nil || len(f.Shapes) <= 0 {
-		return fmt.Errorf("flow is empty")
+		return nil, fmt.Errorf("flow is empty")
 	}
 	for i, row := range f.Shapes {
 		if len(row) <= 0 {
-			return fmt.Errorf("flow row (index: %d) is empty", i)
+			return nil, fmt.Errorf("flow row (index: %d) is empty", i)
 		}
 		for j, ishape := range row {
 			switch ishape.(type) {
 			case *Arrow, *Op, *Split, *Merge:
 				break
 			default:
-				return fmt.Errorf(
+				return nil, fmt.Errorf(
 					"unsupported shape type %T at row index %d and column index %d",
 					ishape, i, j)
 			}
 		}
 	}
-	return nil
+	return f, nil
 }
 
 func svgFlowToBytes(sf *svgFlow) ([]byte, error) {
@@ -197,10 +198,10 @@ var completedMerge *myMergeData
 
 func shapesToSVG(
 	shapes [][]interface{}, sf *svgFlow, x0 int, y0 int,
-	fillArrowDataToSVG func(*Arrow, *svgFlow, int, int) (*svgFlow, int, int, *moveData),
-	fillOpDataToSVG func(*Op, *svgFlow, *myMergeData, int, int) (*svgFlow, *svgRect, int, int, int),
-	fillSplitDataToSVG func(*Split, *svgFlow, *svgRect, int, int) (*svgFlow, int, int),
-	fillMergeDataToSVG func(*Merge, *moveData, int, int) *myMergeData,
+	pluginArrowDataToSVG func(*Arrow, *svgFlow, int, int) (*svgFlow, int, int, *moveData),
+	pluginOpDataToSVG func(*Op, *svgFlow, *myMergeData, int, int) (*svgFlow, *svgRect, int, int, int),
+	pluginSplitDataToSVG func(*Split, *svgFlow, *svgRect, int, int) (*svgFlow, int, int),
+	pluginMergeDataToSVG func(*Merge, *moveData, int, int) *myMergeData,
 ) (nsf *svgFlow, xn, yn int) {
 	var xmax, ymax int
 	var mod *moveData
@@ -213,16 +214,16 @@ func shapesToSVG(
 			y := y0
 			switch s := is.(type) {
 			case *Arrow:
-				sf, x, y, mod = fillArrowDataToSVG(s, sf, x, y)
+				sf, x, y, mod = pluginArrowDataToSVG(s, sf, x, y)
 				lsr = nil
 			case *Op:
-				sf, lsr, y0, x, y = fillOpDataToSVG(s, sf, completedMerge, x, y0)
+				sf, lsr, y0, x, y = pluginOpDataToSVG(s, sf, completedMerge, x, y0)
 				completedMerge = nil
 			case *Split:
-				sf, x, y = fillSplitDataToSVG(s, sf, lsr, x, y)
+				sf, x, y = pluginSplitDataToSVG(s, sf, lsr, x, y)
 				lsr = nil
 			case *Merge:
-				completedMerge = fillMergeDataToSVG(s, mod, x, y)
+				completedMerge = pluginMergeDataToSVG(s, mod, x, y)
 				mod = nil
 			default:
 				panic(fmt.Sprintf("unsupported type: %T", is))
@@ -403,7 +404,7 @@ func opDataToSVG(
 	opW, opH := textDimensions(op.Main)
 	opW += 2 * 12
 	opH += 6 + 10
-	for _, f := range op.Fills {
+	for _, f := range op.Plugins {
 		w, l := fillDimensions(f)
 		opH += l
 		opW = max(opW, w)
@@ -417,7 +418,7 @@ func opDataToSVG(
 	}
 
 	lsr, y, xn, yn = outerOpToSVG(op.Main, opW, opH, sf, x0, y0)
-	for _, f := range op.Fills {
+	for _, f := range op.Plugins {
 		y = fillDataToSVG(f, xn-x0, sf, x0, y)
 	}
 
@@ -438,7 +439,7 @@ func outerOpToSVG(
 	svgMainRect = &svgRect{
 		X: x, Y: y,
 		Width: w, Height: h,
-		IsFill: false,
+		IsPlugin: false,
 	}
 	sf.Rects = append(sf.Rects, svgMainRect)
 
@@ -455,7 +456,7 @@ func outerOpToSVG(
 	return svgMainRect, y0 + 6 + h0, x + w, y0 + h + 2*6
 }
 func fillDataToSVG(
-	f *Fill,
+	f *Plugin,
 	width int,
 	sf *svgFlow,
 	x0, y0 int,
@@ -490,14 +491,14 @@ func fillDataToSVG(
 	y += 3
 	sf.Rects = append(sf.Rects, &svgRect{
 		X: x0, Y: y0,
-		Width:  width,
-		Height: y - y0,
-		IsFill: true,
+		Width:    width,
+		Height:   y - y0,
+		IsPlugin: true,
 	})
 
 	return y
 }
-func fillDimensions(f *Fill) (width int, height int) {
+func fillDimensions(f *Plugin) (width int, height int) {
 	height = 24 + 2*3             // title text and padding
 	width = len(f.Title)*12 + 2*6 // title text and padding
 	for _, r := range f.Rects {
