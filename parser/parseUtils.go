@@ -6,130 +6,212 @@
 package parser
 
 import (
-	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 )
 
-// Utility functions needed because gparselib doesn't know about our MainData:
-
-func getParseData(dat interface{}) *gparselib.ParseData {
-	md := dat.(*data.MainData)
-	return md.ParseData
-}
-func setParseData(dat interface{}, subData *gparselib.ParseData) interface{} {
-	md := dat.(*data.MainData)
-	md.ParseData = subData
-	return md
-}
-
-// ParseSmallIdent parses an identifier that starts with a lower case character
+// ParseNameIdent parses an identifier that starts with a lower case character
 // (a - z). Potentially followed by more valid identifier characters
 // (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
 //
 // flow:
-//     (MainData)-> p:gparselib.ParseRegexp[semantics: TextSemantic] ->
+//     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
 //
 // Details:
-//  - [MainData](../data/data.md#maindata)
+//  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-func ParseSmallIdent(portOut func(interface{})) (portIn func(interface{})) {
-	ptIn, err := gparselib.ParseRegexp(
-		portOut, TextSemantic,
-		getParseData, setParseData,
-		`[a-z][a-zA-Z0-9]*`,
-	)
-	if err != nil {
-		panic(err)
-	}
-	return ptIn
+type ParseNameIdent gparselib.ParseRegexp
+
+// NewParseNameIdent creates a new parser for the given regular expression.
+// If the regular expression is invalid an error is returned.
+func NewParseNameIdent() (*ParseNameIdent, error) {
+	p, err := gparselib.NewParseRegexp(`^[a-z][a-zA-Z0-9]*`)
+	return (*ParseNameIdent)(p), err
 }
 
-// ParseBigIdent parses an identifier that starts with an upper case character
-// (A - Z) followed by at least one other valid identifier character
+// In is the input port of the ParseNameIdent operation.
+func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
+}
+
+// ParsePackageIdent parses an identifier that starts with a lower case character
+// (a - z). Potentially followed by more valid lower case identifier characters
+// (a - z or 0 - 9).  The semantic result is the parsed text.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
+//
+// Details:
+//  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
+//  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
+//  - [TextSemantic](./parseUtils.md#textsemantic)
+type ParsePackageIdent gparselib.ParseRegexp
+
+// NewParsePackageIdent creates a new parser for the given regular expression.
+// If the regular expression is invalid an error is returned.
+func NewParsePackageIdent() (*ParsePackageIdent, error) {
+	p, err := gparselib.NewParseRegexp(`^[a-z][a-z0-9]*`)
+	return (*ParsePackageIdent)(p), err
+}
+
+// In is the input port of the ParsePackageIdent operation.
+func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
+}
+
+// ParseLocalTypeIdent parses an identifier that starts with an upper case character
+// (A - Z). Potentially followed by more valid identifier characters
 // (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
 //
 // flow:
-//   MainData->p(gparselib.ParseRegexp)->
-//   p MainData=> (TextSemantic) => p
-func ParseBigIdent(portOut func(interface{})) (portIn func(interface{})) {
-	ptIn, err := gparselib.ParseRegexp(
-		portOut, TextSemantic,
-		getParseData, setParseData,
-		`[A-Z][a-zA-Z0-9]+`,
-	)
+//     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
+//
+// Details:
+//  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
+//  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
+//  - [TextSemantic](./parseUtils.md#textsemantic)
+type ParseLocalTypeIdent gparselib.ParseRegexp
+
+// NewParseLocalTypeIdent creates a new parser for the given regular expression.
+// If the regular expression is invalid an error is returned.
+func NewParseLocalTypeIdent() (*ParseLocalTypeIdent, error) {
+	p, err := gparselib.NewParseRegexp(`^[A-Z][a-zA-Z0-9]*`)
+	return (*ParseLocalTypeIdent)(p), err
+}
+
+// In is the input port of the ParseLocalTypeIdent operation.
+func (p *ParseLocalTypeIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
+}
+
+// ParseType parses a type declaration including optional package.
+// The semantic result is the optional package name and the local type name.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseAll []] -> out
+//
+// Details:
+type ParseType struct {
+	pLocalType *ParseLocalTypeIdent
+	pPack      *ParsePackageIdent
+}
+
+// TypeSemValue is the semantic representation of a type declaration.
+type TypeSemValue struct {
+	Package   string
+	LocalType string
+}
+
+// NewParseType creates a new parser for e type declaration.
+// If any regular expression used by the subparsers is invalid an error is
+// returned.
+func NewParseType() (*ParseType, error) {
+	pPack, err := NewParsePackageIdent()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return ptIn
+	pLType, err := NewParseLocalTypeIdent()
+	if err != nil {
+		return nil, err
+	}
+	return &ParseType{pPack: pPack, pLocalType: pLType}, nil
+}
+
+// In is the input port of the ParseType operation.
+func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pDot := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd2, ctx2, TextSemantic, `.`)
+	}
+	pAll1 := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAll(
+			pd2, ctx2,
+			[]gparselib.SubparserOp{p.pPack.In, pDot},
+			TextSemantic,
+		)
+	}
+	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseOptional(pd2, ctx2, pAll1, nil)
+	}
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{pOpt, p.pLocalType.In},
+		parseTypeSemantic,
+	)
+}
+func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pack := ""
+	if pd.SubResults[0].Value != nil {
+		optVals := (pd.SubResults[0].Value).([]interface{})
+		pack = (optVals[0]).(string)
+	}
+	pd.Result.Value = &TypeSemValue{
+		Package:   pack,
+		LocalType: pd.SubResults[1].Text,
+	}
+	pd.SubResults = nil
+	return pd, ctx
 }
 
 // ParseOptSpc parses optional space but no newline.
 // The semantic result is the parsed text.
-func ParseOptSpc(portOut func(interface{})) (portIn func(interface{})) {
-	pSpc := func(portOut func(interface{})) (portIn func(interface{})) {
-		return gparselib.ParseSpace(
-			portOut, nil,
-			getParseData, setParseData,
-			false,
-		)
+func ParseOptSpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseSpace(pd2, ctx2, TextSemantic, false)
 	}
-	portIn = gparselib.ParseOptional(
-		portOut, pSpc, TextSemantic,
-		getParseData, setParseData,
-	)
-	return
+	return gparselib.ParseOptional(pd, ctx, pSpc, TextSemantic)
+}
+
+// ParseASpc parses space but no newline.
+// The semantic result is the parsed text.
+func ParseASpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	return gparselib.ParseSpace(pd, ctx, TextSemantic, false)
 }
 
 // ParseSpaceComment parses any amount of space (including newline) and line
 // (`//` ... <NL>) and block (`/*` ... `*/`) comments.  The semantic result is
 // the parsed text.
-func ParseSpaceComment(portOut func(interface{})) (portIn func(interface{})) {
-	pSpc := func(portOut func(interface{})) (portIn func(interface{})) {
-		return gparselib.ParseSpace(
-			portOut, nil,
-			getParseData, setParseData,
-			true,
-		)
+func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseSpace(pd2, ctx2, TextSemantic, true)
 	}
-	pLnCmnt := func(portOut func(interface{})) (portIn func(interface{})) {
-		ptIn, err := gparselib.ParseLineComment(
-			portOut, nil,
-			getParseData, setParseData,
-			`//`,
-		)
+	pLnCmnt := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		var err error
+		pd2, ctx2, err = gparselib.ParseLineComment(pd2, ctx2, TextSemantic, `//`)
 		if err != nil {
-			panic(err)
+			panic(err) // can only be a programming error!
 		}
-		return ptIn
+		return pd2, ctx2
 	}
-	pBlkCmnt := func(portOut func(interface{})) (portIn func(interface{})) {
-		ptIn, err := gparselib.ParseBlockComment(
-			portOut, nil,
-			getParseData, setParseData,
-			`/*`, `*/`,
-		)
+	pBlkCmnt := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		var err error
+		pd2, ctx2, err = gparselib.ParseBlockComment(pd2, ctx2, TextSemantic, `/*`, `*/`)
 		if err != nil {
-			panic(err)
+			panic(err) // can only be a programming error!
 		}
-		return ptIn
+		return pd2, ctx2
 	}
-	pAny := func(portOut func(interface{})) (portIn func(interface{})) {
+	pAny := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAny(
-			portOut, []gparselib.SubparserOp{pSpc, pLnCmnt, pBlkCmnt}, TextSemantic,
-			getParseData, setParseData,
+			pd2, ctx2,
+			[]gparselib.SubparserOp{pSpc, pLnCmnt, pBlkCmnt},
+			TextSemantic,
 		)
 	}
-	portIn = gparselib.ParseMulti0(
-		portOut, pAny, TextSemantic,
-		getParseData, setParseData,
-	)
-	return
+	return gparselib.ParseMulti0(pd, ctx, pAny, TextSemantic)
 }
 
 // ParseStatementEnd parses optional space and comments as defined by
 // `ParseSpaceComment` followed by a semicolon (`;`) and more optional space
 // and comments.  The semantic result is the parsed text.
+/*
 func ParseStatementEnd(portOut func(interface{})) (portIn func(interface{})) {
 	pSemicolon := func(portOut func(interface{})) (portIn func(interface{})) {
 		return gparselib.ParseLiteral(
@@ -146,15 +228,11 @@ func ParseStatementEnd(portOut func(interface{})) (portIn func(interface{})) {
 	)
 	return
 }
+*/
 
 // TextSemantic returns the successfully parsed text as semantic value.
-// Semantics are called by gparselib and thus have to accept the empty interface.
-func TextSemantic(portOut func(interface{})) (portIn func(interface{})) {
-	portIn = func(dat interface{}) {
-		md := dat.(*data.MainData)
-		md.ParseData.Result.Value = md.ParseData.Result.Text
-		md.ParseData.SubResults = nil
-		portOut(md)
-	}
-	return
+func TextSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pd.Result.Value = pd.Result.Text
+	pd.SubResults = nil
+	return pd, ctx
 }
