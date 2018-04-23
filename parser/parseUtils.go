@@ -59,9 +59,9 @@ func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gpars
 	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
 }
 
-// ParseLocalTypeIdent parses an identifier that starts with an upper case character
-// (A - Z). Potentially followed by more valid identifier characters
-// (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
+// ParseLocalTypeIdent parses an identifier that starts with a letter (A - Z or
+// a - z).  Potentially followed by more valid identifier characters (A - Z, a
+// - z or 0 - 9).  The semantic result is the parsed text.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -75,7 +75,7 @@ type ParseLocalTypeIdent gparselib.ParseRegexp
 // NewParseLocalTypeIdent creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
 func NewParseLocalTypeIdent() (*ParseLocalTypeIdent, error) {
-	p, err := gparselib.NewParseRegexp(`^[A-Z][a-zA-Z0-9]*`)
+	p, err := gparselib.NewParseRegexp(`^[A-Za-z][a-zA-Z0-9]*`)
 	return (*ParseLocalTypeIdent)(p), err
 }
 
