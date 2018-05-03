@@ -9,9 +9,9 @@ import (
 	"github.com/flowdev/gparselib"
 )
 
-// ParseNameIdent parses an identifier that starts with a lower case character
-// (a - z). Potentially followed by more valid identifier characters
-// (A - Z, a - z or 0 - 9).  The semantic result is the parsed text.
+// ParseNameIdent parses a name identifier.
+// Regexp: [a-z][a-zA-Z0-9]*
+// Semantic result: The the parsed text.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -34,9 +34,9 @@ func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparseli
 	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
 }
 
-// ParsePackageIdent parses an identifier that starts with a lower case character
-// (a - z). Potentially followed by more valid lower case identifier characters
-// (a - z or 0 - 9).  The semantic result is the parsed text.
+// ParsePackageIdent parses a package identifier.
+// Regexp: [a-z][a-z0-9]*\.
+// Semantic result: The the parsed text (without the dot).
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -50,18 +50,25 @@ type ParsePackageIdent gparselib.ParseRegexp
 // NewParsePackageIdent creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
 func NewParsePackageIdent() (*ParsePackageIdent, error) {
-	p, err := gparselib.NewParseRegexp(`^[a-z][a-z0-9]*`)
+	p, err := gparselib.NewParseRegexp(`^[a-z][a-z0-9]*\.`)
 	return (*ParsePackageIdent)(p), err
 }
 
 // In is the input port of the ParsePackageIdent operation.
-func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
+func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
+	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx,
+		func(pd *gparselib.ParseData, ctx interface{},
+		) (*gparselib.ParseData, interface{}) {
+			pd.Result.Value = pd.Result.Text[:len(pd.Result.Text)-1]
+			pd.SubResults = nil
+			return pd, ctx
+		})
 }
 
-// ParseLocalTypeIdent parses an identifier that starts with a letter (A - Z or
-// a - z).  Potentially followed by more valid identifier characters (A - Z, a
-// - z or 0 - 9).  The semantic result is the parsed text.
+// ParseLocalTypeIdent parses a local (without package) type identifier.
+// Regexp: [A-Za-z][a-zA-Z0-9]*
+// Semantic result: The the parsed text.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -119,21 +126,9 @@ func NewParseType() (*ParseType, error) {
 
 // In is the input port of the ParseType operation.
 func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pDot := func(pd2 *gparselib.ParseData, ctx2 interface{},
-	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd2, ctx2, TextSemantic, `.`)
-	}
-	pAll1 := func(pd2 *gparselib.ParseData, ctx2 interface{},
-	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(
-			pd2, ctx2,
-			[]gparselib.SubparserOp{p.pPack.In, pDot},
-			TextSemantic,
-		)
-	}
 	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
 	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, pAll1, nil)
+		return gparselib.ParseOptional(pd2, ctx2, p.pPack.In, nil)
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
@@ -142,14 +137,14 @@ func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	)
 }
 func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	val0 := pd.SubResults[0].Value
 	pack := ""
-	if pd.SubResults[0].Value != nil {
-		optVals := (pd.SubResults[0].Value).([]interface{})
-		pack = (optVals[0]).(string)
+	if val0 != nil {
+		pack = (val0).(string)
 	}
 	pd.Result.Value = &TypeSemValue{
 		Package:   pack,
-		LocalType: pd.SubResults[1].Text,
+		LocalType: (pd.SubResults[1].Value).(string),
 	}
 	pd.SubResults = nil
 	return pd, ctx
