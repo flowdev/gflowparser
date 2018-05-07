@@ -167,61 +167,6 @@ func TestParseLocalTypeIdent(t *testing.T) {
 	})
 }
 
-func TestParseType(t *testing.T) {
-	p, err := NewParseType()
-	if err != nil {
-		t.Fatalf("Unexpected error: %s", err)
-	}
-	runTests(t, p.In, []parseTestData{
-		{
-			givenName:        "empty",
-			givenContent:     ``,
-			expectedValue:    nil,
-			expectedErrCount: 1,
-		}, {
-			givenName:        "no match 1",
-			givenContent:     `1A`,
-			expectedValue:    nil,
-			expectedErrCount: 1,
-		}, {
-			givenName:        "no match 2",
-			givenContent:     `_A`,
-			expectedValue:    nil,
-			expectedErrCount: 1,
-		}, {
-			givenName:        "simple 1",
-			givenContent:     `Ab`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "Ab"},
-			expectedErrCount: 0,
-		}, {
-			givenName:        "simple 2",
-			givenContent:     `a0`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "a0"},
-			expectedErrCount: 0,
-		}, {
-			givenName:        "simple 3",
-			givenContent:     `Ab_cd`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "Ab"},
-			expectedErrCount: 0,
-		}, {
-			givenName:        "simple 4",
-			givenContent:     `abcDef`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "abcDef"},
-			expectedErrCount: 0,
-		}, {
-			givenName:        "complex 1",
-			givenContent:     `p.Ab1Cd`,
-			expectedValue:    &TypeSemValue{Package: "p", LocalType: "Ab1Cd"},
-			expectedErrCount: 0,
-		}, {
-			givenName:        "complex 2",
-			givenContent:     `pack.a1Bc_d`,
-			expectedValue:    &TypeSemValue{Package: "pack", LocalType: "a1Bc"},
-			expectedErrCount: 0,
-		},
-	})
-}
-
 func TestParseOptSpc(t *testing.T) {
 	runTests(t, ParseOptSpc, []parseTestData{
 		{

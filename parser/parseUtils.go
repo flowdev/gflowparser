@@ -93,65 +93,6 @@ func (p *ParseLocalTypeIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gpa
 	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
 }
 
-// ParseType parses a type declaration including optional package.
-// The semantic result is the optional package name and the local type name.
-//
-// flow:
-//     in (ParseData)-> [gparselib.ParseAll []] -> out
-//
-// Details:
-type ParseType struct {
-	pLocalType *ParseLocalTypeIdent
-	pPack      *ParsePackageIdent
-}
-
-// TypeSemValue is the semantic representation of a type declaration.
-type TypeSemValue struct {
-	Package   string
-	LocalType string
-}
-
-// NewParseType creates a new parser for e type declaration.
-// If any regular expression used by the subparsers is invalid an error is
-// returned.
-func NewParseType() (*ParseType, error) {
-	pPack, err := NewParsePackageIdent()
-	if err != nil {
-		return nil, err
-	}
-	pLType, err := NewParseLocalTypeIdent()
-	if err != nil {
-		return nil, err
-	}
-	return &ParseType{pPack: pPack, pLocalType: pLType}, nil
-}
-
-// In is the input port of the ParseType operation.
-func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
-	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, p.pPack.In, nil)
-	}
-	return gparselib.ParseAll(
-		pd, ctx,
-		[]gparselib.SubparserOp{pOpt, p.pLocalType.In},
-		parseTypeSemantic,
-	)
-}
-func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	val0 := pd.SubResults[0].Value
-	pack := ""
-	if val0 != nil {
-		pack = (val0).(string)
-	}
-	pd.Result.Value = &TypeSemValue{
-		Package:   pack,
-		LocalType: (pd.SubResults[1].Value).(string),
-	}
-	pd.SubResults = nil
-	return pd, ctx
-}
-
 // ParseOptSpc parses optional space but no newline.
 // The semantic result is the parsed text.
 func ParseOptSpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
