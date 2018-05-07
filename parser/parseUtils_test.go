@@ -167,18 +167,72 @@ func TestParseLocalTypeIdent(t *testing.T) {
 	})
 }
 
-/*
+func TestParseType(t *testing.T) {
+	p, err := NewParseType()
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	runTests(t, p.In, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match 1",
+			givenContent:     `1A`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match 2",
+			givenContent:     `_A`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "simple 1",
+			givenContent:     `Ab`,
+			expectedValue:    &TypeSemValue{Package: "", LocalType: "Ab"},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 2",
+			givenContent:     `a0`,
+			expectedValue:    &TypeSemValue{Package: "", LocalType: "a0"},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 3",
+			givenContent:     `Ab_cd`,
+			expectedValue:    &TypeSemValue{Package: "", LocalType: "Ab"},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 4",
+			givenContent:     `abcDef`,
+			expectedValue:    &TypeSemValue{Package: "", LocalType: "abcDef"},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "complex 1",
+			givenContent:     `p.Ab1Cd`,
+			expectedValue:    &TypeSemValue{Package: "p", LocalType: "Ab1Cd"},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "complex 2",
+			givenContent:     `pack.a1Bc_d`,
+			expectedValue:    &TypeSemValue{Package: "pack", LocalType: "a1Bc"},
+			expectedErrCount: 0,
+		},
+	})
+}
+
 func TestParseOptSpc(t *testing.T) {
 	runTests(t, ParseOptSpc, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
-			expectedValue:    "",
+			expectedValue:    nil,
 			expectedErrCount: 0,
 		}, {
 			givenName:        "no match",
 			givenContent:     `baaa`,
-			expectedValue:    "",
+			expectedValue:    nil,
 			expectedErrCount: 0,
 		}, {
 			givenName:        "simple 1",
@@ -203,49 +257,93 @@ func TestParseOptSpc(t *testing.T) {
 		},
 	})
 }
-*/
 
-//func TestParseSpaceComment(t *testing.T) {
-//	runTests(t, ParseSpaceComment, []parseTestData{
-//		{
-//			givenName:        "empty",
-//			givenContent:     ``,
-//			expectedValue:    "",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "no match",
-//			givenContent:     `baaa`,
-//			expectedValue:    "",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 1",
-//			givenContent:     " i",
-//			expectedValue:    " ",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 2",
-//			givenContent:     "\t0",
-//			expectedValue:    "\t",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 3",
-//			givenContent:     " /* bla */ _t",
-//			expectedValue:    " /* bla */ ",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 4",
-//			givenContent:     " // comment! \n lilalo",
-//			expectedValue:    " // comment! \n ",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "complex",
-//			givenContent:     " /* bla\n */ \t // com!\n \t \r\n/** blu */ _t",
-//			expectedValue:    " /* bla\n */ \t // com!\n \t \r\n/** blu */ ",
-//			expectedErrCount: 0,
-//		},
-//	})
-//}
-//
+func TestParseASpc(t *testing.T) {
+	runTests(t, ParseASpc, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match",
+			givenContent:     `baaa`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "simple 1",
+			givenContent:     ` i`,
+			expectedValue:    " ",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 2",
+			givenContent:     "\t0",
+			expectedValue:    "\t",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 3",
+			givenContent:     " \t _t",
+			expectedValue:    " \t ",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 4",
+			givenContent:     " \n ",
+			expectedValue:    " ",
+			expectedErrCount: 0,
+		},
+	})
+}
+
+func TestParseSpaceComment(t *testing.T) {
+	runTests(t, ParseSpaceComment, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    &SpaceCommentSemValue{Text: "", Newline: false},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "no match",
+			givenContent:     `baaa`,
+			expectedValue:    &SpaceCommentSemValue{Text: "", Newline: false},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 1",
+			givenContent:     " i",
+			expectedValue:    &SpaceCommentSemValue{Text: " ", Newline: false},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 2",
+			givenContent:     "\t0",
+			expectedValue:    &SpaceCommentSemValue{Text: "\t", Newline: false},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 3",
+			givenContent: " /* bla */ _t",
+			expectedValue: &SpaceCommentSemValue{
+				Text:    " /* bla */ ",
+				Newline: false,
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 4",
+			givenContent: " // comment! \n lilalo",
+			expectedValue: &SpaceCommentSemValue{
+				Text:    " // comment! \n ",
+				Newline: true,
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex",
+			givenContent: " /* bla\n */ \t // com!\n \t \r\n/** blu */ _t",
+			expectedValue: &SpaceCommentSemValue{
+				Text:    " /* bla\n */ \t // com!\n \t \r\n/** blu */ ",
+				Newline: true,
+			},
+			expectedErrCount: 0,
+		},
+	})
+}
+
 //func TestParseStatementEnd(t *testing.T) {
 //	runTests(t, ParseStatementEnd, []parseTestData{
 //		{

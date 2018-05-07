@@ -6,6 +6,8 @@
 package parser
 
 import (
+	"strings"
+
 	"github.com/flowdev/gparselib"
 )
 
@@ -166,9 +168,29 @@ func ParseASpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, 
 	return gparselib.ParseSpace(pd, ctx, TextSemantic, false)
 }
 
+// SpaceCommentSemValue is the semantic representation of space and comments.
+// It specifically informs whether a newline has been parsed.
+type SpaceCommentSemValue struct {
+	Text    string
+	Newline bool
+}
+
+const newLineRune = 10
+
+// spaceCommentSemantic returns the successfully parsed text as semantic value
+// plus a signal whether a newline has been parsed.
+func spaceCommentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	semVal := &SpaceCommentSemValue{Text: pd.Result.Text}
+	semVal.Newline = strings.ContainsRune(semVal.Text, newLineRune)
+	pd.Result.Value = semVal
+	pd.SubResults = nil
+	return pd, ctx
+}
+
 // ParseSpaceComment parses any amount of space (including newline) and line
-// (`//` ... <NL>) and block (`/*` ... `*/`) comments.  The semantic result is
-// the parsed text.
+// (`//` ... <NL>) and block (`/*` ... `*/`) comments.
+// The semantic result is the parsed text plus a signal whether a newline was
+// parsed.
 func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{},
 	) (*gparselib.ParseData, interface{}) {
@@ -200,7 +222,7 @@ func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 			TextSemantic,
 		)
 	}
-	return gparselib.ParseMulti0(pd, ctx, pAny, TextSemantic)
+	return gparselib.ParseMulti0(pd, ctx, pAny, spaceCommentSemantic)
 }
 
 // ParseStatementEnd parses optional space and comments as defined by
