@@ -70,7 +70,9 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 // The semantic result is the name and the type.
 //
 // flow:
-//     in (ParseData)-> [gparselib.ParseAll []] -> out
+//     in (ParseData)-> [pAll gparselib.ParseAll [ParseNameIdent, ParseASpc]] -> out
+//     in (ParseData)-> [pOpt gparselib.ParseOptional [pAll]] -> out
+//     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseType]] -> out
 //
 // Details:
 type ParseOpDecl struct {
@@ -101,6 +103,64 @@ func NewParseOpDecl() (*ParseOpDecl, error) {
 
 // In is the input port of the ParseOpDecl operation.
 func (p *ParseOpDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pAll := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAll(
+			pd, ctx,
+			[]gparselib.SubparserOp{p.pName.In, ParseASpc},
+			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+				pd2.Result.Value = pd2.SubResults[0].Value
+				pd2.SubResults = nil
+				return pd2, ctx
+			},
+		)
+	}
+	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
+	) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseOptional(pd2, ctx2, pAll, nil)
+	}
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{pOpt, p.pType.In},
+		parseOpDeclSemantic,
+	)
+}
+func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	val0 := pd.SubResults[0].Value
+	typeVal := (pd.SubResults[1].Value).(*TypeSemValue)
+	name := ""
+	if val0 != nil {
+		name = (val0).(string)
+	} else {
+		name = strings.ToLower(typeVal.LocalType[:1]) + typeVal.LocalType[1:]
+	}
+	pd.Result.Value = &OpDeclSemValue{
+		Name: name,
+		Type: typeVal,
+	}
+	pd.SubResults = nil
+	return pd, ctx
+}
+
+// ParseTypeList parses types separated by commas.
+// The semantic result is a slice of *TypeSemValue.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseAll []] -> out
+//
+// Details:
+type ParseTypeList ParseType
+
+// NewParseTypeList creates a new parser for a type list.
+// If any regular expression used by the subparsers is invalid an error is
+// returned.
+func NewParseTypeList() (*ParseTypeList, error) {
+	p, err := NewParseType()
+	return (*ParseTypeList)(p), err
+}
+
+// In is the input port of the ParseTypeList operation.
+func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
 	pAll := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
