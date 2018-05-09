@@ -63,7 +63,6 @@ func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{},
 		func(pd *gparselib.ParseData, ctx interface{},
 		) (*gparselib.ParseData, interface{}) {
 			pd.Result.Value = pd.Result.Text[:len(pd.Result.Text)-1]
-			pd.SubResults = nil
 			return pd, ctx
 		})
 }
@@ -124,7 +123,6 @@ func spaceCommentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 	semVal := &SpaceCommentSemValue{Text: pd.Result.Text}
 	semVal.Newline = strings.ContainsRune(semVal.Text, newLineRune)
 	pd.Result.Value = semVal
-	pd.SubResults = nil
 	return pd, ctx
 }
 
@@ -191,6 +189,5 @@ func ParseStatementEnd(portOut func(interface{})) (portIn func(interface{})) {
 // TextSemantic returns the successfully parsed text as semantic value.
 func TextSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pd.Result.Value = pd.Result.Text
-	pd.SubResults = nil
 	return pd, ctx
 }

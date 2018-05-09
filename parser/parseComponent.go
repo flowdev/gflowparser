@@ -62,7 +62,6 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 		Package:   pack,
 		LocalType: (pd.SubResults[1].Value).(string),
 	}
-	pd.SubResults = nil
 	return pd, ctx
 }
 
@@ -109,8 +108,7 @@ func (p *ParseOpDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 			[]gparselib.SubparserOp{p.pName.In, ParseASpc},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				pd2.Result.Value = pd2.SubResults[0].Value
-				pd2.SubResults = nil
-				return pd2, ctx
+				return pd2, ctx2
 			},
 		)
 	}
@@ -137,7 +135,6 @@ func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 		Name: name,
 		Type: typeVal,
 	}
-	pd.SubResults = nil
 	return pd, ctx
 }
 
@@ -161,40 +158,37 @@ func NewParseTypeList() (*ParseTypeList, error) {
 // In is the input port of the ParseTypeList operation.
 func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pAll := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pComma := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `,`)
+	}
+	pAdditionalType := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pName.In, ParseASpc},
+			[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.In},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = pd2.SubResults[0].Value
-				pd2.SubResults = nil
-				return pd2, ctx
+				pd2.Result.Value = pd2.SubResults[3].Value
+				return pd2, ctx2
 			},
 		)
 	}
-	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
-	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, pAll, nil)
+	pAdditionalTypes := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseMulti0(pd, ctx, pAdditionalType, nil)
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{pOpt, p.pType.In},
-		parseOpDeclSemantic,
+		[]gparselib.SubparserOp{p.In, pAdditionalTypes},
+		parseTypeListSemantic,
 	)
 }
-func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	val0 := pd.SubResults[0].Value
-	typeVal := (pd.SubResults[1].Value).(*TypeSemValue)
-	name := ""
-	if val0 != nil {
-		name = (val0).(string)
-	} else {
-		name = strings.ToLower(typeVal.LocalType[:1]) + typeVal.LocalType[1:]
+func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	firstType := pd.SubResults[0].Value
+	additionalTypes := (pd.SubResults[1].Value).([]interface{})
+	alltypes := make([](*TypeSemValue), len(additionalTypes)+1)
+	alltypes[0] = firstType.(*TypeSemValue)
+
+	for i, typ := range additionalTypes {
+		alltypes[i+1] = typ.(*TypeSemValue)
 	}
-	pd.Result.Value = &OpDeclSemValue{
-		Name: name,
-		Type: typeVal,
-	}
-	pd.SubResults = nil
+	pd.Result.Value = alltypes
 	return pd, ctx
 }
