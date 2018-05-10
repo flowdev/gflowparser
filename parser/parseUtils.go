@@ -13,7 +13,7 @@ import (
 
 // ParseNameIdent parses a name identifier.
 // Regexp: [a-z][a-zA-Z0-9]*
-// Semantic result: The the parsed text.
+// Semantic result: The parsed text.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -38,7 +38,7 @@ func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparseli
 
 // ParsePackageIdent parses a package identifier.
 // Regexp: [a-z][a-z0-9]*\.
-// Semantic result: The the parsed text (without the dot).
+// Semantic result: The parsed text (without the dot).
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -69,7 +69,7 @@ func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{},
 
 // ParseLocalTypeIdent parses a local (without package) type identifier.
 // Regexp: [A-Za-z][a-zA-Z0-9]*
-// Semantic result: The the parsed text.
+// Semantic result: The parsed text.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
@@ -93,7 +93,7 @@ func (p *ParseLocalTypeIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gpa
 }
 
 // ParseOptSpc parses optional space but no newline.
-// The semantic result is the parsed text.
+// Semantic result: The parsed text.
 func ParseOptSpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{},
 	) (*gparselib.ParseData, interface{}) {
@@ -103,7 +103,7 @@ func ParseOptSpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData
 }
 
 // ParseASpc parses space but no newline.
-// The semantic result is the parsed text.
+// Semantic result: The parsed text.
 func ParseASpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	return gparselib.ParseSpace(pd, ctx, TextSemantic, false)
 }
@@ -128,7 +128,7 @@ func spaceCommentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 
 // ParseSpaceComment parses any amount of space (including newline) and line
 // (`//` ... <NL>) and block (`/*` ... `*/`) comments.
-// The semantic result is the parsed text plus a signal whether a newline was
+// Semantic result: The parsed text plus a signal whether a newline was
 // parsed.
 func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{},

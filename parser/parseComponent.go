@@ -7,7 +7,7 @@ import (
 )
 
 // ParseType parses a type declaration including optional package.
-// The semantic result is the optional package name and the local type name.
+// Semantic result: The optional package name and the local type name.
 //
 // flow:
 //     in (ParseData)-> [pOpt gparselib.ParseOptional [subparser = ParsePackageIdent]] -> out
@@ -66,7 +66,7 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 }
 
 // ParseOpDecl parses an operation declaration.
-// The semantic result is the name and the type.
+// Semantic result: The name and the type.
 //
 // flow:
 //     in (ParseData)-> [pAll gparselib.ParseAll [ParseNameIdent, ParseASpc]] -> out
@@ -139,7 +139,7 @@ func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 }
 
 // ParseTypeList parses types separated by commas.
-// The semantic result is a slice of *TypeSemValue.
+// Semantic result: A slice of *TypeSemValue.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseAll []] -> out
@@ -196,4 +196,55 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	}
 	pd.Result.Value = alltypes
 	return pd, ctx
+}
+
+// ParseTitledTypes parses a name followed by the equals sign and types separated by commas.
+// Semantic result: The title and a slice of *TypeSemValue.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseAll []] -> out
+//
+// Details:
+type ParseTitledTypes struct {
+	pn  *ParseNameIdent
+	ptl *ParseTypeList
+}
+
+// TitledTypesSemValue is the semantic representation of titled types.
+type TitledTypesSemValue struct {
+	Title string
+	Types []*TypeSemValue
+}
+
+// NewParseTitledTypes creates a new parser for a titled type list.
+// If any regular expression used by the subparsers is invalid an error is
+// returned.
+func NewParseTitledTypes() (*ParseTitledTypes, error) {
+	pn, err := NewParseNameIdent()
+	if err != nil {
+		return nil, err
+	}
+	ptl, err := NewParseTypeList()
+	if err != nil {
+		return nil, err
+	}
+	return &ParseTitledTypes{pn: pn, ptl: ptl}, nil
+}
+
+// In is the input port of the ParseTypeList operation.
+func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
+	pEqual := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `=`)
+	}
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{p.pn.In, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.In},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			val0 := pd2.SubResults[0].Value
+			val4 := pd2.SubResults[4].Value
+			pd2.Result.Value = &TitledTypesSemValue{Title: val0.(string), Types: val4.([]*TypeSemValue)}
+			return pd2, ctx2
+		},
+	)
 }
