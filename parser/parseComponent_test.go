@@ -129,3 +129,61 @@ func TestParseOpDecl(t *testing.T) {
 		},
 	})
 }
+
+func TestParseTypeList(t *testing.T) {
+	p, err := NewParseTypeList()
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	runTests(t, p.In, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match 1",
+			givenContent:     `1A`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match 2",
+			givenContent:     `_A`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:    "simple 1",
+			givenContent: `A`,
+			expectedValue: []*TypeSemValue{
+				&TypeSemValue{LocalType: "A"},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 2",
+			givenContent: `a,b`,
+			expectedValue: []*TypeSemValue{
+				&TypeSemValue{LocalType: "a"},
+				&TypeSemValue{LocalType: "b"},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 3",
+			givenContent: `p.A , q.B`,
+			expectedValue: []*TypeSemValue{
+				&TypeSemValue{Package: "p", LocalType: "A"},
+				&TypeSemValue{Package: "q", LocalType: "B"},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex",
+			givenContent: "a, B \t \n, /* comment */ p.C, q.D",
+			expectedValue: []*TypeSemValue{
+				&TypeSemValue{LocalType: "a"},
+				&TypeSemValue{LocalType: "B"},
+				&TypeSemValue{Package: "p", LocalType: "C"},
+				&TypeSemValue{Package: "q", LocalType: "D"},
+			},
+			expectedErrCount: 0,
+		},
+	})
+}

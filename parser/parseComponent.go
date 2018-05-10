@@ -145,14 +145,19 @@ func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 //     in (ParseData)-> [gparselib.ParseAll []] -> out
 //
 // Details:
-type ParseTypeList ParseType
+type ParseTypeList struct {
+	pt *ParseType
+}
 
 // NewParseTypeList creates a new parser for a type list.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
 func NewParseTypeList() (*ParseTypeList, error) {
 	p, err := NewParseType()
-	return (*ParseTypeList)(p), err
+	if err != nil {
+		return nil, err
+	}
+	return &ParseTypeList{pt: p}, nil
 }
 
 // In is the input port of the ParseTypeList operation.
@@ -164,7 +169,7 @@ func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
 	pAdditionalType := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.In},
+			[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.pt.In},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				pd2.Result.Value = pd2.SubResults[3].Value
 				return pd2, ctx2
@@ -176,7 +181,7 @@ func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{p.In, pAdditionalTypes},
+		[]gparselib.SubparserOp{p.pt.In, pAdditionalTypes},
 		parseTypeListSemantic,
 	)
 }
