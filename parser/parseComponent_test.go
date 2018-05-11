@@ -260,3 +260,75 @@ func TestParseTitledTypes(t *testing.T) {
 		},
 	})
 }
+
+func TestParseTitledTypesList(t *testing.T) {
+	p, err := NewParseTitledTypesList()
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	runTests(t, p.In, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match",
+			givenContent:     `|a=b`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:    "simple 1",
+			givenContent: `a=A`,
+			expectedValue: []*TitledTypesSemValue{
+				&TitledTypesSemValue{
+					Title: "a",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "A"}},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 2",
+			givenContent: `a=b|c=D`,
+			expectedValue: []*TitledTypesSemValue{
+				&TitledTypesSemValue{
+					Title: "a",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+				},
+				&TitledTypesSemValue{
+					Title: "c",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 3",
+			givenContent: `a=b | c=D`,
+			expectedValue: []*TitledTypesSemValue{
+				&TitledTypesSemValue{
+					Title: "a",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+				},
+				&TitledTypesSemValue{
+					Title: "c",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex",
+			givenContent: "a=b \t \n| /* comment */ c=D",
+			expectedValue: []*TitledTypesSemValue{
+				&TitledTypesSemValue{
+					Title: "a",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+				},
+				&TitledTypesSemValue{
+					Title: "c",
+					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				},
+			},
+			expectedErrCount: 0,
+		},
+	})
+}

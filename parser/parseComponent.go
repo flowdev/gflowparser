@@ -10,8 +10,8 @@ import (
 // Semantic result: The optional package name and the local type name.
 //
 // flow:
-//     in (ParseData)-> [pOpt gparselib.ParseOptional [subparser = ParsePackageIdent]] -> out
-//     in (ParseData)-> [gparselib.ParseAll [subparser = pOpt, ParseLocalTypeIdent]] -> out
+//     in (ParseData)-> [pOpt gparselib.ParseOptional [ParsePackageIdent]] -> out
+//     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseLocalTypeIdent]] -> out
 //
 // Details:
 type ParseType struct {
@@ -142,7 +142,13 @@ func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 // Semantic result: A slice of *TypeSemValue.
 //
 // flow:
-//     in (ParseData)-> [gparselib.ParseAll []] -> out
+//     in (ParseData)-> [pAdditionalType gparselib.ParseAll
+//                          [ParseSpaceComment, ParseLiteral, ParseSpaceComment, ParseType]
+//                      ] -> out
+//     in (ParseData)-> [pAdditionalTypes gparselib.ParseMulti0 [pAdditionalType]] -> out
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ParseType, pAdditionalTypes]
+//                      ] -> out
 //
 // Details:
 type ParseTypeList struct {
@@ -202,7 +208,10 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 // Semantic result: The title and a slice of *TypeSemValue.
 //
 // flow:
-//     in (ParseData)-> [gparselib.ParseAll []] -> out
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
+//                            ParseSpaceComment, ParseTypeList                 ]
+//                      ] -> out
 //
 // Details:
 type ParseTitledTypes struct {
@@ -247,4 +256,74 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 			return pd2, ctx2
 		},
 	)
+}
+
+// ParseTitledTypesList parses TitledTypes separated by a pipe '|' character.
+// Semantic result: A slice of *TitledTypesSemValue.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
+//                            ParseSpaceComment, ParseTypeList                 ]
+//                      ] -> out
+//
+// Details:
+type ParseTitledTypesList struct {
+	ptt *ParseTitledTypes
+}
+
+// NewParseTitledTypesList creates a new parser for multiple titled type lists.
+// If any regular expression used by the subparsers is invalid an error is
+// returned.
+func NewParseTitledTypesList() (*ParseTitledTypesList, error) {
+	ptt, err := NewParseTitledTypes()
+	if err != nil {
+		return nil, err
+	}
+	return &ParseTitledTypesList{ptt: ptt}, nil
+}
+
+// In is the input port of the ParseTitledTypesList operation.
+//     in (ParseData)-> [pAdditionalList gparselib.ParseAll
+//                          [ParseSpaceComment, ParseLiteral, ParseSpaceComment, ParseTitledTypes]
+//                      ] -> out
+//     in (ParseData)-> [pAdditionalLists gparselib.ParseMulti0 [pAdditionalList]] -> out
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ParseTitledTypes, pAdditionalLists]
+//                      ] -> out
+func (p *ParseTitledTypesList) In(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
+	pBar := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `|`)
+	}
+	pAdditionalList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAll(
+			pd, ctx,
+			[]gparselib.SubparserOp{ParseSpaceComment, pBar, ParseSpaceComment, p.ptt.In},
+			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+				pd2.Result.Value = pd2.SubResults[3].Value
+				return pd2, ctx2
+			},
+		)
+	}
+	pAdditionalLists := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseMulti0(pd, ctx, pAdditionalList, nil)
+	}
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{p.ptt.In, pAdditionalLists},
+		parseTitledTypesListSemantic,
+	)
+}
+func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	firstList := pd.SubResults[0].Value
+	additionalLists := (pd.SubResults[1].Value).([]interface{})
+	alllists := make([](*TitledTypesSemValue), len(additionalLists)+1)
+	alllists[0] = firstList.(*TitledTypesSemValue)
+
+	for i, typ := range additionalLists {
+		alllists[i+1] = typ.(*TitledTypesSemValue)
+	}
+	pd.Result.Value = alllists
+	return pd, ctx
 }
