@@ -399,3 +399,77 @@ func TestParsePlugins(t *testing.T) {
 		},
 	})
 }
+
+func TestParseComponent(t *testing.T) {
+	p, err := NewParseComponent()
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	runTests(t, p.In, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match",
+			givenContent:     `[a [a]]`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:    "simple 1",
+			givenContent: `[a A]`,
+			expectedValue: &ComponentSemValue{
+				Decl: &OpDeclSemValue{
+					Name: "a", Type: &TypeSemValue{LocalType: "A"},
+				},
+				Plugins: nil,
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 2",
+			givenContent: `[a B[c]]`,
+			expectedValue: &ComponentSemValue{
+				Decl: &OpDeclSemValue{
+					Name: "a", Type: &TypeSemValue{LocalType: "B"},
+				},
+				Plugins: []*TitledTypesSemValue{
+					&TitledTypesSemValue{
+						Title: "",
+						Types: []*TypeSemValue{&TypeSemValue{LocalType: "c"}},
+					},
+				},
+			},
+		}, {
+			givenName:    "simple 3",
+			givenContent: `[ a B [c=D] ]`,
+			expectedValue: &ComponentSemValue{
+				Decl: &OpDeclSemValue{
+					Name: "a", Type: &TypeSemValue{LocalType: "B"},
+				},
+				Plugins: []*TitledTypesSemValue{
+					&TitledTypesSemValue{
+						Title: "c",
+						Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex",
+			givenContent: "[ \t \na B /* comment 1 */ [c=D] // comment 2\n ]",
+			expectedValue: &ComponentSemValue{
+				Decl: &OpDeclSemValue{
+					Name: "a", Type: &TypeSemValue{LocalType: "B"},
+				},
+				Plugins: []*TitledTypesSemValue{
+					&TitledTypesSemValue{
+						Title: "c",
+						Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		},
+	})
+}

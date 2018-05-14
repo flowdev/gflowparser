@@ -400,3 +400,85 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 
 	return pd, ctx
 }
+
+// ParseComponent parses a component including declaration and its plugins.
+// Semantic result: A *ComponentSemValue.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
+//                            ParseSpaceComment, ParseTypeList                 ]
+//                      ] -> out
+//
+// Details:
+type ParseComponent struct {
+	pod *ParseOpDecl
+	pp  *ParsePlugins
+}
+
+// ComponentSemValue is the semantic representation of a component.
+type ComponentSemValue struct {
+	Decl    *OpDeclSemValue
+	Plugins []*TitledTypesSemValue
+}
+
+// NewParseComponent creates a new parser for a complete component.
+// If any regular expression used by the subparsers is invalid an error is
+// returned.
+func NewParseComponent() (*ParseComponent, error) {
+	pod, err := NewParseOpDecl()
+	if err != nil {
+		return nil, err
+	}
+	pp, err := NewParsePlugins()
+	if err != nil {
+		return nil, err
+	}
+	return &ParseComponent{pod: pod, pp: pp}, nil
+}
+
+// In is the input port of the ParseComponent operation.
+//     in (ParseData)-> [pList gparselib.ParseAny
+//                          [ParseTitledTypesList, ParseTypeList]
+//                      ] -> out
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ ParseLiteral, ParseSpaceComment, pList,
+//                            ParseSpaceComment, ParseLiteral         ]
+//                      ] -> out
+func (p *ParseComponent) In(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
+	pPlugins := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAll(
+			pd, ctx,
+			[]gparselib.SubparserOp{ParseSpaceComment, p.pp.In},
+			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+				pd2.Result.Value = pd2.SubResults[1].Value
+				return pd2, ctx2
+			},
+		)
+	}
+	pOpt := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseOptional(pd, ctx, pPlugins, nil)
+	}
+	pOpen := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `[`)
+	}
+	pClose := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `]`)
+	}
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, p.pod.In, pOpt, ParseSpaceComment, pClose},
+		parseComponentSemantic,
+	)
+}
+func parseComponentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	semVal := &ComponentSemValue{
+		Decl: (pd.SubResults[2].Value).(*OpDeclSemValue),
+	}
+	if pd.SubResults[3].Value != nil {
+		semVal.Plugins = (pd.SubResults[3].Value).([]*TitledTypesSemValue)
+	}
+	pd.Result.Value = semVal
+	return pd, ctx
+}
