@@ -240,7 +240,7 @@ func NewParseTitledTypes() (*ParseTitledTypes, error) {
 	return &ParseTitledTypes{pn: pn, ptl: ptl}, nil
 }
 
-// In is the input port of the ParseTypeList operation.
+// In is the input port of the ParseTitledTypes operation.
 func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pEqual := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
@@ -325,5 +325,78 @@ func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gp
 		alllists[i+1] = typ.(*TitledTypesSemValue)
 	}
 	pd.Result.Value = alllists
+	return pd, ctx
+}
+
+// ParsePlugins parses the plugins of an operation starting with a '[' followed
+// by a TitledTypesList or a TypeList and a closing ']'.
+// Semantic result: A slice of *TitledTypesSemValue.
+//
+// flow:
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
+//                            ParseSpaceComment, ParseTypeList                 ]
+//                      ] -> out
+//
+// Details:
+type ParsePlugins struct {
+	pttl *ParseTitledTypesList
+	ptl  *ParseTypeList
+}
+
+// NewParsePlugins creates a new parser for the plugins of an operation.
+// If any regular expression used by the subparsers is invalid an error is
+// returned.
+func NewParsePlugins() (*ParsePlugins, error) {
+	pttl, err := NewParseTitledTypesList()
+	if err != nil {
+		return nil, err
+	}
+	ptl, err := NewParseTypeList()
+	if err != nil {
+		return nil, err
+	}
+	return &ParsePlugins{pttl: pttl, ptl: ptl}, nil
+}
+
+// In is the input port of the ParsePlugins operation.
+//     in (ParseData)-> [pList gparselib.ParseAny
+//                          [ParseTitledTypesList, ParseTypeList]
+//                      ] -> out
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ ParseLiteral, ParseSpaceComment, pList,
+//                            ParseSpaceComment, ParseLiteral         ]
+//                      ] -> out
+func (p *ParsePlugins) In(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
+	pList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAny(
+			pd, ctx,
+			[]gparselib.SubparserOp{p.pttl.In, p.ptl.In},
+			nil,
+		)
+	}
+	pOpen := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `[`)
+	}
+	pClose := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseLiteral(pd, ctx, nil, `]`)
+	}
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, pList, ParseSpaceComment, pClose},
+		parsePluginsSemantic,
+	)
+}
+func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	list := pd.SubResults[2].Value
+	if v, ok := list.([](*TypeSemValue)); ok {
+		pd.Result.Value = [](*TitledTypesSemValue){
+			&TitledTypesSemValue{Title: "", Types: v},
+		}
+	} else {
+		pd.Result.Value = list
+	}
+
 	return pd, ctx
 }
