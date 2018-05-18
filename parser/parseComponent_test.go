@@ -1,6 +1,10 @@
 package parser
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/flowdev/gflowparser/data"
+)
 
 func TestParseType(t *testing.T) {
 	p, err := NewParseType()
@@ -26,38 +30,38 @@ func TestParseType(t *testing.T) {
 		}, {
 			givenName:        "simple 1",
 			givenContent:     `Ab`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "Ab"},
+			expectedValue:    data.Type{Package: "", LocalType: "Ab"},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "simple 2",
 			givenContent:     `a0`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "a0"},
+			expectedValue:    data.Type{Package: "", LocalType: "a0"},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "simple 3",
 			givenContent:     `Ab_cd`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "Ab"},
+			expectedValue:    data.Type{Package: "", LocalType: "Ab"},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "simple 4",
 			givenContent:     `abcDef`,
-			expectedValue:    &TypeSemValue{Package: "", LocalType: "abcDef"},
+			expectedValue:    data.Type{Package: "", LocalType: "abcDef"},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "complex 1",
 			givenContent:     `p.Ab1Cd`,
-			expectedValue:    &TypeSemValue{Package: "p", LocalType: "Ab1Cd"},
+			expectedValue:    data.Type{Package: "p", LocalType: "Ab1Cd"},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "complex 2",
 			givenContent:     `pack.a1Bc_d`,
-			expectedValue:    &TypeSemValue{Package: "pack", LocalType: "a1Bc"},
+			expectedValue:    data.Type{Package: "pack", LocalType: "a1Bc"},
 			expectedErrCount: 0,
 		},
 	})
 }
 
-func TestParseOpDecl(t *testing.T) {
+func TestParseCompDecl(t *testing.T) {
 	p, err := NewParseOpDecl()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
@@ -81,49 +85,51 @@ func TestParseOpDecl(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `A`,
-			expectedValue: &OpDeclSemValue{
+			expectedValue: data.CompDecl{
 				Name: "a",
-				Type: &TypeSemValue{LocalType: "A"},
+				Type: data.Type{LocalType: "A"},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 2",
 			givenContent: `a0`,
-			expectedValue: &OpDeclSemValue{
-				Name: "a0",
-				Type: &TypeSemValue{LocalType: "a0"},
+			expectedValue: data.CompDecl{
+				Name:      "a0",
+				Type:      data.Type{LocalType: "a0"},
+				VagueType: true,
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: `p.Ab_cd`,
-			expectedValue: &OpDeclSemValue{
+			expectedValue: data.CompDecl{
 				Name: "ab",
-				Type: &TypeSemValue{Package: "p", LocalType: "Ab"},
+				Type: data.Type{Package: "p", LocalType: "Ab"},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 4",
 			givenContent: `abcDef`,
-			expectedValue: &OpDeclSemValue{
-				Name: "abcDef",
-				Type: &TypeSemValue{LocalType: "abcDef"},
+			expectedValue: data.CompDecl{
+				Name:      "abcDef",
+				Type:      data.Type{LocalType: "abcDef"},
+				VagueType: true,
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex 1",
 			givenContent: `n p.Ab1Cd`,
-			expectedValue: &OpDeclSemValue{
+			expectedValue: data.CompDecl{
 				Name: "n",
-				Type: &TypeSemValue{Package: "p", LocalType: "Ab1Cd"},
+				Type: data.Type{Package: "p", LocalType: "Ab1Cd"},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex 2",
 			givenContent: "nam \t pack.a1Bc_d",
-			expectedValue: &OpDeclSemValue{
+			expectedValue: data.CompDecl{
 				Name: "nam",
-				Type: &TypeSemValue{Package: "pack", LocalType: "a1Bc"},
+				Type: data.Type{Package: "pack", LocalType: "a1Bc"},
 			},
 			expectedErrCount: 0,
 		},
@@ -154,34 +160,34 @@ func TestParseTypeList(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `A`,
-			expectedValue: []*TypeSemValue{
-				&TypeSemValue{LocalType: "A"},
+			expectedValue: []data.Type{
+				data.Type{LocalType: "A"},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 2",
 			givenContent: `a,b`,
-			expectedValue: []*TypeSemValue{
-				&TypeSemValue{LocalType: "a"},
-				&TypeSemValue{LocalType: "b"},
+			expectedValue: []data.Type{
+				data.Type{LocalType: "a"},
+				data.Type{LocalType: "b"},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: `p.A , q.B`,
-			expectedValue: []*TypeSemValue{
-				&TypeSemValue{Package: "p", LocalType: "A"},
-				&TypeSemValue{Package: "q", LocalType: "B"},
+			expectedValue: []data.Type{
+				data.Type{Package: "p", LocalType: "A"},
+				data.Type{Package: "q", LocalType: "B"},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex",
 			givenContent: "a, B \t \n, /* comment */ p.C, q.D",
-			expectedValue: []*TypeSemValue{
-				&TypeSemValue{LocalType: "a"},
-				&TypeSemValue{LocalType: "B"},
-				&TypeSemValue{Package: "p", LocalType: "C"},
-				&TypeSemValue{Package: "q", LocalType: "D"},
+			expectedValue: []data.Type{
+				data.Type{LocalType: "a"},
+				data.Type{LocalType: "B"},
+				data.Type{Package: "p", LocalType: "C"},
+				data.Type{Package: "q", LocalType: "D"},
 			},
 			expectedErrCount: 0,
 		},
@@ -217,43 +223,43 @@ func TestParseTitledTypes(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `a=A`,
-			expectedValue: &TitledTypesSemValue{
-				Title: "a",
-				Types: []*TypeSemValue{
-					&TypeSemValue{LocalType: "A"},
+			expectedValue: data.NameNTypes{
+				Name: "a",
+				Types: []data.Type{
+					data.Type{LocalType: "A"},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 2",
 			givenContent: `a=b, C`,
-			expectedValue: &TitledTypesSemValue{
-				Title: "a",
-				Types: []*TypeSemValue{
-					&TypeSemValue{LocalType: "b"},
-					&TypeSemValue{LocalType: "C"},
+			expectedValue: data.NameNTypes{
+				Name: "a",
+				Types: []data.Type{
+					data.Type{LocalType: "b"},
+					data.Type{LocalType: "C"},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: `tiTle = p.A, q.B`,
-			expectedValue: &TitledTypesSemValue{
-				Title: "tiTle",
-				Types: []*TypeSemValue{
-					&TypeSemValue{Package: "p", LocalType: "A"},
-					&TypeSemValue{Package: "q", LocalType: "B"},
+			expectedValue: data.NameNTypes{
+				Name: "tiTle",
+				Types: []data.Type{
+					data.Type{Package: "p", LocalType: "A"},
+					data.Type{Package: "q", LocalType: "B"},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex",
 			givenContent: "t \t \n= /* comment */ p.C, q.D",
-			expectedValue: &TitledTypesSemValue{
-				Title: "t",
-				Types: []*TypeSemValue{
-					&TypeSemValue{Package: "p", LocalType: "C"},
-					&TypeSemValue{Package: "q", LocalType: "D"},
+			expectedValue: data.NameNTypes{
+				Name: "t",
+				Types: []data.Type{
+					data.Type{Package: "p", LocalType: "C"},
+					data.Type{Package: "q", LocalType: "D"},
 				},
 			},
 			expectedErrCount: 0,
@@ -280,52 +286,52 @@ func TestParseTitledTypesList(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `a=A`,
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "A"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "a",
+					Types: []data.Type{data.Type{LocalType: "A"}},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 2",
 			givenContent: `a=b|c=D`,
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "a",
+					Types: []data.Type{data.Type{LocalType: "b"}},
 				},
-				&TitledTypesSemValue{
-					Title: "c",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				data.NameNTypes{
+					Name:  "c",
+					Types: []data.Type{data.Type{LocalType: "D"}},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: `a=b | c=D`,
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "a",
+					Types: []data.Type{data.Type{LocalType: "b"}},
 				},
-				&TitledTypesSemValue{
-					Title: "c",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				data.NameNTypes{
+					Name:  "c",
+					Types: []data.Type{data.Type{LocalType: "D"}},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex",
 			givenContent: "a=b \t \n| /* comment */ c=D",
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "a",
+					Types: []data.Type{data.Type{LocalType: "b"}},
 				},
-				&TitledTypesSemValue{
-					Title: "c",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				data.NameNTypes{
+					Name:  "c",
+					Types: []data.Type{data.Type{LocalType: "D"}},
 				},
 			},
 			expectedErrCount: 0,
@@ -352,32 +358,32 @@ func TestParsePlugins(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `[a=A]`,
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "A"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "a",
+					Types: []data.Type{data.Type{LocalType: "A"}},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 2",
 			givenContent: `[a]`,
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "a"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "",
+					Types: []data.Type{data.Type{LocalType: "a"}},
 				},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: `[ a=b,D ]`,
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{
-						&TypeSemValue{LocalType: "b"},
-						&TypeSemValue{LocalType: "D"},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name: "a",
+					Types: []data.Type{
+						data.Type{LocalType: "b"},
+						data.Type{LocalType: "D"},
 					},
 				},
 			},
@@ -385,14 +391,14 @@ func TestParsePlugins(t *testing.T) {
 		}, {
 			givenName:    "complex",
 			givenContent: "[ \t \na=b|c=D /* comment */ ]",
-			expectedValue: []*TitledTypesSemValue{
-				&TitledTypesSemValue{
-					Title: "a",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "b"}},
+			expectedValue: []data.NameNTypes{
+				data.NameNTypes{
+					Name:  "a",
+					Types: []data.Type{data.Type{LocalType: "b"}},
 				},
-				&TitledTypesSemValue{
-					Title: "c",
-					Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				data.NameNTypes{
+					Name:  "c",
+					Types: []data.Type{data.Type{LocalType: "D"}},
 				},
 			},
 			expectedErrCount: 0,
@@ -419,9 +425,9 @@ func TestParseComponent(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `[a A]`,
-			expectedValue: &ComponentSemValue{
-				Decl: &OpDeclSemValue{
-					Name: "a", Type: &TypeSemValue{LocalType: "A"},
+			expectedValue: data.Component{
+				Decl: data.CompDecl{
+					Name: "a", Type: data.Type{LocalType: "A"},
 				},
 				Plugins: nil,
 			},
@@ -429,28 +435,28 @@ func TestParseComponent(t *testing.T) {
 		}, {
 			givenName:    "simple 2",
 			givenContent: `[a B[c]]`,
-			expectedValue: &ComponentSemValue{
-				Decl: &OpDeclSemValue{
-					Name: "a", Type: &TypeSemValue{LocalType: "B"},
+			expectedValue: data.Component{
+				Decl: data.CompDecl{
+					Name: "a", Type: data.Type{LocalType: "B"},
 				},
-				Plugins: []*TitledTypesSemValue{
-					&TitledTypesSemValue{
-						Title: "",
-						Types: []*TypeSemValue{&TypeSemValue{LocalType: "c"}},
+				Plugins: []data.NameNTypes{
+					data.NameNTypes{
+						Name:  "",
+						Types: []data.Type{data.Type{LocalType: "c"}},
 					},
 				},
 			},
 		}, {
 			givenName:    "simple 3",
 			givenContent: `[ a B [c=D] ]`,
-			expectedValue: &ComponentSemValue{
-				Decl: &OpDeclSemValue{
-					Name: "a", Type: &TypeSemValue{LocalType: "B"},
+			expectedValue: data.Component{
+				Decl: data.CompDecl{
+					Name: "a", Type: data.Type{LocalType: "B"},
 				},
-				Plugins: []*TitledTypesSemValue{
-					&TitledTypesSemValue{
-						Title: "c",
-						Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				Plugins: []data.NameNTypes{
+					data.NameNTypes{
+						Name:  "c",
+						Types: []data.Type{data.Type{LocalType: "D"}},
 					},
 				},
 			},
@@ -458,14 +464,14 @@ func TestParseComponent(t *testing.T) {
 		}, {
 			givenName:    "complex",
 			givenContent: "[ \t \na B /* comment 1 */ [c=D] // comment 2\n ]",
-			expectedValue: &ComponentSemValue{
-				Decl: &OpDeclSemValue{
-					Name: "a", Type: &TypeSemValue{LocalType: "B"},
+			expectedValue: data.Component{
+				Decl: data.CompDecl{
+					Name: "a", Type: data.Type{LocalType: "B"},
 				},
-				Plugins: []*TitledTypesSemValue{
-					&TitledTypesSemValue{
-						Title: "c",
-						Types: []*TypeSemValue{&TypeSemValue{LocalType: "D"}},
+				Plugins: []data.NameNTypes{
+					data.NameNTypes{
+						Name:  "c",
+						Types: []data.Type{data.Type{LocalType: "D"}},
 					},
 				},
 			},

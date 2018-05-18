@@ -2,14 +2,7 @@ package data
 
 import (
 	"strings"
-
-	"github.com/flowdev/gparselib"
 )
-
-type Version struct {
-	Political int
-	Major     int
-}
 
 type PortData struct {
 	Name     string
@@ -65,24 +58,27 @@ type Connection struct {
 	ToPort       *PortData
 }
 
-type Flow struct {
+// Component is the semantic representation of a component.
+type Component struct {
+	Decl    CompDecl
+	Plugins []NameNTypes
+}
+
+// NameNTypes is the semantic representation of a Name plus a list of types.
+type NameNTypes struct {
 	Name  string
-	Ops   []*Operation
-	Conns []*Connection
+	Types []Type
 }
 
-type FlowFile struct {
-	FileName string
-	Version  Version
-	Flows    []*Flow
+// CompDecl is the semantic representation of an operation declaration.
+type CompDecl struct {
+	Name      string
+	Type      Type
+	VagueType bool
 }
 
-type MainData struct {
-	ParseData       *gparselib.ParseData
-	FlowFile        *FlowFile
-	Horizontal      bool
-	SelectedFormats []string
-	CurrentFormat   string
-	OutputName      string
-	OutputContent   string
+// Type is the semantic representation of a type declaration.
+type Type struct {
+	Package   string
+	LocalType string
 }

@@ -3,6 +3,7 @@ package parser
 import (
 	"strings"
 
+	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 )
 
@@ -17,12 +18,6 @@ import (
 type ParseType struct {
 	pLocalType *ParseLocalTypeIdent
 	pPack      *ParsePackageIdent
-}
-
-// TypeSemValue is the semantic representation of a type declaration.
-type TypeSemValue struct {
-	Package   string
-	LocalType string
 }
 
 // NewParseType creates a new parser for a type declaration.
@@ -58,7 +53,7 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	if val0 != nil {
 		pack = (val0).(string)
 	}
-	pd.Result.Value = &TypeSemValue{
+	pd.Result.Value = data.Type{
 		Package:   pack,
 		LocalType: (pd.SubResults[1].Value).(string),
 	}
@@ -77,12 +72,6 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 type ParseOpDecl struct {
 	pName *ParseNameIdent
 	pType *ParseType
-}
-
-// OpDeclSemValue is the semantic representation of a type declaration.
-type OpDeclSemValue struct {
-	Name string
-	Type *TypeSemValue
 }
 
 // NewParseOpDecl creates a new parser for an operation declaration.
@@ -124,22 +113,23 @@ func (p *ParseOpDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 }
 func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	val0 := pd.SubResults[0].Value
-	typeVal := (pd.SubResults[1].Value).(*TypeSemValue)
+	typeVal := (pd.SubResults[1].Value).(data.Type)
 	name := ""
 	if val0 != nil {
 		name = (val0).(string)
 	} else {
 		name = strings.ToLower(typeVal.LocalType[:1]) + typeVal.LocalType[1:]
 	}
-	pd.Result.Value = &OpDeclSemValue{
-		Name: name,
-		Type: typeVal,
+	pd.Result.Value = data.CompDecl{
+		Name:      name,
+		Type:      typeVal,
+		VagueType: val0 == nil && name == typeVal.LocalType && typeVal.Package == "",
 	}
 	return pd, ctx
 }
 
 // ParseTypeList parses types separated by commas.
-// Semantic result: A slice of *TypeSemValue.
+// Semantic result: A slice of *data.Type.
 //
 // flow:
 //     in (ParseData)-> [pAdditionalType gparselib.ParseAll
@@ -194,18 +184,18 @@ func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
 func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	firstType := pd.SubResults[0].Value
 	additionalTypes := (pd.SubResults[1].Value).([]interface{})
-	alltypes := make([](*TypeSemValue), len(additionalTypes)+1)
-	alltypes[0] = firstType.(*TypeSemValue)
+	alltypes := make([](data.Type), len(additionalTypes)+1)
+	alltypes[0] = firstType.(data.Type)
 
 	for i, typ := range additionalTypes {
-		alltypes[i+1] = typ.(*TypeSemValue)
+		alltypes[i+1] = typ.(data.Type)
 	}
 	pd.Result.Value = alltypes
 	return pd, ctx
 }
 
 // ParseTitledTypes parses a name followed by the equals sign and types separated by commas.
-// Semantic result: The title and a slice of *TypeSemValue.
+// Semantic result: The title and a slice of *data.Type.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseAll
@@ -217,12 +207,6 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 type ParseTitledTypes struct {
 	pn  *ParseNameIdent
 	ptl *ParseTypeList
-}
-
-// TitledTypesSemValue is the semantic representation of titled types.
-type TitledTypesSemValue struct {
-	Title string
-	Types []*TypeSemValue
 }
 
 // NewParseTitledTypes creates a new parser for a titled type list.
@@ -252,14 +236,14 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 			val0 := pd2.SubResults[0].Value
 			val4 := pd2.SubResults[4].Value
-			pd2.Result.Value = &TitledTypesSemValue{Title: val0.(string), Types: val4.([]*TypeSemValue)}
+			pd2.Result.Value = data.NameNTypes{Name: val0.(string), Types: val4.([]data.Type)}
 			return pd2, ctx2
 		},
 	)
 }
 
 // ParseTitledTypesList parses TitledTypes separated by a pipe '|' character.
-// Semantic result: A slice of *TitledTypesSemValue.
+// Semantic result: A slice of data.NameNTypes.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseAll
@@ -318,11 +302,11 @@ func (p *ParseTitledTypesList) In(pd *gparselib.ParseData, ctx interface{},
 func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	firstList := pd.SubResults[0].Value
 	additionalLists := (pd.SubResults[1].Value).([]interface{})
-	alllists := make([](*TitledTypesSemValue), len(additionalLists)+1)
-	alllists[0] = firstList.(*TitledTypesSemValue)
+	alllists := make([](data.NameNTypes), len(additionalLists)+1)
+	alllists[0] = firstList.(data.NameNTypes)
 
 	for i, typ := range additionalLists {
-		alllists[i+1] = typ.(*TitledTypesSemValue)
+		alllists[i+1] = typ.(data.NameNTypes)
 	}
 	pd.Result.Value = alllists
 	return pd, ctx
@@ -330,7 +314,7 @@ func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gp
 
 // ParsePlugins parses the plugins of an operation starting with a '[' followed
 // by a TitledTypesList or a TypeList and a closing ']'.
-// Semantic result: A slice of *TitledTypesSemValue.
+// Semantic result: A slice of data.NameNTypes.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseAll
@@ -390,9 +374,9 @@ func (p *ParsePlugins) In(pd *gparselib.ParseData, ctx interface{},
 }
 func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	list := pd.SubResults[2].Value
-	if v, ok := list.([](*TypeSemValue)); ok {
-		pd.Result.Value = [](*TitledTypesSemValue){
-			&TitledTypesSemValue{Title: "", Types: v},
+	if v, ok := list.([](data.Type)); ok {
+		pd.Result.Value = [](data.NameNTypes){
+			data.NameNTypes{Name: "", Types: v},
 		}
 	} else {
 		pd.Result.Value = list
@@ -402,7 +386,7 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 }
 
 // ParseComponent parses a component including declaration and its plugins.
-// Semantic result: A *ComponentSemValue.
+// Semantic result: A data.Component.
 //
 // flow:
 //     in (ParseData)-> [gparselib.ParseAll
@@ -414,12 +398,6 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 type ParseComponent struct {
 	pod *ParseOpDecl
 	pp  *ParsePlugins
-}
-
-// ComponentSemValue is the semantic representation of a component.
-type ComponentSemValue struct {
-	Decl    *OpDeclSemValue
-	Plugins []*TitledTypesSemValue
 }
 
 // NewParseComponent creates a new parser for a complete component.
@@ -473,11 +451,11 @@ func (p *ParseComponent) In(pd *gparselib.ParseData, ctx interface{},
 	)
 }
 func parseComponentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	semVal := &ComponentSemValue{
-		Decl: (pd.SubResults[2].Value).(*OpDeclSemValue),
+	semVal := data.Component{
+		Decl: (pd.SubResults[2].Value).(data.CompDecl),
 	}
 	if pd.SubResults[3].Value != nil {
-		semVal.Plugins = (pd.SubResults[3].Value).([]*TitledTypesSemValue)
+		semVal.Plugins = (pd.SubResults[3].Value).([]data.NameNTypes)
 	}
 	pd.Result.Value = semVal
 	return pd, ctx
