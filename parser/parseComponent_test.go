@@ -62,7 +62,7 @@ func TestParseType(t *testing.T) {
 }
 
 func TestParseCompDecl(t *testing.T) {
-	p, err := NewParseOpDecl()
+	p, err := NewParseCompDecl()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}

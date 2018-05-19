@@ -58,6 +58,13 @@ type Connection struct {
 	ToPort       *PortData
 }
 
+// Port is the semantic representation of a port.
+type Port struct {
+	Name     string
+	HasIndex bool
+	Index    int
+}
+
 // Component is the semantic representation of a component.
 type Component struct {
 	Decl    CompDecl

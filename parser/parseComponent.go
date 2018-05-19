@@ -60,7 +60,7 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	return pd, ctx
 }
 
-// ParseOpDecl parses an operation declaration.
+// ParseCompDecl parses an operation declaration.
 // Semantic result: The name and the type.
 //
 // flow:
@@ -69,15 +69,15 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 //     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseType]] -> out
 //
 // Details:
-type ParseOpDecl struct {
+type ParseCompDecl struct {
 	pName *ParseNameIdent
 	pType *ParseType
 }
 
-// NewParseOpDecl creates a new parser for an operation declaration.
+// NewParseCompDecl creates a new parser for an operation declaration.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseOpDecl() (*ParseOpDecl, error) {
+func NewParseCompDecl() (*ParseCompDecl, error) {
 	pName, err := NewParseNameIdent()
 	if err != nil {
 		return nil, err
@@ -86,11 +86,11 @@ func NewParseOpDecl() (*ParseOpDecl, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ParseOpDecl{pName: pName, pType: pType}, nil
+	return &ParseCompDecl{pName: pName, pType: pType}, nil
 }
 
-// In is the input port of the ParseOpDecl operation.
-func (p *ParseOpDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// In is the input port of the ParseCompDecl operation.
+func (p *ParseCompDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pAll := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
@@ -108,10 +108,10 @@ func (p *ParseOpDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.P
 	return gparselib.ParseAll(
 		pd, ctx,
 		[]gparselib.SubparserOp{pOpt, p.pType.In},
-		parseOpDeclSemantic,
+		parseCompDeclSemantic,
 	)
 }
-func parseOpDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+func parseCompDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	val0 := pd.SubResults[0].Value
 	typeVal := (pd.SubResults[1].Value).(data.Type)
 	name := ""
@@ -396,7 +396,7 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 //
 // Details:
 type ParseComponent struct {
-	pod *ParseOpDecl
+	pod *ParseCompDecl
 	pp  *ParsePlugins
 }
 
@@ -404,7 +404,7 @@ type ParseComponent struct {
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
 func NewParseComponent() (*ParseComponent, error) {
-	pod, err := NewParseOpDecl()
+	pod, err := NewParseCompDecl()
 	if err != nil {
 		return nil, err
 	}
