@@ -58,6 +58,14 @@ type Connection struct {
 	ToPort       *PortData
 }
 
+// Arrow is the semantic representation of a flow arrow including data type and
+// ports.
+type Arrow struct {
+	FromPort *Port
+	ToPort   *Port
+	Data     []Type
+}
+
 // Port is the semantic representation of a port.
 type Port struct {
 	Name     string

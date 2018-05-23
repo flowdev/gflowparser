@@ -129,7 +129,7 @@ func parseCompDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 }
 
 // ParseTypeList parses types separated by commas.
-// Semantic result: A slice of *data.Type.
+// Semantic result: []data.Type
 //
 // flow:
 //     in (ParseData)-> [pAdditionalType gparselib.ParseAll
