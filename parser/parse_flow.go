@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 )
@@ -184,9 +186,13 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 //                           ParseArrow, ParseOptSpc
 //                          ]
 //                      ] -> out
-//     in (ParseData)-> [pPairs gparselib.ParseMulti1 [pPair]] -> out
+//     in (ParseData)-> [pPairs gparselib.ParseMulti0 [pPair]] -> out
+//     in (ParseData)-> [pOptComp gparselib.ParseOptional [ParseComponent]] -> out
 //     in (ParseData)-> [pPartLine gparselib.ParseAll
-//                          [pOptArrow, ParseOptSpc, pPairs, ParseSpaceComment]
+//                          [pOptArrow, ParseOptSpc,
+//                           pPairs, ParseOptSpc,
+//                           pOptComp, ParseSpaceComment
+//                          ]
 //                      ] -> out
 //     in (ParseData)-> [gparselib.ParseMulti1 [pPartLine]] -> out
 //
@@ -195,6 +201,20 @@ type ParseFlow struct {
 	pArrow *ParseArrow
 	pComp  *ParseComponent
 }
+
+// Error messages for semantic errors.
+const (
+	errMsg2Parts = "A flow line must contain at least 2 parts " +
+		"but this one contains only %d"
+	errMsg2Arrows = "A flow line must contain alternating arrows and components " +
+		"but this one has got two consecutive arrows at position %d"
+	errMsg2Comps = "A flow line must contain alternating arrows and components " +
+		"but this one has got two consecutive components at position %d"
+	errMsgPartType = "A flow line must only contain arrows and components " +
+		"but this one has got a %T"
+	errMsgFirstArrow = "The first arrow of this flow line is missing a source port"
+	errMsgLastArrow  = "The last arrow of this flow line is missing a destination port"
+)
 
 // NewParseFlow creates a new parser for a flow.
 // If any regular expression used by the subparsers is invalid an error is
@@ -232,12 +252,17 @@ func (p *ParseFlow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 		)
 	}
 	pPairs := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseMulti1(pd, ctx, pPair, parsePairsSemantic)
+		return gparselib.ParseMulti0(pd, ctx, pPair, parsePairsSemantic)
+	}
+	pOptComp := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseOptional(pd2, ctx2, p.pComp.In, nil)
 	}
 	pPartLine := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
 			[]gparselib.SubparserOp{
-				pOptArrow, ParseOptSpc, pPairs, ParseSpaceComment,
+				pOptArrow, ParseOptSpc,
+				pPairs, ParseOptSpc,
+				pOptComp, ParseSpaceComment,
 			},
 			parsePartLineSemantic,
 		)
@@ -257,13 +282,53 @@ func parsePairsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 	return pd, ctx
 }
 func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	partline := []interface{}{
-		pd.SubResults[0].Value,
-	}
 	pairs := pd.SubResults[2].Value.([]interface{})
-	pd.Result.Value = append(partline, pairs...)
+	partLine := make([]interface{}, 0, len(pairs)+2)
+	if pd.SubResults[0].Value != nil { // first optional arrow
+		partLine = append(partLine, pd.SubResults[0].Value)
+	}
+	partLine = append(partLine, pairs...)
+	if pd.SubResults[4].Value != nil { // last optional component
+		partLine = append(partLine, pd.SubResults[4].Value)
+	}
+	n := len(partLine)
+
+	if n < 2 {
+		gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsg2Parts, n), nil)
+	}
+	var lastIsArrow, lastIsComp bool
+	for i, part := range partLine {
+		switch part.(type) {
+		case data.Arrow:
+			if lastIsArrow {
+				gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsg2Arrows, i+1), nil)
+			}
+			lastIsArrow = true
+			lastIsComp = false
+		case data.Component:
+			if lastIsComp {
+				gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsg2Comps, i+1), nil)
+			}
+			lastIsComp = true
+			lastIsArrow = false
+		default:
+			gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsgPartType, part), nil)
+		}
+	}
+	if firstArrow, ok := partLine[0].(data.Arrow); ok {
+		if firstArrow.FromPort == nil {
+			gparselib.NewParseError(pd, pd.Result.Pos, errMsgFirstArrow, nil)
+		}
+	}
+	if lastArrow, ok := partLine[n-1].(data.Arrow); ok {
+		if lastArrow.ToPort == nil {
+			gparselib.NewParseError(pd, pd.Result.Pos, errMsgLastArrow, nil)
+		}
+	}
+	pd.Result.Value = partLine
 	return pd, ctx
 }
+
 func parseFlowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	lines := make([][]interface{}, len(pd.SubResults))
 	for i, subResult := range pd.SubResults {
