@@ -56,6 +56,7 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	pd.Result.Value = data.Type{
 		Package:   pack,
 		LocalType: (pd.SubResults[1].Value).(string),
+		SrcPos:    pd.Result.Pos,
 	}
 	return pd, ctx
 }
@@ -124,6 +125,7 @@ func parseCompDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 		Name:      name,
 		Type:      typeVal,
 		VagueType: val0 == nil && name == typeVal.LocalType && typeVal.Package == "",
+		SrcPos:    pd.Result.Pos,
 	}
 	return pd, ctx
 }
@@ -236,7 +238,11 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 			val0 := pd2.SubResults[0].Value
 			val4 := pd2.SubResults[4].Value
-			pd2.Result.Value = data.NameNTypes{Name: val0.(string), Types: val4.([]data.Type)}
+			pd2.Result.Value = data.NameNTypes{
+				Name:   val0.(string),
+				Types:  val4.([]data.Type),
+				SrcPos: pd.Result.Pos,
+			}
 			return pd2, ctx2
 		},
 	)
@@ -376,7 +382,7 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 	list := pd.SubResults[2].Value
 	if v, ok := list.([](data.Type)); ok {
 		pd.Result.Value = [](data.NameNTypes){
-			data.NameNTypes{Name: "", Types: v},
+			data.NameNTypes{Name: "", Types: v, SrcPos: v[0].SrcPos},
 		}
 	} else {
 		pd.Result.Value = list
@@ -452,7 +458,8 @@ func (p *ParseComponent) In(pd *gparselib.ParseData, ctx interface{},
 }
 func parseComponentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	semVal := data.Component{
-		Decl: (pd.SubResults[2].Value).(data.CompDecl),
+		Decl:   (pd.SubResults[2].Value).(data.CompDecl),
+		SrcPos: pd.Result.Pos,
 	}
 	if pd.SubResults[3].Value != nil {
 		semVal.Plugins = (pd.SubResults[3].Value).([]data.NameNTypes)

@@ -121,7 +121,7 @@ func TestParseCompDecl(t *testing.T) {
 			givenContent: `n p.Ab1Cd`,
 			expectedValue: data.CompDecl{
 				Name: "n",
-				Type: data.Type{Package: "p", LocalType: "Ab1Cd"},
+				Type: data.Type{Package: "p", LocalType: "Ab1Cd", SrcPos: 2},
 			},
 			expectedErrCount: 0,
 		}, {
@@ -129,7 +129,7 @@ func TestParseCompDecl(t *testing.T) {
 			givenContent: "nam \t pack.a1Bc_d",
 			expectedValue: data.CompDecl{
 				Name: "nam",
-				Type: data.Type{Package: "pack", LocalType: "a1Bc"},
+				Type: data.Type{Package: "pack", LocalType: "a1Bc", SrcPos: 6},
 			},
 			expectedErrCount: 0,
 		},
@@ -169,7 +169,7 @@ func TestParseTypeList(t *testing.T) {
 			givenContent: `a,b`,
 			expectedValue: []data.Type{
 				data.Type{LocalType: "a"},
-				data.Type{LocalType: "b"},
+				data.Type{LocalType: "b", SrcPos: 2},
 			},
 			expectedErrCount: 0,
 		}, {
@@ -177,7 +177,7 @@ func TestParseTypeList(t *testing.T) {
 			givenContent: `p.A , q.B`,
 			expectedValue: []data.Type{
 				data.Type{Package: "p", LocalType: "A"},
-				data.Type{Package: "q", LocalType: "B"},
+				data.Type{Package: "q", LocalType: "B", SrcPos: 6},
 			},
 			expectedErrCount: 0,
 		}, {
@@ -185,9 +185,9 @@ func TestParseTypeList(t *testing.T) {
 			givenContent: "a, B \t \n, /* comment */ p.C, q.D",
 			expectedValue: []data.Type{
 				data.Type{LocalType: "a"},
-				data.Type{LocalType: "B"},
-				data.Type{Package: "p", LocalType: "C"},
-				data.Type{Package: "q", LocalType: "D"},
+				data.Type{LocalType: "B", SrcPos: 3},
+				data.Type{Package: "p", LocalType: "C", SrcPos: 24},
+				data.Type{Package: "q", LocalType: "D", SrcPos: 29},
 			},
 			expectedErrCount: 0,
 		},
@@ -226,7 +226,7 @@ func TestParseTitledTypes(t *testing.T) {
 			expectedValue: data.NameNTypes{
 				Name: "a",
 				Types: []data.Type{
-					data.Type{LocalType: "A"},
+					data.Type{LocalType: "A", SrcPos: 2},
 				},
 			},
 			expectedErrCount: 0,
@@ -236,8 +236,8 @@ func TestParseTitledTypes(t *testing.T) {
 			expectedValue: data.NameNTypes{
 				Name: "a",
 				Types: []data.Type{
-					data.Type{LocalType: "b"},
-					data.Type{LocalType: "C"},
+					data.Type{LocalType: "b", SrcPos: 2},
+					data.Type{LocalType: "C", SrcPos: 5},
 				},
 			},
 			expectedErrCount: 0,
@@ -247,8 +247,8 @@ func TestParseTitledTypes(t *testing.T) {
 			expectedValue: data.NameNTypes{
 				Name: "tiTle",
 				Types: []data.Type{
-					data.Type{Package: "p", LocalType: "A"},
-					data.Type{Package: "q", LocalType: "B"},
+					data.Type{Package: "p", LocalType: "A", SrcPos: 8},
+					data.Type{Package: "q", LocalType: "B", SrcPos: 13},
 				},
 			},
 			expectedErrCount: 0,
@@ -258,8 +258,8 @@ func TestParseTitledTypes(t *testing.T) {
 			expectedValue: data.NameNTypes{
 				Name: "t",
 				Types: []data.Type{
-					data.Type{Package: "p", LocalType: "C"},
-					data.Type{Package: "q", LocalType: "D"},
+					data.Type{Package: "p", LocalType: "C", SrcPos: 21},
+					data.Type{Package: "q", LocalType: "D", SrcPos: 26},
 				},
 			},
 			expectedErrCount: 0,
@@ -289,7 +289,7 @@ func TestParseTitledTypesList(t *testing.T) {
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
 					Name:  "a",
-					Types: []data.Type{data.Type{LocalType: "A"}},
+					Types: []data.Type{data.Type{LocalType: "A", SrcPos: 2}},
 				},
 			},
 			expectedErrCount: 0,
@@ -299,11 +299,12 @@ func TestParseTitledTypesList(t *testing.T) {
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
 					Name:  "a",
-					Types: []data.Type{data.Type{LocalType: "b"}},
+					Types: []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
 				},
 				data.NameNTypes{
-					Name:  "c",
-					Types: []data.Type{data.Type{LocalType: "D"}},
+					Name:   "c",
+					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 6}},
+					SrcPos: 4,
 				},
 			},
 			expectedErrCount: 0,
@@ -313,11 +314,12 @@ func TestParseTitledTypesList(t *testing.T) {
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
 					Name:  "a",
-					Types: []data.Type{data.Type{LocalType: "b"}},
+					Types: []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
 				},
 				data.NameNTypes{
-					Name:  "c",
-					Types: []data.Type{data.Type{LocalType: "D"}},
+					Name:   "c",
+					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 8}},
+					SrcPos: 6,
 				},
 			},
 			expectedErrCount: 0,
@@ -327,11 +329,12 @@ func TestParseTitledTypesList(t *testing.T) {
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
 					Name:  "a",
-					Types: []data.Type{data.Type{LocalType: "b"}},
+					Types: []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
 				},
 				data.NameNTypes{
-					Name:  "c",
-					Types: []data.Type{data.Type{LocalType: "D"}},
+					Name:   "c",
+					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 25}},
+					SrcPos: 23,
 				},
 			},
 			expectedErrCount: 0,
@@ -360,8 +363,9 @@ func TestParsePlugins(t *testing.T) {
 			givenContent: `[a=A]`,
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
-					Name:  "a",
-					Types: []data.Type{data.Type{LocalType: "A"}},
+					Name:   "a",
+					Types:  []data.Type{data.Type{LocalType: "A", SrcPos: 3}},
+					SrcPos: 1,
 				},
 			},
 			expectedErrCount: 0,
@@ -370,8 +374,9 @@ func TestParsePlugins(t *testing.T) {
 			givenContent: `[a]`,
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
-					Name:  "",
-					Types: []data.Type{data.Type{LocalType: "a"}},
+					Name:   "",
+					Types:  []data.Type{data.Type{LocalType: "a", SrcPos: 1}},
+					SrcPos: 1,
 				},
 			},
 			expectedErrCount: 0,
@@ -382,9 +387,10 @@ func TestParsePlugins(t *testing.T) {
 				data.NameNTypes{
 					Name: "a",
 					Types: []data.Type{
-						data.Type{LocalType: "b"},
-						data.Type{LocalType: "D"},
+						data.Type{LocalType: "b", SrcPos: 4},
+						data.Type{LocalType: "D", SrcPos: 6},
 					},
+					SrcPos: 2,
 				},
 			},
 			expectedErrCount: 0,
@@ -393,12 +399,14 @@ func TestParsePlugins(t *testing.T) {
 			givenContent: "[ \t \na=b|c=D /* comment */ ]",
 			expectedValue: []data.NameNTypes{
 				data.NameNTypes{
-					Name:  "a",
-					Types: []data.Type{data.Type{LocalType: "b"}},
+					Name:   "a",
+					Types:  []data.Type{data.Type{LocalType: "b", SrcPos: 7}},
+					SrcPos: 5,
 				},
 				data.NameNTypes{
-					Name:  "c",
-					Types: []data.Type{data.Type{LocalType: "D"}},
+					Name:   "c",
+					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 11}},
+					SrcPos: 9,
 				},
 			},
 			expectedErrCount: 0,
@@ -427,7 +435,8 @@ func TestParseComponent(t *testing.T) {
 			givenContent: `[a A]`,
 			expectedValue: data.Component{
 				Decl: data.CompDecl{
-					Name: "a", Type: data.Type{LocalType: "A"},
+					Name: "a", Type: data.Type{LocalType: "A", SrcPos: 3},
+					SrcPos: 1,
 				},
 				Plugins: nil,
 			},
@@ -437,12 +446,14 @@ func TestParseComponent(t *testing.T) {
 			givenContent: `[a B[c]]`,
 			expectedValue: data.Component{
 				Decl: data.CompDecl{
-					Name: "a", Type: data.Type{LocalType: "B"},
+					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 3},
+					SrcPos: 1,
 				},
 				Plugins: []data.NameNTypes{
 					data.NameNTypes{
-						Name:  "",
-						Types: []data.Type{data.Type{LocalType: "c"}},
+						Name:   "",
+						Types:  []data.Type{data.Type{LocalType: "c", SrcPos: 5}},
+						SrcPos: 5,
 					},
 				},
 			},
@@ -451,12 +462,14 @@ func TestParseComponent(t *testing.T) {
 			givenContent: `[ a B [c=D] ]`,
 			expectedValue: data.Component{
 				Decl: data.CompDecl{
-					Name: "a", Type: data.Type{LocalType: "B"},
+					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 4},
+					SrcPos: 2,
 				},
 				Plugins: []data.NameNTypes{
 					data.NameNTypes{
-						Name:  "c",
-						Types: []data.Type{data.Type{LocalType: "D"}},
+						Name:   "c",
+						Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 9}},
+						SrcPos: 7,
 					},
 				},
 			},
@@ -466,12 +479,14 @@ func TestParseComponent(t *testing.T) {
 			givenContent: "[ \t \na B /* comment 1 */ [c=D] // comment 2\n ]",
 			expectedValue: data.Component{
 				Decl: data.CompDecl{
-					Name: "a", Type: data.Type{LocalType: "B"},
+					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 7},
+					SrcPos: 5,
 				},
 				Plugins: []data.NameNTypes{
 					data.NameNTypes{
-						Name:  "c",
-						Types: []data.Type{data.Type{LocalType: "D"}},
+						Name:   "c",
+						Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 28}},
+						SrcPos: 26,
 					},
 				},
 			},

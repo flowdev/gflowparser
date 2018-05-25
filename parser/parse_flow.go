@@ -65,7 +65,8 @@ func (p *ParsePort) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 func parsePortSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	val1 := pd.SubResults[1].Value
 	port := data.Port{
-		Name: (pd.SubResults[0].Value).(string),
+		Name:   (pd.SubResults[0].Value).(string),
+		SrcPos: pd.Result.Pos,
 	}
 	if val1 != nil {
 		port.HasIndex = true
@@ -160,7 +161,7 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 	val0 := pd.SubResults[0].Value
 	val2 := pd.SubResults[2].Value
 	val5 := pd.SubResults[5].Value
-	arrow := data.Arrow{}
+	arrow := data.Arrow{SrcPos: pd.Result.Pos}
 	if val0 != nil {
 		port := (val0).(data.Port)
 		arrow.FromPort = &port
@@ -211,7 +212,7 @@ const (
 	errMsg2Comps = "A flow line must contain alternating arrows and components " +
 		"but this one has got two consecutive components at position %d"
 	errMsgPartType = "A flow line must only contain arrows and components " +
-		"but this one has got a %T"
+		"but this one has got a %T at position %d"
 	errMsgFirstArrow = "The first arrow of this flow line is missing a source port"
 	errMsgLastArrow  = "The last arrow of this flow line is missing a destination port"
 )
@@ -298,21 +299,21 @@ func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	}
 	var lastIsArrow, lastIsComp bool
 	for i, part := range partLine {
-		switch part.(type) {
+		switch v := part.(type) {
 		case data.Arrow:
 			if lastIsArrow {
-				gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsg2Arrows, i+1), nil)
+				gparselib.NewParseError(pd, v.SrcPos, fmt.Sprintf(errMsg2Arrows, i+1), nil)
 			}
 			lastIsArrow = true
 			lastIsComp = false
 		case data.Component:
 			if lastIsComp {
-				gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsg2Comps, i+1), nil)
+				gparselib.NewParseError(pd, v.SrcPos, fmt.Sprintf(errMsg2Comps, i+1), nil)
 			}
 			lastIsComp = true
 			lastIsArrow = false
 		default:
-			gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsgPartType, part), nil)
+			gparselib.NewParseError(pd, pd.Result.Pos, fmt.Sprintf(errMsgPartType, part, i+1), nil)
 		}
 	}
 	if firstArrow, ok := partLine[0].(data.Arrow); ok {
