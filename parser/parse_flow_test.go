@@ -92,14 +92,14 @@ func TestParseArrow(t *testing.T) {
 			givenContent: `aPort->bPort`,
 			expectedValue: data.Arrow{
 				FromPort: &data.Port{Name: "aPort"},
-				ToPort:   &data.Port{Name: "bPort"},
+				ToPort:   &data.Port{Name: "bPort", SrcPos: 7},
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: `(Data)->`,
 			expectedValue: data.Arrow{
-				Data: []data.Type{data.Type{LocalType: "Data"}},
+				Data: []data.Type{data.Type{LocalType: "Data", SrcPos: 1}},
 			},
 			expectedErrCount: 0,
 		}, {
@@ -107,8 +107,8 @@ func TestParseArrow(t *testing.T) {
 			givenContent: "aPort // comment1\n ( \t Data \t ) \t -> // comment2\n bPort",
 			expectedValue: data.Arrow{
 				FromPort: &data.Port{Name: "aPort"},
-				Data:     []data.Type{data.Type{LocalType: "Data"}},
-				ToPort:   &data.Port{Name: "bPort"},
+				Data:     []data.Type{data.Type{LocalType: "Data", SrcPos: 23}},
+				ToPort:   &data.Port{Name: "bPort", SrcPos: 50},
 			},
 			expectedErrCount: 0,
 		},
