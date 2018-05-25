@@ -366,8 +366,7 @@ func runTests(t *testing.T, p testParseOp, specs []parseTestData) {
 					"Expected %d errors, got %d.",
 					spec.expectedErrCount, len(pd2.Result.Feedback),
 				)
-			}
-			if pd2.Result.Feedback[spec.expectedErrCount-1].Msg.String() == "" {
+			} else if pd2.Result.Feedback[spec.expectedErrCount-1].Msg.String() == "" {
 				t.Logf("Actual errors are: %s", printErrors(pd2.Result.Feedback))
 				t.Errorf("Expected an error message.")
 			}

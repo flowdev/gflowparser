@@ -114,3 +114,86 @@ func TestParseArrow(t *testing.T) {
 		},
 	})
 }
+
+func TestParseFlow(t *testing.T) {
+	p, err := NewParseFlow()
+	if err != nil {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+	runTests(t, p.In, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "first input port missing",
+			givenContent:     `(dat)->[A]`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "component missing",
+			givenContent:     `aPort (pack.Data)-> bPort`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "data of first arrow missing",
+			givenContent:     `[A]->out`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "two consecutive arrows",
+			givenContent:     `in(Data)->->out`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "two consecutive components",
+			givenContent:     `[A][B]`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:    "simple 1",
+			givenContent: `a(b)->[c]`,
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "a"},
+							Data:     []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "c", SrcPos: 7},
+								VagueType: true,
+								SrcPos:    7,
+							},
+							SrcPos: 6,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple 2",
+			givenContent: `[A](b)->c`,
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{Decl: data.CompDecl{
+							Name:   "a",
+							Type:   data.Type{LocalType: "A", SrcPos: 1},
+							SrcPos: 1,
+						}},
+						data.Arrow{
+							Data:   []data.Type{data.Type{LocalType: "b", SrcPos: 4}},
+							ToPort: &data.Port{Name: "c", SrcPos: 8},
+							SrcPos: 3,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		},
+	})
+}
