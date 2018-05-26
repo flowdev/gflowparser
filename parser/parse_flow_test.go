@@ -152,8 +152,13 @@ func TestParseFlow(t *testing.T) {
 			expectedValue:    nil,
 			expectedErrCount: 2,
 		}, {
+			givenName:        "no end",
+			givenContent:     `a(b)->[c]`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
 			givenName:    "simple 1",
-			givenContent: `a(b)->[c]`,
+			givenContent: `a(b)->[c];`,
 			expectedValue: data.Flow{
 				Parts: [][]interface{}{
 					{
@@ -176,7 +181,7 @@ func TestParseFlow(t *testing.T) {
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 2",
-			givenContent: `[A](b)->c`,
+			givenContent: "[A](b)->c // my comment\n",
 			expectedValue: data.Flow{
 				Parts: [][]interface{}{
 					{

@@ -255,7 +255,7 @@ func (p *ParseFlow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	}
 	pPartLine := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
-			[]gparselib.SubparserOp{pPartString, ParseSpaceComment},
+			[]gparselib.SubparserOp{pPartString, ParseStatementEnd},
 			parsePartLineSemantic,
 		)
 	}

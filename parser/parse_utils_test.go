@@ -244,96 +244,101 @@ func TestParseSpaceComment(t *testing.T) {
 		{
 			givenName:        "empty",
 			givenContent:     ``,
-			expectedValue:    &SpaceCommentSemValue{Text: "", Newline: false},
+			expectedValue:    SpaceCommentSemValue{Text: "", NewLine: false},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "no match",
 			givenContent:     `baaa`,
-			expectedValue:    &SpaceCommentSemValue{Text: "", Newline: false},
+			expectedValue:    SpaceCommentSemValue{Text: "", NewLine: false},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "simple 1",
 			givenContent:     " i",
-			expectedValue:    &SpaceCommentSemValue{Text: " ", Newline: false},
+			expectedValue:    SpaceCommentSemValue{Text: " ", NewLine: false},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "simple 2",
 			givenContent:     "\t0",
-			expectedValue:    &SpaceCommentSemValue{Text: "\t", Newline: false},
+			expectedValue:    SpaceCommentSemValue{Text: "\t", NewLine: false},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 3",
 			givenContent: " /* bla */ _t",
-			expectedValue: &SpaceCommentSemValue{
+			expectedValue: SpaceCommentSemValue{
 				Text:    " /* bla */ ",
-				Newline: false,
+				NewLine: false,
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "simple 4",
 			givenContent: " // comment! \n lilalo",
-			expectedValue: &SpaceCommentSemValue{
+			expectedValue: SpaceCommentSemValue{
 				Text:    " // comment! \n ",
-				Newline: true,
+				NewLine: true,
 			},
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex",
 			givenContent: " /* bla\n */ \t // com!\n \t \r\n/** blu */ _t",
-			expectedValue: &SpaceCommentSemValue{
+			expectedValue: SpaceCommentSemValue{
 				Text:    " /* bla\n */ \t // com!\n \t \r\n/** blu */ ",
-				Newline: true,
+				NewLine: true,
 			},
 			expectedErrCount: 0,
 		},
 	})
 }
 
-//func TestParseStatementEnd(t *testing.T) {
-//	runTests(t, ParseStatementEnd, []parseTestData{
-//		{
-//			givenName:        "empty",
-//			givenContent:     ``,
-//			expectedValue:    nil,
-//			expectedErrCount: 1,
-//		}, {
-//			givenName:        "no match 1",
-//			givenContent:     `baaa`,
-//			expectedValue:    nil,
-//			expectedErrCount: 1,
-//		}, {
-//			givenName:        "no match 2",
-//			givenContent:     " /* bla\n */ \t // com!\n \t \r\n/** blu ; */ ",
-//			expectedValue:    nil,
-//			expectedErrCount: 1,
-//		}, {
-//			givenName:        "simple 1",
-//			givenContent:     ";",
-//			expectedValue:    ";",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 2",
-//			givenContent:     "\t;0",
-//			expectedValue:    "\t;",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 3",
-//			givenContent:     " /* bla */; _t",
-//			expectedValue:    " /* bla */; ",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "simple 4",
-//			givenContent:     " // comment! \n ;lilalo",
-//			expectedValue:    " // comment! \n ;",
-//			expectedErrCount: 0,
-//		}, {
-//			givenName:        "complex",
-//			givenContent:     " /* bla\n */ \t; // com!\n \t \r\n/** blu */ _t",
-//			expectedValue:    " /* bla\n */ \t; // com!\n \t \r\n/** blu */ ",
-//			expectedErrCount: 0,
-//		},
-//	})
-//}
+func TestParseStatementEnd(t *testing.T) {
+	runTests(t, ParseStatementEnd, []parseTestData{
+		{
+			givenName:        "empty",
+			givenContent:     ``,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match 1",
+			givenContent:     `baaa`,
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "no match 2",
+			givenContent:     " /* bla */ \t /** blu ; */ \t ",
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "simple 1",
+			givenContent:     ";",
+			expectedValue:    ";",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 2",
+			givenContent:     "\n",
+			expectedValue:    "\n",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 3",
+			givenContent:     "\t;0",
+			expectedValue:    "\t;",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 4",
+			givenContent:     " /* bla */\r\n _t",
+			expectedValue:    " /* bla */\r\n ",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "simple 5",
+			givenContent:     " // comment! \n ;lilalo",
+			expectedValue:    " // comment! \n ;",
+			expectedErrCount: 0,
+		}, {
+			givenName:        "complex",
+			givenContent:     " /* bla\n */ \t; // com!\n \t \r\n/** blu */ _t",
+			expectedValue:    " /* bla\n */ \t; // com!\n \t \r\n/** blu */ ",
+			expectedErrCount: 0,
+		},
+	})
+}
 
 func runTests(t *testing.T, p testParseOp, specs []parseTestData) {
 	for _, spec := range specs {
