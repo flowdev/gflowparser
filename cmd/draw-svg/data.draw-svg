@@ -64,7 +64,7 @@ var flowData = &svg.Flow{
 					},
 				},
 			},
-		}, {
+		}, {}, {
 			&svg.Arrow{
 				DataType: "flowData",
 				HasSrcOp: false, SrcPort: "in",

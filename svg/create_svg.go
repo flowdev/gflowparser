@@ -145,9 +145,6 @@ func validateFlowData(f *Flow) (*Flow, error) {
 		return nil, fmt.Errorf("flow is empty")
 	}
 	for i, row := range f.Shapes {
-		if len(row) <= 0 {
-			return nil, fmt.Errorf("flow row (index: %d) is empty", i)
-		}
 		for j, ishape := range row {
 			switch ishape.(type) {
 			case *Arrow, *Op, *Split, *Merge:
@@ -210,6 +207,10 @@ func shapesToSVG(
 	for _, ss := range shapes {
 		x := x0
 		lsr = nil
+		if len(ss) < 1 {
+			y0 += 48
+			continue
+		}
 		for _, is := range ss {
 			y := y0
 			switch s := is.(type) {
