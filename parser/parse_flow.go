@@ -86,15 +86,15 @@ func parsePortSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 //     in (ParseData)-> [pRightParen gparselib.ParseLiteral] -> out
 //     in (ParseData)-> [pArrow gparselib.ParseLiteral] -> out
 //     in (ParseData)-> [pData gparselib.ParseAll
-//                          [pLeftParen, ParseOptSpc,
-//                           ParseTypeList, ParseOptSpc,
+//                          [pLeftParen, ParseSpaceComment,
+//                           ParseTypeList, ParseSpaceComment,
 //                           pRightParen, ParseOptSpc
 //                          ]
 //                      ] -> out
 //     in (ParseData)-> [pOptData gparselib.ParseOptional [pData]] -> out
 //     in (ParseData)-> [gparselib.ParseAll
-//                          [pOptPort, ParseSpaceComment, pOptData,
-//                           pArrow, ParseSpaceComment, pOptPort
+//                          [pOptPort, ParseOptSpc, pOptData,
+//                           pArrow, ParseOptSpc, pOptPort
 //                          ]
 //                      ] -> out
 //
@@ -136,8 +136,8 @@ func (p *ParseArrow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 	pData := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
 			[]gparselib.SubparserOp{
-				pLeftParen, ParseOptSpc,
-				p.pData.In, ParseOptSpc,
+				pLeftParen, ParseSpaceComment,
+				p.pData.In, ParseSpaceComment,
 				pRightParen, ParseOptSpc,
 			},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
@@ -152,8 +152,8 @@ func (p *ParseArrow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 
 	return gparselib.ParseAll(pd, ctx,
 		[]gparselib.SubparserOp{
-			pOptPort, ParseSpaceComment, pOptData,
-			pArrow, ParseSpaceComment, pOptPort,
+			pOptPort, ParseOptSpc, pOptData,
+			pArrow, ParseOptSpc, pOptPort,
 		},
 		parseArrowSemantic,
 	)
@@ -182,19 +182,11 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 // Semantic result: data.Flow
 //
 // flow:
-//     in (ParseData)-> [pOptArrow gparselib.ParseOptional [ParseArrow]] -> out
-//     in (ParseData)-> [pPair gparselib.ParseAll
-//                          [ParseComponent, ParseOptSpc,
-//                           ParseArrow, ParseOptSpc
-//                          ]
-//                      ] -> out
-//     in (ParseData)-> [pPairs gparselib.ParseMulti0 [pPair]] -> out
-//     in (ParseData)-> [pOptComp gparselib.ParseOptional [ParseComponent]] -> out
+//     in (ParseData)-> [pAnyPart gparselib.ParseAny [ParseArrow, ParseComponent]] -> out
+//     in (ParseData)-> [pFullPart gparselib.ParseAll [pAnyPart, ParseOptSpc]] -> out
+//     in (ParseData)-> [pPartString gparselib.ParseMulti [pFullPart]] -> out
 //     in (ParseData)-> [pPartLine gparselib.ParseAll
-//                          [pOptArrow, ParseOptSpc,
-//                           pPairs, ParseOptSpc,
-//                           pOptComp, ParseSpaceComment
-//                          ]
+//                          [pPartString, ParseStatementEnd]
 //                      ] -> out
 //     in (ParseData)-> [gparselib.ParseMulti1 [pPartLine]] -> out
 //

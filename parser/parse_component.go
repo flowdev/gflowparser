@@ -252,9 +252,12 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 // Semantic result: A slice of data.NameNTypes.
 //
 // flow:
+//     in (ParseData)-> [pAdditionalList gparselib.ParseAll
+//                          [ParseSpaceComment, ParseLiteral, ParseSpaceComment, ParseTitledTypes]
+//                      ] -> out
+//     in (ParseData)-> [pAdditionalLists gparselib.ParseMulti0 [pAdditionalList]] -> out
 //     in (ParseData)-> [gparselib.ParseAll
-//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
-//                            ParseSpaceComment, ParseTypeList                 ]
+//                          [ParseTitledTypes, pAdditionalLists]
 //                      ] -> out
 //
 // Details:
@@ -274,13 +277,6 @@ func NewParseTitledTypesList() (*ParseTitledTypesList, error) {
 }
 
 // In is the input port of the ParseTitledTypesList operation.
-//     in (ParseData)-> [pAdditionalList gparselib.ParseAll
-//                          [ParseSpaceComment, ParseLiteral, ParseSpaceComment, ParseTitledTypes]
-//                      ] -> out
-//     in (ParseData)-> [pAdditionalLists gparselib.ParseMulti0 [pAdditionalList]] -> out
-//     in (ParseData)-> [gparselib.ParseAll
-//                          [ParseTitledTypes, pAdditionalLists]
-//                      ] -> out
 func (p *ParseTitledTypesList) In(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pBar := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
@@ -323,9 +319,12 @@ func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gp
 // Semantic result: A slice of data.NameNTypes.
 //
 // flow:
+//     in (ParseData)-> [pList gparselib.ParseAny
+//                          [ParseTitledTypesList, ParseTypeList]
+//                      ] -> out
 //     in (ParseData)-> [gparselib.ParseAll
-//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
-//                            ParseSpaceComment, ParseTypeList                 ]
+//                          [ ParseLiteral, ParseSpaceComment, pList,
+//                            ParseSpaceComment, ParseLiteral         ]
 //                      ] -> out
 //
 // Details:
@@ -350,13 +349,6 @@ func NewParsePlugins() (*ParsePlugins, error) {
 }
 
 // In is the input port of the ParsePlugins operation.
-//     in (ParseData)-> [pList gparselib.ParseAny
-//                          [ParseTitledTypesList, ParseTypeList]
-//                      ] -> out
-//     in (ParseData)-> [gparselib.ParseAll
-//                          [ ParseLiteral, ParseSpaceComment, pList,
-//                            ParseSpaceComment, ParseLiteral         ]
-//                      ] -> out
 func (p *ParsePlugins) In(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
@@ -395,9 +387,13 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 // Semantic result: A data.Component.
 //
 // flow:
+//     in (ParseData)-> [pPlugins gparselib.ParseAll
+//                          [ParseSpaceComment, ParsePlugins]
+//                      ] -> out
+//     in (ParseData)-> [pOpt gparselib.ParseOptional [pPlugins]] -> out
 //     in (ParseData)-> [gparselib.ParseAll
-//                          [ ParseNameIdent, ParseSpaceComment, ParseLiteral,
-//                            ParseSpaceComment, ParseTypeList                 ]
+//                          [ ParseLiteral, ParseSpaceComment, ParseCompDecl,
+//                            pOpt, ParseSpaceComment, ParseLiteral          ]
 //                      ] -> out
 //
 // Details:
@@ -422,13 +418,6 @@ func NewParseComponent() (*ParseComponent, error) {
 }
 
 // In is the input port of the ParseComponent operation.
-//     in (ParseData)-> [pList gparselib.ParseAny
-//                          [ParseTitledTypesList, ParseTypeList]
-//                      ] -> out
-//     in (ParseData)-> [gparselib.ParseAll
-//                          [ ParseLiteral, ParseSpaceComment, pList,
-//                            ParseSpaceComment, ParseLiteral         ]
-//                      ] -> out
 func (p *ParseComponent) In(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pPlugins := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {

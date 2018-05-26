@@ -104,7 +104,7 @@ func TestParseArrow(t *testing.T) {
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex",
-			givenContent: "aPort // comment1\n ( \t Data \t ) \t -> // comment2\n bPort",
+			givenContent: "aPort \t ( // comment1\n Data // comment2\n ) \t -> \t bPort",
 			expectedValue: data.Arrow{
 				FromPort: &data.Port{Name: "aPort"},
 				Data:     []data.Type{data.Type{LocalType: "Data", SrcPos: 23}},
@@ -157,6 +157,11 @@ func TestParseFlow(t *testing.T) {
 			expectedValue:    nil,
 			expectedErrCount: 2,
 		}, {
+			givenName:        "wrong new line",
+			givenContent:     "a(b)->\n[c];",
+			expectedValue:    nil,
+			expectedErrCount: 5,
+		}, {
 			givenName:    "simple 1",
 			givenContent: `a(b)->[c];`,
 			expectedValue: data.Flow{
@@ -194,6 +199,45 @@ func TestParseFlow(t *testing.T) {
 							Data:   []data.Type{data.Type{LocalType: "b", SrcPos: 4}},
 							ToPort: &data.Port{Name: "c", SrcPos: 8},
 							SrcPos: 3,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex",
+			givenContent: "[A](b)->c // my comment\nd \t (e)-> \t f \t [G] \t -> \t h;",
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{Decl: data.CompDecl{
+							Name:   "a",
+							Type:   data.Type{LocalType: "A", SrcPos: 1},
+							SrcPos: 1,
+						}},
+						data.Arrow{
+							Data:   []data.Type{data.Type{LocalType: "b", SrcPos: 4}},
+							ToPort: &data.Port{Name: "c", SrcPos: 8},
+							SrcPos: 3,
+						},
+					}, {
+						data.Arrow{
+							FromPort: &data.Port{Name: "d", SrcPos: 24},
+							Data:     []data.Type{data.Type{LocalType: "e", SrcPos: 29}},
+							ToPort:   &data.Port{Name: "f", SrcPos: 36},
+							SrcPos:   24,
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:   "g",
+								Type:   data.Type{LocalType: "G", SrcPos: 41},
+								SrcPos: 41,
+							},
+							SrcPos: 40,
+						},
+						data.Arrow{
+							ToPort: &data.Port{Name: "h", SrcPos: 51},
+							SrcPos: 46,
 						},
 					},
 				},
