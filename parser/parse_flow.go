@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
@@ -205,8 +206,6 @@ type ParseFlow struct {
 
 // Error messages for semantic errors.
 const (
-	errMsg2Parts = "A flow line must contain at least 2 parts " +
-		"but this one contains only %d"
 	errMsg2Arrows = "A flow line must contain alternating arrows and components " +
 		"but this one has got two consecutive arrows at position %d"
 	errMsg2Comps = "A flow line must contain alternating arrows and components " +
@@ -235,87 +234,57 @@ func NewParseFlow() (*ParseFlow, error) {
 
 // In is the input port of the ParsePort operation.
 func (p *ParseFlow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pOptArrow := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, p.pArrow.In, nil)
+	pAnyPart := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAny(
+			pd, ctx,
+			[]gparselib.SubparserOp{p.pArrow.In, p.pComp.In},
+			nil,
+		)
 	}
-	pPair := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+	pFullPart := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
-			[]gparselib.SubparserOp{
-				p.pComp.In, ParseOptSpc,
-				p.pArrow.In, ParseOptSpc,
-			},
+			[]gparselib.SubparserOp{pAnyPart, ParseOptSpc},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = []interface{}{
-					pd2.SubResults[0].Value,
-					pd2.SubResults[2].Value,
-				}
+				pd2.Result.Value = pd2.SubResults[0].Value
 				return pd2, ctx2
 			},
 		)
 	}
-	pPairs := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseMulti0(pd, ctx, pPair, parsePairsSemantic)
-	}
-	pOptComp := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, p.pComp.In, nil)
+	pPartString := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseMulti(pd, ctx, pFullPart, nil, 2, math.MaxInt32)
 	}
 	pPartLine := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
-			[]gparselib.SubparserOp{
-				pOptArrow, ParseOptSpc,
-				pPairs, ParseOptSpc,
-				pOptComp, ParseSpaceComment,
-			},
+			[]gparselib.SubparserOp{pPartString, ParseSpaceComment},
 			parsePartLineSemantic,
 		)
 	}
 	return gparselib.ParseMulti1(pd, ctx, pPartLine, parseFlowSemantic)
 }
-func parsePairsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	parts := make([]interface{}, len(pd.SubResults)*2)
-	j := 0
-	for _, subResult := range pd.SubResults {
-		pair := subResult.Value.([]interface{})
-		parts[j] = pair[0]
-		parts[j+1] = pair[1]
-		j += 2
-	}
-	pd.Result.Value = parts
-	return pd, ctx
-}
 func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pairs := pd.SubResults[2].Value.([]interface{})
-	partLine := make([]interface{}, 0, len(pairs)+2)
-	if pd.SubResults[0].Value != nil { // first optional arrow
-		partLine = append(partLine, pd.SubResults[0].Value)
-	}
-	partLine = append(partLine, pairs...)
-	if pd.SubResults[4].Value != nil { // last optional component
-		partLine = append(partLine, pd.SubResults[4].Value)
-	}
+	partLine := pd.SubResults[0].Value.([]interface{})
 	n := len(partLine)
 
-	if n < 2 {
-		pd.AddError(pd.Result.Pos, fmt.Sprintf(errMsg2Parts, n), nil)
-		return pd, ctx
-	}
 	var lastIsArrow, lastIsComp bool
 	for i, part := range partLine {
 		switch v := part.(type) {
 		case data.Arrow:
 			if lastIsArrow {
 				pd.AddError(v.SrcPos, fmt.Sprintf(errMsg2Arrows, i+1), nil)
+				return pd, ctx
 			}
 			lastIsArrow = true
 			lastIsComp = false
 		case data.Component:
 			if lastIsComp {
 				pd.AddError(v.SrcPos, fmt.Sprintf(errMsg2Comps, i+1), nil)
+				return pd, ctx
 			}
 			lastIsComp = true
 			lastIsArrow = false
 		default:
 			pd.AddError(pd.Result.Pos, fmt.Sprintf(errMsgPartType, part, i+1), nil)
+			return pd, ctx
 		}
 	}
 	var firstArrow data.Arrow

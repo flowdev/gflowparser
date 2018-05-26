@@ -125,7 +125,7 @@ func TestParseFlow(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 2,
+			expectedErrCount: 5,
 		}, {
 			givenName:        "first input port missing",
 			givenContent:     `(dat)->[A]`,
@@ -135,7 +135,7 @@ func TestParseFlow(t *testing.T) {
 			givenName:        "component missing",
 			givenContent:     `aPort (pack.Data)-> bPort`,
 			expectedValue:    nil,
-			expectedErrCount: 2,
+			expectedErrCount: 5,
 		}, {
 			givenName:        "data of first arrow missing",
 			givenContent:     `[A]->out`,
