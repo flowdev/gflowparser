@@ -69,6 +69,13 @@ type Merge struct {
 	Size int
 }
 
+// Flow contains data for a whole flow.
+// The data is organized in rows and individual shapes per row.
+// Valid shapes are Arrow, Op, Split and Merge.
+type Flow struct {
+	Shapes [][]interface{}
+}
+
 type svgArrow struct {
 	X1, Y1       int
 	X2, Y2       int
@@ -101,13 +108,6 @@ type svgFlow struct {
 	Rects       []*svgRect
 	Lines       []*svgLine
 	Texts       []*svgText
-}
-
-// Flow contains data for a whole flow.
-// The data is organized in rows and individual shapes per row.
-// Valid shapes are Arrow, Op, Split and Merge.
-type Flow struct {
-	Shapes [][]interface{}
 }
 
 type myMergeData struct {
