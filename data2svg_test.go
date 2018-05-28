@@ -16,7 +16,7 @@ func TestParserToSVGData(t *testing.T) {
 		expected *svg.Flow
 	}{
 		{
-			name: "simple 1",
+			name: "simple",
 			given: data.Flow{
 				Parts: [][]interface{}{
 					{
@@ -47,6 +47,76 @@ func TestParserToSVGData(t *testing.T) {
 								Text: []string{"c", "c"},
 							},
 							Plugins: []*svg.Plugin{},
+						},
+					},
+				},
+			},
+		}, {
+			name: "full arrows",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "a"},
+							Data:     []data.Type{data.Type{LocalType: "b"}},
+							ToPort:   &data.Port{Name: "in"},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "c"},
+								VagueType: true,
+							},
+						},
+						data.Arrow{
+							FromPort: &data.Port{Name: "out"},
+							Data:     []data.Type{data.Type{LocalType: "b"}},
+							ToPort:   &data.Port{Name: "in"},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "d",
+								Type:      data.Type{LocalType: "D"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{
+							FromPort: &data.Port{Name: "out"},
+							Data:     []data.Type{data.Type{LocalType: "b"}},
+							ToPort:   &data.Port{Name: "out"},
+						},
+					},
+				},
+			},
+			expected: &svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Arrow{
+							HasSrcOp: false, SrcPort: "a",
+							DataType: "(b)",
+							HasDstOp: true, DstPort: "in",
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c", "c"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "out",
+							DataType: "(b)",
+							HasDstOp: true, DstPort: "in",
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"d", "D"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "out",
+							DataType: "(b)",
+							HasDstOp: false, DstPort: "out",
 						},
 					},
 				},
