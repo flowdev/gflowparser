@@ -24,7 +24,9 @@ func parserToSVGData(flowDat data.Flow) *svg.Flow {
 			case data.Component:
 				svgLine = append(svgLine, compToSVGData(p))
 			default:
-				panic(fmt.Sprintf("Found illegal flow part type '%T' at position: %d, %d", part, i, j))
+				panic(fmt.Sprintf(
+					"Found illegal flow part type '%T' at position: %d, %d",
+					part, i, j))
 			}
 		}
 		svgDat = append(svgDat, svgLine)
@@ -105,7 +107,8 @@ func typeToSVGData(typ data.Type) string {
 // checkParserFeedback converts parser errors into a single error.
 func checkParserFeedback(pd *gparselib.ParseData) (string, error) {
 	if pd.Result.HasError() {
-		return "", errors.New(feedbackToString(pd))
+		return "", errors.New("Found errors while parsing flow:\n" +
+			feedbackToString(pd))
 	}
 	return feedbackToString(pd), nil
 }
@@ -139,7 +142,8 @@ func NewFlowToSVG() (*FlowToSVG, error) {
 // feedback.
 // If the flow is invalid or some other error happens an error and no diagram
 // or feedback is returned.
-func (fts *FlowToSVG) ConvertFlowToSVG(flowContent, flowName string) ([]byte, string, error) {
+func (fts *FlowToSVG) ConvertFlowToSVG(flowContent, flowName string,
+) ([]byte, string, error) {
 	pd := gparselib.NewParseData(flowName, flowContent)
 	pd, _ = fts.pFlow.In(pd, nil)
 
