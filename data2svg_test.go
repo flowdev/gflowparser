@@ -121,6 +121,128 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
+		}, {
+			name: "full components",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "a",
+								Type:      data.Type{Package: "p", LocalType: "A"},
+								VagueType: false,
+							},
+							Plugins: []data.NameNTypes{
+								{
+									Types: []data.Type{data.Type{Package: "q", LocalType: "Z"}},
+								},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "b",
+								Type:      data.Type{Package: "p", LocalType: "B"},
+								VagueType: false,
+							},
+							Plugins: []data.NameNTypes{
+								{
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "Y"},
+										data.Type{Package: "q", LocalType: "X"},
+										data.Type{Package: "q", LocalType: "W"},
+									},
+								},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "c"},
+								VagueType: true,
+							},
+							Plugins: []data.NameNTypes{
+								{
+									Name: "plugin1",
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "V"},
+										data.Type{Package: "q", LocalType: "U"},
+									},
+								}, {
+									Name: "plugin2",
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "T"},
+									},
+								}, {
+									Name: "plugin3",
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "S"},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: &svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"a", "p.A"},
+							},
+							Plugins: []*svg.Plugin{
+								{
+									Rects: []*svg.Rect{
+										{Text: []string{"q.Z"}},
+									},
+								},
+							},
+						},
+						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"b", "p.B"},
+							},
+							Plugins: []*svg.Plugin{
+								{
+									Rects: []*svg.Rect{
+										{Text: []string{"q.Y"}},
+										{Text: []string{"q.X"}},
+										{Text: []string{"q.W"}},
+									},
+								},
+							},
+						},
+						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c", "c"},
+							},
+							Plugins: []*svg.Plugin{
+								{
+									Title: "plugin1",
+									Rects: []*svg.Rect{
+										{Text: []string{"q.V"}},
+										{Text: []string{"q.U"}},
+									},
+								}, {
+									Title: "plugin2",
+									Rects: []*svg.Rect{
+										{Text: []string{"q.T"}},
+									},
+								}, {
+									Title: "plugin3",
+									Rects: []*svg.Rect{
+										{Text: []string{"q.S"}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 
