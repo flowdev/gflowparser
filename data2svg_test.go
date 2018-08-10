@@ -14,6 +14,7 @@ func TestParserToSVGData(t *testing.T) {
 		name     string
 		given    data.Flow
 		expected *svg.Flow
+		hasError bool
 	}{
 		{
 			name: "simple",
@@ -51,6 +52,7 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
+			hasError: false,
 		}, {
 			name: "full arrows",
 			given: data.Flow{
@@ -121,6 +123,7 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
+			hasError: false,
 		}, {
 			name: "full components",
 			given: data.Flow{
@@ -243,12 +246,51 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
+			hasError: false,
+		}, {
+			name: "error",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "a"},
+							Data:     []data.Type{data.Type{LocalType: "b"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "C"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "c"},
+								VagueType: true,
+							},
+						},
+					},
+				},
+			},
+			expected: nil,
+			hasError: true,
 		},
 	}
 
 	for _, spec := range specs {
 		t.Logf("Testing spec: %s\n", spec.name)
-		gotAll := parserToSVGData(spec.given)
+		gotAll, _, err := parserPartsToSVGData(spec.given)
+		if spec.hasError && err != nil {
+			continue
+		} else if spec.hasError && err == nil {
+			t.Error("Expected an error but didn't get one.")
+			continue
+		} else if !spec.hasError && err != nil {
+			t.Errorf("Expected no error but got: %s", err)
+			continue
+		}
 		if len(gotAll.Shapes) != len(spec.expected.Shapes) {
 			t.Errorf("Expected %d part lines, got: %d",
 				len(spec.expected.Shapes), len(gotAll.Shapes))
