@@ -27,6 +27,19 @@ type declOrRef struct {
 	splitRefs, mergeRefs int
 }
 
+// TODO: Prevent circles (for now)!
+// TODO: Handle lines with multiple splits/merges (clusterStart, clusterEnd, ...)
+// TODO: Restructure easily
+type decl struct {
+	name         string
+	i, j         int
+	svgOp        *svg.Op
+	svgMerge     *svg.Merge
+	svgSplit     *svg.Split
+	clusterStart int
+	clusterEnd   int
+}
+
 // checkParserFeedback converts parser errors into a single error.
 func checkParserFeedback(pd *gparselib.ParseData) (string, error) {
 	if pd.Result.HasError() {
@@ -48,11 +61,14 @@ func feedbackToString(pd *gparselib.ParseData) string {
 // diagram shapes.
 // So this operation does only a simple translation but doesn't change the form
 // of the part table.
+// Components are special since they can be translated in 3 ways:
+// 1. Into a decl struct if it is a declaration (the first occurence).
+// 2. Into a merge if there are more parts before it.
+// 3. Into a string (the name of the decl) if it is only used for a split.
 func parserPartsToSVGData(flowDat data.Flow,
-) (flow *svg.Flow, declRefs []declOrRef, err error) {
-	comps := make(map[string]declOrRef)
+) (flow [][]interface{}, decls map[string]*decl, err error) {
 	svgDat := make([][]interface{}, len(flowDat.Parts))
-	declRefs = make([]declOrRef, 0, 128)
+	decls = make(map[string]*decl)
 
 	for i, partLine := range flowDat.Parts {
 		m := len(partLine) - 1
@@ -62,22 +78,38 @@ func parserPartsToSVGData(flowDat data.Flow,
 			case data.Arrow:
 				svgLine[j] = arrowToSVGData(p, j > 0, j < m)
 			case data.Component:
-				if decl, ok := comps[p.Decl.Name]; ok {
+				if dcl, ok := decls[p.Decl.Name]; ok {
 					if p.Decl.VagueType {
-						if decl.i >= i {
+						if dcl.clusterStart >= i {
 							return nil, nil, fmt.Errorf(errMsgDeclAndRef,
-								p.Decl.Name, decl.i, decl.j, i, j)
+								dcl.name, dcl.i, dcl.j, i, j)
 						}
 					} else {
 						return nil, nil, fmt.Errorf(errMsg2Decls,
-							p.Decl.Name, decl.i, decl.j, i, j)
+							dcl.name, dcl.i, dcl.j, i, j)
 					}
-					ref := declOrRef{i: i, j: j}
-					svgLine[j] = ref
-					declRefs = append(declRefs, decl, ref)
+					if j > 0 {
+						dcl.svgMerge.Size++
+						dcl.clusterEnd = max(dcl.clusterEnd, i)
+						svgLine[j] = dcl.svgMerge
+					}
+					if j < m {
+						if svgLine[j] == nil {
+							svgLine[j] = dcl.name
+						}
+					}
 				} else {
-					comps[p.Decl.Name] = declOrRef{i: i, j: j, isDecl: true}
-					svgLine[j] = compToSVGData(p)
+					dcl := &decl{
+						name:         p.Decl.Name,
+						i:            i,
+						j:            j,
+						svgOp:        compToSVGData(p),
+						svgMerge:     &svg.Merge{ID: p.Decl.Name},
+						clusterStart: i,
+						clusterEnd:   i,
+					}
+					decls[dcl.name] = dcl
+					svgLine[j] = dcl
 				}
 			default:
 				panic(fmt.Sprintf(errMsgPartType, part, i, j))
@@ -85,7 +117,7 @@ func parserPartsToSVGData(flowDat data.Flow,
 		}
 		svgDat[i] = svgLine
 	}
-	return &svg.Flow{Shapes: svgDat}, declRefs, nil
+	return svgDat, decls, nil
 }
 
 func arrowToSVGData(arr data.Arrow, hasSrcOp, hasDstOp bool) *svg.Arrow {
@@ -108,7 +140,11 @@ func compToSVGData(comp data.Component) *svg.Op {
 }
 
 func compDeclToSVGData(decl data.CompDecl) []string {
-	return []string{decl.Name, typeToSVGData(decl.Type)}
+	typ := typeToSVGData(decl.Type)
+	if typ == decl.Name {
+		return []string{decl.Name}
+	}
+	return []string{decl.Name, typ}
 }
 
 func pluginToSVGData(plug data.NameNTypes) *svg.Plugin {
@@ -178,7 +214,7 @@ func sortAndUniqDeclRefs(declRefs []declOrRef) []declOrRef {
 	return declRefs[:i+1]
 }
 
-// enhanceDecls adds knowledge to the declaration indices as 3rd and 4th index
+// enhanceDecls adds knowledge to the declarations declOrRef
 // whether the decl is target for a split and the number of merges.
 func enhanceDecls(declRefs []declOrRef, flow *svg.Flow) []declOrRef {
 	svgDat := flow.Shapes
@@ -410,23 +446,27 @@ func (fts *FlowToSVG) ConvertFlowToSVG(flowContent, flowName string,
 		return nil, "", err
 	}
 
-	flow, declRefs, err := parserPartsToSVGData(pd.Result.Value.(data.Flow))
+	//svgData, decls, err := parserPartsToSVGData(pd.Result.Value.(data.Flow))
+	_, _, err = parserPartsToSVGData(pd.Result.Value.(data.Flow))
 	if err != nil {
 		return nil, "", err
 	}
+	/*
+		flow, merges := addSplitsAndMergesToSVGData(flow, declRefs)
 
-	declRefs = sortAndUniqDeclRefs(declRefs)
-
-	declRefs = enhanceDecls(declRefs, flow)
-
-	flow, merges := addSplitsAndMergesToSVGData(flow, declRefs)
-
-	flow = addMergesAndSpaceToSVGData(flow, merges)
-
-	buf, err := svg.FromFlowData(flow)
+		flow = addMergesAndSpaceToSVGData(flow, merges)
+	*/
+	buf, err := svg.FromFlowData(nil)
 	if err != nil {
 		return nil, "", err
 	}
 
 	return buf, fb, nil
+}
+
+func max(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
 }
