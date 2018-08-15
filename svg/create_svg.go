@@ -170,7 +170,7 @@ func svgFlowToBytes(sf *svgFlow) ([]byte, error) {
 
 func flowDataToSVGFlow(f *Flow) *svgFlow {
 	sf, x, y := initSVGData()
-	sf, x, y = shapesToSVG(f.Shapes, sf, x, y, arrowDataToSVG, opDataToSVG, splitDataToSVG, mergeDataToSVG)
+	sf, x, y = shapesToSVG(f.Shapes, sf, x, y, arrowDataToSVG, opDataToSVG, rectDataToSVG, splitDataToSVG, mergeDataToSVG)
 	return adjustDimensions(sf, x, y)
 }
 
@@ -197,6 +197,7 @@ func shapesToSVG(
 	shapes [][]interface{}, sf *svgFlow, x0 int, y0 int,
 	pluginArrowDataToSVG func(*Arrow, *svgFlow, int, int) (*svgFlow, int, int, *moveData),
 	pluginOpDataToSVG func(*Op, *svgFlow, *myMergeData, int, int) (*svgFlow, *svgRect, int, int, int),
+	pluginRectDataToSVG func(*Rect, *svgFlow, int, int) (*svgFlow, int, int),
 	pluginSplitDataToSVG func(*Split, *svgFlow, *svgRect, int, int) (*svgFlow, int, int),
 	pluginMergeDataToSVG func(*Merge, *moveData, int, int) *myMergeData,
 ) (nsf *svgFlow, xn, yn int) {
@@ -220,6 +221,8 @@ func shapesToSVG(
 			case *Op:
 				sf, lsr, y0, x, y = pluginOpDataToSVG(s, sf, completedMerge, x, y0)
 				completedMerge = nil
+			case *Rect:
+				sf, x, y = pluginRectDataToSVG(s, sf, x, y)
 			case *Split:
 				sf, x, y = pluginSplitDataToSVG(s, sf, lsr, x, y)
 				lsr = nil
@@ -288,7 +291,7 @@ func moveXTo(med *myMergeData, newX int) {
 func splitDataToSVG(s *Split, sf *svgFlow, lsr *svgRect, x0, y0 int) (
 	nsf *svgFlow, xn, yn int,
 ) {
-	nsf, xn, yn = shapesToSVG(s.Shapes, sf, x0, y0, arrowDataToSVG, opDataToSVG, splitDataToSVG, mergeDataToSVG)
+	nsf, xn, yn = shapesToSVG(s.Shapes, sf, x0, y0, arrowDataToSVG, opDataToSVG, rectDataToSVG, splitDataToSVG, mergeDataToSVG)
 	adjustLastRect(lsr, yn)
 	return
 }
@@ -387,6 +390,21 @@ func addDstPort(a *Arrow, sts []*svgText, x, y int) ([]*svgText, int) {
 		})
 	}
 	return sts, x
+}
+
+func rectDataToSVG(r *Rect, sf *svgFlow, x int, y int) (nsf *svgFlow, nx, ny int) {
+	txt := "... back to: " + r.Text[0]
+	width := len(txt) * 12
+
+	sf.Texts = append(sf.Texts, &svgText{
+		X: x, Y: y + 6,
+		Width: width,
+		Text:  txt,
+	})
+
+	x += width
+
+	return sf, x + width + 12, y + 12
 }
 
 func opDataToSVG(

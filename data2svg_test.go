@@ -6,6 +6,7 @@ import (
 
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/svg"
+	"github.com/flowdev/gparselib"
 )
 
 // func parserToSVGData(flowDat data.Flow) *svg.Flow {
@@ -281,7 +282,10 @@ func TestParserToSVGData(t *testing.T) {
 
 	for _, spec := range specs {
 		t.Logf("Testing spec: %s\n", spec.name)
-		gotAll, _, err := parserPartsToSVGData(spec.given)
+		gotAll, _, _, err := parserPartsToSVGData(
+			spec.given,
+			gparselib.NewSourceData("test data", "sad but true: <undefined>"),
+		)
 		if spec.hasError && err != nil {
 			continue
 		} else if spec.hasError && err == nil {
@@ -291,14 +295,14 @@ func TestParserToSVGData(t *testing.T) {
 			t.Errorf("Expected no error but got: %s", err)
 			continue
 		}
-		if len(gotAll.Shapes) != len(spec.expected.Shapes) {
+		if len(gotAll) != len(spec.expected.Shapes) {
 			t.Errorf("Expected %d part lines, got: %d",
-				len(spec.expected.Shapes), len(gotAll.Shapes))
+				len(spec.expected.Shapes), len(gotAll))
 			continue
 		}
 		for i, expectedLine := range spec.expected.Shapes {
 			t.Logf("Testing part line: %d\n", i+1)
-			gotLine := gotAll.Shapes[i]
+			gotLine := gotAll[i]
 			if len(gotLine) != len(expectedLine) {
 				t.Errorf("Expected %d parts in line %d, got: %d",
 					len(expectedLine), i+1, len(gotLine))

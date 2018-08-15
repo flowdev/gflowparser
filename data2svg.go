@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/parser"
@@ -14,30 +13,37 @@ import (
 
 // Error messages.
 const (
-	errMsgDeclAndRef = "in one flow line the component '%s' is declared at " +
-		"index [%d, %d] and referenced at index [%d, %d]"
-	errMsg2Decls = "a component with the name '%s' is declared in the " +
-		"two index positions [%d, %d] and [%d, %d]"
+	errMsgDeclAndRef = "Circular flows aren't allowed yet, but the component " +
+		"'%s' is declared here:\n%s\n... and referenced again here:\n%s"
+	errMsg2Decls = "A component with the name '%s' is declared two times, " +
+		"here:\n%s\n... and again here:\n%s"
 	errMsgPartType = "Found illegal flow part type '%T' at index [%d, %d]"
+	errMsgLoneComp = "Component reference with name '%s' without " +
+		"input or output found:\n%s"
 )
 
-type declOrRef struct {
-	i, j                 int
-	isDecl               bool
-	splitRefs, mergeRefs int
+type whereer interface {
+	Where(pos int) string
 }
 
-// TODO: Prevent circles (for now)!
-// TODO: Handle lines with multiple splits/merges (clusterStart, clusterEnd, ...)
-// TODO: Restructure easily
 type decl struct {
-	name         string
-	i, j         int
-	svgOp        *svg.Op
-	svgMerge     *svg.Merge
-	svgSplit     *svg.Split
-	clusterStart int
-	clusterEnd   int
+	name     string
+	srcPos   int
+	i, j     int
+	svgOp    *svg.Op
+	svgMerge *svg.Merge
+	svgSplit *svg.Split
+}
+
+type merge struct {
+	name   string
+	srcPos int
+	svg    *svg.Merge
+}
+
+type split struct {
+	name   string
+	srcPos int
 }
 
 // checkParserFeedback converts parser errors into a single error.
@@ -64,11 +70,12 @@ func feedbackToString(pd *gparselib.ParseData) string {
 // Components are special since they can be translated in 3 ways:
 // 1. Into a decl struct if it is a declaration (the first occurence).
 // 2. Into a merge if there are more parts before it.
-// 3. Into a string (the name of the decl) if it is only used for a split.
-func parserPartsToSVGData(flowDat data.Flow,
-) (flow [][]interface{}, decls map[string]*decl, err error) {
+// 3. Into a split if it is only used for a split.
+func parserPartsToSVGData(flowDat data.Flow, w whereer,
+) (shapes [][]interface{}, decls map[string]*decl, clsts clusters, err error) {
 	svgDat := make([][]interface{}, len(flowDat.Parts))
 	decls = make(map[string]*decl)
+	clsts = clusters(nil)
 
 	for i, partLine := range flowDat.Parts {
 		m := len(partLine) - 1
@@ -79,34 +86,32 @@ func parserPartsToSVGData(flowDat data.Flow,
 				svgLine[j] = arrowToSVGData(p, j > 0, j < m)
 			case data.Component:
 				if dcl, ok := decls[p.Decl.Name]; ok {
-					if p.Decl.VagueType {
-						if dcl.clusterStart >= i {
-							return nil, nil, fmt.Errorf(errMsgDeclAndRef,
-								dcl.name, dcl.i, dcl.j, i, j)
-						}
-					} else {
-						return nil, nil, fmt.Errorf(errMsg2Decls,
-							dcl.name, dcl.i, dcl.j, i, j)
+					if !p.Decl.VagueType { // prevent double declaration
+						return nil, nil, nil, fmt.Errorf(errMsg2Decls,
+							dcl.name, w.Where(dcl.srcPos), w.Where(p.SrcPos))
 					}
-					if j > 0 {
+					if j > 0 { // we need a merge
 						dcl.svgMerge.Size++
-						dcl.clusterEnd = max(dcl.clusterEnd, i)
-						svgLine[j] = dcl.svgMerge
-					}
-					if j < m {
-						if svgLine[j] == nil {
-							svgLine[j] = dcl.name
+						clsts.addCluster(dcl.i, i)
+						svgLine[j] = &merge{
+							name:   dcl.name,
+							srcPos: p.SrcPos,
+							svg:    dcl.svgMerge,
 						}
+					} else if j < m { // we only need a split
+						svgLine[j] = &split{name: dcl.name, srcPos: p.SrcPos}
+					} else { // we don't need anything at all???!!!
+						return nil, nil, nil, fmt.Errorf(errMsgLoneComp,
+							dcl.name, w.Where(p.SrcPos))
 					}
 				} else {
 					dcl := &decl{
-						name:         p.Decl.Name,
-						i:            i,
-						j:            j,
-						svgOp:        compToSVGData(p),
-						svgMerge:     &svg.Merge{ID: p.Decl.Name},
-						clusterStart: i,
-						clusterEnd:   i,
+						name:     p.Decl.Name,
+						srcPos:   p.SrcPos,
+						i:        i,
+						j:        j,
+						svgOp:    compToSVGData(p),
+						svgMerge: &svg.Merge{ID: p.Decl.Name},
 					}
 					decls[dcl.name] = dcl
 					svgLine[j] = dcl
@@ -117,7 +122,7 @@ func parserPartsToSVGData(flowDat data.Flow,
 		}
 		svgDat[i] = svgLine
 	}
-	return svgDat, decls, nil
+	return svgDat, decls, clsts, nil
 }
 
 func arrowToSVGData(arr data.Arrow, hasSrcOp, hasDstOp bool) *svg.Arrow {
@@ -192,228 +197,21 @@ func typeToSVGData(typ data.Type) string {
 	return typ.LocalType
 }
 
-// sortAndUniqIdxs sorts the indices of declarations and makes them unique.
-// WARNING: The second index has to be sorted in decreasing order or splits
-// can't be added easily.
-func sortAndUniqDeclRefs(declRefs []declOrRef) []declOrRef {
-	if len(declRefs) == 0 {
-		return declRefs
-	}
-	sort.Slice(declRefs, func(i, j int) bool {
-		return declRefs[i].i < declRefs[j].i ||
-			(declRefs[i].i == declRefs[j].i && declRefs[i].j >= declRefs[j].j)
-	})
-
-	i := 0
-	for j := 1; i < len(declRefs); j++ {
-		if declRefs[i].i != declRefs[j].i || declRefs[i].j != declRefs[j].j {
-			i++
-			declRefs[i] = declRefs[j]
-		}
-	}
-	return declRefs[:i+1]
+// reshapeSVGData handles merges and splits
+func reshapeSVGData(shapes [][]interface{}, decls map[string]*decl, clsts clusters,
+) (nshapes [][]interface{}, ndecls map[string]*decl, nclsts clusters, err error) {
+	return shapes, decls, clsts, nil
 }
 
-// enhanceDecls adds knowledge to the declarations declOrRef
-// whether the decl is target for a split and the number of merges.
-func enhanceDecls(declRefs []declOrRef, flow *svg.Flow) []declOrRef {
-	svgDat := flow.Shapes
-	for i, decl := range declRefs {
-		if !decl.isDecl {
-			continue
-		}
-		split, merge := 0, 0
-		for _, refRef := range declRefs {
-			if refRef.isDecl {
-				continue
-			}
-			ref := svgDat[refRef.i][refRef.j].(declOrRef)
-			if ref.i != decl.i || ref.j != decl.j {
-				continue
-			}
-			sl := svgDat[refRef.i]
-			if refRef.j < len(sl)-1 {
-				split = 1
-			}
-			if refRef.j > 0 {
-				merge++
-			}
-		}
-		decl.splitRefs = split
-		decl.mergeRefs = merge
-		declRefs[i] = decl
-	}
-	return declRefs
+// breakCircles replaces back pointing merges with simple svg.Rects.
+func breakCircles(shapes [][]interface{}, decls map[string]*decl, clsts clusters,
+) (nshapes [][]interface{}, err error) {
+	return shapes, nil
 }
 
-type mergeData struct {
-	line                   []interface{}
-	svgMerge               *svg.Merge
-	found                  int
-	lastMergeI, lastMergeJ int
-}
-
-// addSplitsAndMergesToSVGData rearranges SVG flow shapes to accomodate splits
-// and merges in flows.
-func addSplitsAndMergesToSVGData(flow *svg.Flow, declRefs []declOrRef,
-) (*svg.Flow, []mergeData) {
-	splits := make(map[int]map[int]*svg.Split)
-	merges := make(map[int]map[int]mergeData)
-	svgDat := flow.Shapes
-	for _, dor := range declRefs {
-		if dor.isDecl {
-			svgDat, splits, merges = handleDecl(svgDat, dor, splits, merges)
-		} else {
-			svgDat = handleRef(svgDat, dor, splits, merges)
-		}
-	}
-	ms := simplifyMerges(merges)
-	ms = sortMerges(ms)
-	return &svg.Flow{Shapes: svgDat}, ms
-}
-func handleDecl(
-	svgDat [][]interface{},
-	decl declOrRef,
-	splits map[int]map[int]*svg.Split,
-	merges map[int]map[int]mergeData,
-) ([][]interface{}, map[int]map[int]*svg.Split, map[int]map[int]mergeData) {
-	// Splits:
-	// Splits have to be directly after the decl/comp.
-	if decl.splitRefs > 0 {
-		var split *svg.Split
-		svgDat, split = addSplit(svgDat, decl.i, decl.j)
-		rememberSplit(splits, split, decl.i, decl.j)
-	}
-
-	// Merges:
-	// Merges replace the ref/decl and end the line.
-	// The decl/comp itself and everything after that has to follow on an
-	// own line directly after the last merge.
-	if decl.mergeRefs > 0 {
-		md := mergeData{
-			svgMerge: &svg.Merge{
-				ID:   mergeID(svgDat, decl.i, decl.j),
-				Size: decl.mergeRefs + 1,
-			},
-			line:  svgDat[decl.i][decl.j:],
-			found: 1,
-		}
-		rememberMerge(merges, md, decl.i, decl.j)
-		svgDat[decl.i][decl.j] = md.svgMerge
-		svgDat[decl.i] = svgDat[decl.i][:decl.j+1]
-	}
-	return svgDat, splits, merges
-}
-func handleRef(
-	svgDat [][]interface{},
-	refRef declOrRef,
-	splits map[int]map[int]*svg.Split,
-	merges map[int]map[int]mergeData,
-) [][]interface{} {
-	sl := svgDat[refRef.i]
-	ref := sl[refRef.j].(declOrRef)
-
-	// Splits:
-	// Add rest of line to split
-	if refRef.j < len(sl)-1 {
-		split := splits[ref.i][ref.j]
-		split.Shapes = append(split.Shapes, sl[refRef.j+1:])
-		sl = sl[:refRef.j]
-		svgDat[refRef.i] = sl
-	}
-
-	// Merges:
-	// Merges replace the ref/decl and end the line.
-	// The decl/comp itself and everything after that has to follow on an
-	// own line directly after the last merge.
-	if refRef.j > 0 {
-		merge := merges[ref.i][ref.j]
-		if len(sl) > refRef.j {
-			sl[refRef.j] = merge.svgMerge
-		} else {
-			sl = append(sl, merge.svgMerge)
-			svgDat[refRef.i] = sl
-		}
-		merge.found++
-		if merge.found == merge.svgMerge.Size {
-			merge.lastMergeI = refRef.i
-			merge.lastMergeJ = refRef.j
-		}
-	}
-	return svgDat
-}
-func rememberSplit(splits map[int]map[int]*svg.Split, split *svg.Split, i, j int) {
-	subMap := splits[i]
-	if subMap == nil {
-		subMap = make(map[int]*svg.Split)
-		splits[i] = subMap
-	}
-	subMap[j] = split
-}
-func rememberMerge(merges map[int]map[int]mergeData, merge mergeData, i, j int) {
-	subMap := merges[i]
-	if subMap == nil {
-		subMap = make(map[int]mergeData)
-		merges[i] = subMap
-	}
-	subMap[j] = merge
-}
-func addSplit(svgDat [][]interface{}, i, j int) ([][]interface{}, *svg.Split) {
-	sl := svgDat[i]
-	rest := sl[j+1:]
-	split := &svg.Split{
-		Shapes: make([][]interface{}, 0, 16),
-	}
-	if len(rest) > 0 {
-		split.Shapes = append(split.Shapes, rest)
-	}
-	sl = append(sl[:j+1], split)
-	svgDat[i] = sl
-	return svgDat, split
-}
-func mergeID(svgData [][]interface{}, i, j int) string {
-	return svgData[i][j].(svg.Op).Main.Text[0]
-}
-func simplifyMerges(merges map[int]map[int]mergeData) []mergeData {
-	ms := make([]mergeData, 0, 64)
-	for _, mrgs := range merges {
-		for _, m := range mrgs {
-			ms = append(ms, m)
-		}
-	}
-	return ms
-}
-func sortMerges(ms []mergeData) []mergeData {
-	sort.Slice(ms, func(i, j int) bool {
-		return ms[i].lastMergeI > ms[j].lastMergeI ||
-			(ms[i].lastMergeI == ms[j].lastMergeI &&
-				ms[i].lastMergeJ >= ms[j].lastMergeJ)
-	})
-	return ms
-}
-
-// addMergesAndSpaceToSVGData adds an empty line after every normal flow line.
-func addMergesAndSpaceToSVGData(flow *svg.Flow, ms []mergeData) *svg.Flow {
-	src := flow.Shapes
-	dst := make([][]interface{}, len(src)*2-1+len(ms))
-	di := len(dst) - 1
-	si := len(src) - 1
-	mi := 0
-	for mi < len(ms) || si >= 0 {
-		for ms[mi].lastMergeI >= si {
-			dst[di] = ms[mi].line
-			mi++
-			di--
-		}
-		dst[di] = src[si]
-		si--
-		di--
-		if si >= 0 { // TODO: less empty lines
-			dst[di] = []interface{}{}
-			di--
-		}
-	}
-	return &svg.Flow{Shapes: dst[di+1:]}
+// cleanSVGData replaces all special data structures with pure SVG ones.
+func cleanSVGData(shapes [][]interface{}) [][]interface{} {
+	return shapes
 }
 
 // FlowToSVG converts a flow DSL string into a SVG diagram string.
@@ -446,27 +244,32 @@ func (fts *FlowToSVG) ConvertFlowToSVG(flowContent, flowName string,
 		return nil, "", err
 	}
 
-	//svgData, decls, err := parserPartsToSVGData(pd.Result.Value.(data.Flow))
-	_, _, err = parserPartsToSVGData(pd.Result.Value.(data.Flow))
+	shapes, decls, clsts, err := parserPartsToSVGData(
+		pd.Result.Value.(data.Flow),
+		pd.Source,
+	)
 	if err != nil {
 		return nil, "", err
 	}
-	/*
-		flow, merges := addSplitsAndMergesToSVGData(flow, declRefs)
 
-		flow = addMergesAndSpaceToSVGData(flow, merges)
-	*/
-	buf, err := svg.FromFlowData(nil)
+	// TODO: Restructure: insert merge comp -> addLine
+	// TODO: Restructure: move split comp -> deleteLine
+	shapes, decls, clsts, err = reshapeSVGData(shapes, decls, clsts)
+	if err != nil {
+		return nil, "", err
+	}
+
+	shapes, err = breakCircles(shapes, decls, clsts)
+	if err != nil {
+		return nil, "", err
+	}
+
+	shapes = cleanSVGData(shapes)
+
+	buf, err := svg.FromFlowData(&svg.Flow{Shapes: shapes})
 	if err != nil {
 		return nil, "", err
 	}
 
 	return buf, fb, nil
-}
-
-func max(a, b int) int {
-	if a >= b {
-		return a
-	}
-	return b
 }
