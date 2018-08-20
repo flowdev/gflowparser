@@ -44,11 +44,16 @@ func TestParserToSVGData(t *testing.T) {
 							DataType: "(b)",
 							HasDstOp: true, DstPort: "",
 						},
-						&svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"c", "c"},
+						&decl{
+							name: "c",
+							i:    0, j: 1,
+							svgOp: &svg.Op{
+								Main: &svg.Rect{
+									Text: []string{"c"},
+								},
+								Plugins: []*svg.Plugin{},
 							},
-							Plugins: []*svg.Plugin{},
+							svgMerge: &svg.Merge{ID: "c", Size: 1},
 						},
 					},
 				},
@@ -99,22 +104,32 @@ func TestParserToSVGData(t *testing.T) {
 							DataType: "(b)",
 							HasDstOp: true, DstPort: "in",
 						},
-						&svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"c", "c"},
+						&decl{
+							name: "c",
+							i:    0, j: 1,
+							svgOp: &svg.Op{
+								Main: &svg.Rect{
+									Text: []string{"c"},
+								},
+								Plugins: []*svg.Plugin{},
 							},
-							Plugins: []*svg.Plugin{},
+							svgMerge: &svg.Merge{ID: "c", Size: 1},
 						},
 						&svg.Arrow{
 							HasSrcOp: true, SrcPort: "out",
 							DataType: "(b)",
 							HasDstOp: true, DstPort: "in",
 						},
-						&svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"d", "D"},
+						&decl{
+							name: "d",
+							i:    0, j: 3,
+							svgOp: &svg.Op{
+								Main: &svg.Rect{
+									Text: []string{"d", "D"},
+								},
+								Plugins: []*svg.Plugin{},
 							},
-							Plugins: []*svg.Plugin{},
+							svgMerge: &svg.Merge{ID: "d", Size: 1},
 						},
 						&svg.Arrow{
 							HasSrcOp: true, SrcPort: "out",
