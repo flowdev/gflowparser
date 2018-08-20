@@ -92,42 +92,43 @@ func NewParseCompDecl() (*ParseCompDecl, error) {
 
 // In is the input port of the ParseCompDecl operation.
 func (p *ParseCompDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pAll := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pLong := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pName.In, ParseASpc},
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = pd2.SubResults[0].Value
-				return pd2, ctx2
-			},
+			[]gparselib.SubparserOp{p.pName.In, ParseASpc, p.pType.In},
+			parseCompDeclSemantic,
 		)
 	}
-	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
-	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, pAll, nil)
-	}
-	return gparselib.ParseAll(
+	return gparselib.ParseAny(
 		pd, ctx,
-		[]gparselib.SubparserOp{pOpt, p.pType.In},
-		parseCompDeclSemantic,
+		[]gparselib.SubparserOp{pLong, p.pType.In},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			if typ, ok := pd2.Result.Value.(data.Type); ok {
+				name := nameFromType(typ.LocalType)
+				pd2.Result.Value = data.CompDecl{
+					Name:      name,
+					Type:      typ,
+					VagueType: name == typ.LocalType && typ.Package == "",
+					SrcPos:    pd.Result.Pos,
+				}
+			}
+			return pd2, ctx2
+		},
 	)
 }
 func parseCompDeclSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	val0 := pd.SubResults[0].Value
-	typeVal := (pd.SubResults[1].Value).(data.Type)
-	name := ""
-	if val0 != nil {
-		name = (val0).(string)
-	} else {
-		name = strings.ToLower(typeVal.LocalType[:1]) + typeVal.LocalType[1:]
-	}
+	name := (pd.SubResults[0].Value).(string)
+	typeVal := (pd.SubResults[2].Value).(data.Type)
 	pd.Result.Value = data.CompDecl{
 		Name:      name,
 		Type:      typeVal,
-		VagueType: val0 == nil && name == typeVal.LocalType && typeVal.Package == "",
+		VagueType: false,
 		SrcPos:    pd.Result.Pos,
 	}
 	return pd, ctx
+}
+func nameFromType(localType string) string {
+	return strings.ToLower(localType[:1]) + localType[1:]
 }
 
 // ParseTypeList parses types separated by commas.
@@ -209,6 +210,7 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 type ParseTitledTypes struct {
 	pn  *ParseNameIdent
 	ptl *ParseTypeList
+	pt  *ParseType
 }
 
 // NewParseTitledTypes creates a new parser for a titled type list.
@@ -223,7 +225,11 @@ func NewParseTitledTypes() (*ParseTitledTypes, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ParseTitledTypes{pn: pn, ptl: ptl}, nil
+	pt, err := NewParseType()
+	if err != nil {
+		return nil, err
+	}
+	return &ParseTitledTypes{pn: pn, ptl: ptl, pt: pt}, nil
 }
 
 // In is the input port of the ParseTitledTypes operation.
@@ -232,16 +238,30 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 	pEqual := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, nil, `=`)
 	}
-	return gparselib.ParseAll(
+	pBig := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseAll(pd, ctx,
+			[]gparselib.SubparserOp{p.pn.In, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.In},
+			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+				val0 := pd2.SubResults[0].Value
+				val4 := pd2.SubResults[4].Value
+				pd2.Result.Value = data.NameNTypes{
+					Name:   val0.(string),
+					Types:  val4.([]data.Type),
+					SrcPos: pd.Result.Pos,
+				}
+				return pd2, ctx2
+			},
+		)
+	}
+	return gparselib.ParseAny(
 		pd, ctx,
-		[]gparselib.SubparserOp{p.pn.In, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.In},
+		[]gparselib.SubparserOp{pBig, p.pt.In},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-			val0 := pd2.SubResults[0].Value
-			val4 := pd2.SubResults[4].Value
-			pd2.Result.Value = data.NameNTypes{
-				Name:   val0.(string),
-				Types:  val4.([]data.Type),
-				SrcPos: pd.Result.Pos,
+			if typ, ok := pd2.Result.Value.(data.Type); ok {
+				pd2.Result.Value = data.NameNTypes{
+					Types:  []data.Type{typ},
+					SrcPos: pd.Result.Pos,
+				}
 			}
 			return pd2, ctx2
 		},
@@ -352,7 +372,7 @@ func NewParsePlugins() (*ParsePlugins, error) {
 func (p *ParsePlugins) In(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAny(
+		return gparselib.ParseBest(
 			pd, ctx,
 			[]gparselib.SubparserOp{p.pttl.In, p.ptl.In},
 			nil,

@@ -205,7 +205,7 @@ func TestParseFlow(t *testing.T) {
 			},
 			expectedErrCount: 0,
 		}, {
-			givenName:    "complex",
+			givenName:    "complex 1",
 			givenContent: "[A](b)->c // my comment\nd \t (e)-> \t f \t [G] \t -> \t h;",
 			expectedValue: data.Flow{
 				Parts: [][]interface{}{
@@ -238,6 +238,132 @@ func TestParseFlow(t *testing.T) {
 						data.Arrow{
 							ToPort: &data.Port{Name: "h", SrcPos: 51},
 							SrcPos: 46,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex 2",
+			givenContent: "[a B [c=D,E|f=G,H]] (i)-> out\n",
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", Type: data.Type{LocalType: "B", SrcPos: 3},
+								SrcPos: 1,
+							},
+							Plugins: []data.NameNTypes{
+								data.NameNTypes{
+									Name: "c",
+									Types: []data.Type{
+										data.Type{LocalType: "D", SrcPos: 8},
+										data.Type{LocalType: "E", SrcPos: 10},
+									},
+									SrcPos: 6,
+								},
+								data.NameNTypes{
+									Name: "f",
+									Types: []data.Type{
+										data.Type{LocalType: "G", SrcPos: 14},
+										data.Type{LocalType: "H", SrcPos: 16},
+									},
+									SrcPos: 12,
+								},
+							},
+						},
+						data.Arrow{
+							Data:   []data.Type{data.Type{LocalType: "i", SrcPos: 21}},
+							ToPort: &data.Port{Name: "out", SrcPos: 26},
+							SrcPos: 20,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex 3",
+			givenContent: "[A[p1|p2|p3]] (b)->c [D[plug=sp1,sp2,sp3]] (e)-> f[G[sp1,sp2]] -> h;",
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{
+							Decl: data.CompDecl{
+								Name:   "a",
+								Type:   data.Type{LocalType: "A", SrcPos: 1},
+								SrcPos: 1,
+							},
+							Plugins: []data.NameNTypes{
+								data.NameNTypes{
+									Types: []data.Type{
+										data.Type{LocalType: "p1", SrcPos: 3},
+									},
+									SrcPos: 3,
+								},
+								data.NameNTypes{
+									Types: []data.Type{
+										data.Type{LocalType: "p2", SrcPos: 6},
+									},
+									SrcPos: 6,
+								},
+								data.NameNTypes{
+									Types: []data.Type{
+										data.Type{LocalType: "p3", SrcPos: 9},
+									},
+									SrcPos: 9,
+								},
+							},
+						},
+						data.Arrow{
+							Data:   []data.Type{data.Type{LocalType: "b", SrcPos: 15}},
+							ToPort: &data.Port{Name: "c", SrcPos: 19},
+							SrcPos: 14,
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:   "d",
+								Type:   data.Type{LocalType: "D", SrcPos: 22},
+								SrcPos: 22,
+							},
+							Plugins: []data.NameNTypes{
+								data.NameNTypes{
+									Name: "plug",
+									Types: []data.Type{
+										data.Type{LocalType: "sp1", SrcPos: 29},
+										data.Type{LocalType: "sp2", SrcPos: 33},
+										data.Type{LocalType: "sp3", SrcPos: 37},
+									},
+									SrcPos: 24,
+								},
+							},
+							SrcPos: 21,
+						},
+						data.Arrow{
+							Data:   []data.Type{data.Type{LocalType: "e", SrcPos: 44}},
+							ToPort: &data.Port{Name: "f", SrcPos: 49},
+							SrcPos: 43,
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:   "g",
+								Type:   data.Type{LocalType: "G", SrcPos: 51},
+								SrcPos: 51,
+							},
+							Plugins: []data.NameNTypes{
+								data.NameNTypes{
+									Types: []data.Type{
+										data.Type{LocalType: "sp1", SrcPos: 53},
+										data.Type{LocalType: "sp2", SrcPos: 57},
+									},
+									SrcPos: 53,
+								},
+							},
+							SrcPos: 50,
+						},
+						data.Arrow{
+							ToPort: &data.Port{Name: "h", SrcPos: 66},
+							SrcPos: 63,
 						},
 					},
 				},

@@ -224,7 +224,7 @@ func NewParseFlow() (*ParseFlow, error) {
 	return &ParseFlow{pArrow: pArrow, pComp: pComp}, nil
 }
 
-// In is the input port of the ParsePort operation.
+// In is the input port of the ParseFlow operation.
 func (p *ParseFlow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pAnyPart := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAny(

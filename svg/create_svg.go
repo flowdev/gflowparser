@@ -484,12 +484,14 @@ func fillDataToSVG(
 	y := y0
 
 	y += 3
-	sf.Texts = append(sf.Texts, &svgText{
-		X: x + 6, Y: y + 24 - 6,
-		Width: len(f.Title) * 12,
-		Text:  f.Title,
-	})
-	y += 24
+	if f.Title != "" {
+		sf.Texts = append(sf.Texts, &svgText{
+			X: x + 6, Y: y + 24 - 6,
+			Width: (len(f.Title) + 1) * 12,
+			Text:  f.Title + ":",
+		})
+		y += 24
+	}
 
 	for _, r := range f.Rects {
 		sf.Lines = append(sf.Lines, &svgLine{
@@ -518,8 +520,10 @@ func fillDataToSVG(
 	return y
 }
 func fillDimensions(f *Plugin) (width int, height int) {
-	height = 24 + 2*3             // title text and padding
-	width = len(f.Title)*12 + 2*6 // title text and padding
+	if f.Title != "" {
+		height = 24 + 2*3                 // title text and padding
+		width = (len(f.Title)+1)*12 + 2*6 // title text and padding
+	}
 	for _, r := range f.Rects {
 		w, h := textDimensions(r)
 		height += h + 2*3
