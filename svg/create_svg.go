@@ -170,7 +170,15 @@ func svgFlowToBytes(sf *svgFlow) ([]byte, error) {
 
 func flowDataToSVGFlow(f *Flow) *svgFlow {
 	sf, x, y := initSVGData()
-	sf, x, y = shapesToSVG(f.Shapes, sf, x, y, arrowDataToSVG, opDataToSVG, rectDataToSVG, splitDataToSVG, mergeDataToSVG)
+	sf, x, y = shapesToSVG(
+		f.Shapes,
+		sf, x, y,
+		arrowDataToSVG,
+		opDataToSVG,
+		rectDataToSVG,
+		splitDataToSVG,
+		mergeDataToSVG,
+	)
 	return adjustDimensions(sf, x, y)
 }
 
@@ -288,10 +296,17 @@ func moveXTo(med *myMergeData, newX int) {
 	}
 }
 
-func splitDataToSVG(s *Split, sf *svgFlow, lsr *svgRect, x0, y0 int) (
-	nsf *svgFlow, xn, yn int,
-) {
-	nsf, xn, yn = shapesToSVG(s.Shapes, sf, x0, y0, arrowDataToSVG, opDataToSVG, rectDataToSVG, splitDataToSVG, mergeDataToSVG)
+func splitDataToSVG(s *Split, sf *svgFlow, lsr *svgRect, x0, y0 int,
+) (nsf *svgFlow, xn, yn int) {
+	nsf, xn, yn = shapesToSVG(
+		s.Shapes,
+		sf, x0, y0,
+		arrowDataToSVG,
+		opDataToSVG,
+		rectDataToSVG,
+		splitDataToSVG,
+		mergeDataToSVG,
+	)
 	adjustLastRect(lsr, yn)
 	return
 }
@@ -304,7 +319,8 @@ func adjustLastRect(lsr *svgRect, yn int) {
 	}
 }
 
-func arrowDataToSVG(a *Arrow, sf *svgFlow, x int, y int) (nsf *svgFlow, nx, ny int, mod *moveData) {
+func arrowDataToSVG(a *Arrow, sf *svgFlow, x int, y int,
+) (nsf *svgFlow, nx, ny int, mod *moveData) {
 	var dstPortText, dataText *svgText
 	y += 24
 	portLen := 0 // length in chars NOT pixels
@@ -407,17 +423,8 @@ func rectDataToSVG(r *Rect, sf *svgFlow, x int, y int) (nsf *svgFlow, nx, ny int
 	return sf, x + width + 12, y + 12
 }
 
-func opDataToSVG(
-	op *Op,
-	sf *svgFlow,
-	completedMerge *myMergeData,
-	x0, y0 int,
-) (
-	nsf *svgFlow,
-	lsr *svgRect,
-	ny0 int,
-	xn, yn int,
-) {
+func opDataToSVG(op *Op, sf *svgFlow, completedMerge *myMergeData, x0, y0 int,
+) (nsf *svgFlow, lsr *svgRect, ny0 int, xn, yn int) {
 	var y int
 
 	opW, opH := textDimensions(op.Main)
@@ -427,6 +434,9 @@ func opDataToSVG(
 		w, l := fillDimensions(f)
 		opH += l
 		opW = max(opW, w)
+	}
+	if len(op.Plugins) > 0 {
+		opH += 6
 	}
 
 	if completedMerge != nil {
@@ -448,8 +458,7 @@ func textDimensions(r *Rect) (width int, height int) {
 	height += len(r.Text) * 24
 	return
 }
-func outerOpToSVG(
-	r *Rect, w int, h int, sf *svgFlow, x0, y0 int,
+func outerOpToSVG(r *Rect, w int, h int, sf *svgFlow, x0, y0 int,
 ) (svgMainRect *svgRect, y02 int, xn int, yn int) {
 	x := x0
 	y := y0 + 6
@@ -521,15 +530,16 @@ func fillDataToSVG(
 }
 func fillDimensions(f *Plugin) (width int, height int) {
 	if f.Title != "" {
-		height = 24 + 2*3                 // title text and padding
+		height = 24                       // title text
 		width = (len(f.Title)+1)*12 + 2*6 // title text and padding
 	}
+	height += 2 * 3 // padding
 	for _, r := range f.Rects {
 		w, h := textDimensions(r)
-		height += h + 2*3
+		height += h + 3
 		width = max(width, w+2*6)
 	}
-	return
+	return width, height
 }
 
 func maxLen(ss []string) int {

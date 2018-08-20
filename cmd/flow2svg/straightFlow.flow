@@ -1,0 +1,6 @@
+in1 (data1)-> in[a]o:0 -> i:1[c D]out -> out1
+inX (d1, d2, pack.D3)-> myIn [ x B [c=d,pack.E,F,G] ] myOut:3 -> outX
+in2 (svg.Flow)-> in[validateFlowData]-> [flowDataToSVGFlow] (svg.svgFlow)-> [svgFlowToBytes]out (bytes)-> out2
+in3 (d1, d2, pack.D3)-> myIn [ e B [c=d,E|pack.F] ] myOut:3 -> [ lottaPlugs [P1|p2|p3|p4|p5|p6|p7|p8|p9|p10] ] -> [ lottaSubPlugs [p=sp1,sp2,sp3,sp4,sp5,sp6,sp7,sp8,sp9,sp10|q] ] -> out3
+in4 (data4)-> in[s T]o:0 -> i:1[u V]out -> out4
+

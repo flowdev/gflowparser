@@ -22,18 +22,18 @@ import (
 //  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-type ParseNameIdent gparselib.ParseRegexp
+type ParseNameIdent gparselib.ParseRegexper
 
 // NewParseNameIdent creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
 func NewParseNameIdent() (*ParseNameIdent, error) {
-	p, err := gparselib.NewParseRegexp(`^[a-z][a-zA-Z0-9]*`)
+	p, err := gparselib.NewParseRegexper(`^[a-z][a-zA-Z0-9]*`)
 	return (*ParseNameIdent)(p), err
 }
 
 // In is the input port of the ParseNameIdent operation.
 func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
+	return ((*gparselib.ParseRegexper)(p)).ParseRegexp(pd, ctx, TextSemantic)
 }
 
 // ParsePackageIdent parses a package identifier.
@@ -47,18 +47,18 @@ func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparseli
 //  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-type ParsePackageIdent gparselib.ParseRegexp
+type ParsePackageIdent gparselib.ParseRegexper
 
 // NewParsePackageIdent creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
 func NewParsePackageIdent() (*ParsePackageIdent, error) {
-	p, err := gparselib.NewParseRegexp(`^[a-z][a-z0-9]*\.`)
+	p, err := gparselib.NewParseRegexper(`^[a-z][a-z0-9]*\.`)
 	return (*ParsePackageIdent)(p), err
 }
 
 // In is the input port of the ParsePackageIdent operation.
 func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx,
+	return ((*gparselib.ParseRegexper)(p)).ParseRegexp(pd, ctx,
 		func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 			pd.Result.Value = pd.Result.Text[:len(pd.Result.Text)-1]
 			return pd, ctx
@@ -76,18 +76,18 @@ func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gpars
 //  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-type ParseLocalTypeIdent gparselib.ParseRegexp
+type ParseLocalTypeIdent gparselib.ParseRegexper
 
 // NewParseLocalTypeIdent creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
 func NewParseLocalTypeIdent() (*ParseLocalTypeIdent, error) {
-	p, err := gparselib.NewParseRegexp(`^[A-Za-z][a-zA-Z0-9]*`)
+	p, err := gparselib.NewParseRegexper(`^[A-Za-z][a-zA-Z0-9]*`)
 	return (*ParseLocalTypeIdent)(p), err
 }
 
 // In is the input port of the ParseLocalTypeIdent operation.
 func (p *ParseLocalTypeIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	return ((*gparselib.ParseRegexp)(p)).In(pd, ctx, TextSemantic)
+	return ((*gparselib.ParseRegexper)(p)).ParseRegexp(pd, ctx, TextSemantic)
 }
 
 // ParseOptSpc parses optional space but no newline.

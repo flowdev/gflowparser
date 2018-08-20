@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/parser"
@@ -139,7 +138,6 @@ func arrowToSVGData(arr data.Arrow, hasSrcOp, hasDstOp bool) *svg.Arrow {
 
 func compToSVGData(comp data.Component) *svg.Op {
 	plugs := make([]*svg.Plugin, len(comp.Plugins))
-	log.Printf("%s, # of plugins: %d", comp.Decl.Name, len(comp.Plugins))
 	for i, plug := range comp.Plugins {
 		plugs[i] = pluginToSVGData(plug)
 	}
