@@ -27,13 +27,13 @@ var BigTestFlowData = &Flow{
 							},
 							Plugins: []*Plugin{
 								{
-									Title: "semantics:",
+									Title: "semantics",
 									Rects: []*Rect{
 										{Text: []string{"TextSemantics"}},
 									},
 								},
 								{
-									Title: "subParser:",
+									Title: "subParser",
 									Rects: []*Rect{
 										{Text: []string{"LitralParser"}},
 										{Text: []string{"NaturalParser"}},
@@ -104,13 +104,13 @@ var BigTestFlowData = &Flow{
 							},
 							Plugins: []*Plugin{
 								{
-									Title: "semantics:",
+									Title: "semantics",
 									Rects: []*Rect{
 										{Text: []string{"TextSemantics"}},
 									},
 								},
 								{
-									Title: "subParser:",
+									Title: "subParser",
 									Rects: []*Rect{
 										{Text: []string{"LitralParser"}},
 										{Text: []string{"NaturalParser"}},

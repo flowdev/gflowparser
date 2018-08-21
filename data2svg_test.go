@@ -4,10 +4,19 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"
 )
+
+func init() {
+	spew.Config.Indent = "    "
+	spew.Config.DisablePointerAddresses = true
+	spew.Config.DisableCapacities = true
+	spew.Config.SortKeys = true
+	spew.Config.SpewKeys = true
+}
 
 // func parserToSVGData(flowDat data.Flow) *svg.Flow {
 func TestParserToSVGData(t *testing.T) {
@@ -194,9 +203,8 @@ func TestParserToSVGData(t *testing.T) {
 										data.Type{Package: "q", LocalType: "T"},
 									},
 								}, {
-									Name: "plugin3",
 									Types: []data.Type{
-										data.Type{Package: "q", LocalType: "S"},
+										data.Type{Package: "q", LocalType: "Plugin3"},
 									},
 								},
 							},
@@ -207,57 +215,71 @@ func TestParserToSVGData(t *testing.T) {
 			expected: &svg.Flow{
 				Shapes: [][]interface{}{
 					{
-						&svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"a", "p.A"},
-							},
-							Plugins: []*svg.Plugin{
-								{
-									Rects: []*svg.Rect{
-										{Text: []string{"q.Z"}},
+						&decl{
+							name: "a",
+							i:    0, j: 0,
+							svgOp: &svg.Op{
+								Main: &svg.Rect{
+									Text: []string{"a", "p.A"},
+								},
+								Plugins: []*svg.Plugin{
+									{
+										Rects: []*svg.Rect{
+											{Text: []string{"q.Z"}},
+										},
 									},
 								},
 							},
+							svgMerge: &svg.Merge{ID: "a", Size: 0},
 						},
 						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
-						&svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"b", "p.B"},
-							},
-							Plugins: []*svg.Plugin{
-								{
-									Rects: []*svg.Rect{
-										{Text: []string{"q.Y"}},
-										{Text: []string{"q.X"}},
-										{Text: []string{"q.W"}},
+						&decl{
+							name: "b",
+							i:    0, j: 2,
+							svgOp: &svg.Op{
+								Main: &svg.Rect{
+									Text: []string{"b", "p.B"},
+								},
+								Plugins: []*svg.Plugin{
+									{
+										Rects: []*svg.Rect{
+											{Text: []string{"q.Y"}},
+											{Text: []string{"q.X"}},
+											{Text: []string{"q.W"}},
+										},
 									},
 								},
 							},
+							svgMerge: &svg.Merge{ID: "b", Size: 1},
 						},
 						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
-						&svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"c", "c"},
-							},
-							Plugins: []*svg.Plugin{
-								{
-									Title: "plugin1",
-									Rects: []*svg.Rect{
-										{Text: []string{"q.V"}},
-										{Text: []string{"q.U"}},
-									},
-								}, {
-									Title: "plugin2",
-									Rects: []*svg.Rect{
-										{Text: []string{"q.T"}},
-									},
-								}, {
-									Title: "plugin3",
-									Rects: []*svg.Rect{
-										{Text: []string{"q.S"}},
+						&decl{
+							name: "c",
+							i:    0, j: 4,
+							svgOp: &svg.Op{
+								Main: &svg.Rect{
+									Text: []string{"c"},
+								},
+								Plugins: []*svg.Plugin{
+									{
+										Title: "plugin1",
+										Rects: []*svg.Rect{
+											{Text: []string{"q.V"}},
+											{Text: []string{"q.U"}},
+										},
+									}, {
+										Title: "plugin2",
+										Rects: []*svg.Rect{
+											{Text: []string{"q.T"}},
+										},
+									}, {
+										Rects: []*svg.Rect{
+											{Text: []string{"q.Plugin3"}},
+										},
 									},
 								},
 							},
+							svgMerge: &svg.Merge{ID: "c", Size: 1},
 						},
 					},
 				},
@@ -284,7 +306,7 @@ func TestParserToSVGData(t *testing.T) {
 							Decl: data.CompDecl{
 								Name:      "c",
 								Type:      data.Type{LocalType: "c"},
-								VagueType: true,
+								VagueType: false,
 							},
 						},
 					},
@@ -326,18 +348,20 @@ func TestParserToSVGData(t *testing.T) {
 			for j, expectedPart := range expectedLine {
 				t.Logf("Testing part: %d\n", j+1)
 				gotPart := gotLine[j]
-				checkValue(gotPart, expectedPart, t)
+				checkValue(expectedPart, gotPart, t)
 			}
 		}
 	}
 }
 
-func checkValue(got, expected interface{}, t *testing.T) {
+func checkValue(expected, got interface{}, t *testing.T) {
 	if expected != nil && got == nil {
 		t.Errorf("Expected a value.")
 	} else if !reflect.DeepEqual(got, expected) {
 		t.Logf("The acutal value isn't equal to the expected one:")
-		t.Logf("Expected value of type '%T', got '%T'.", expected, got)
-		t.Errorf("Expected value '%#v', got '%#v'.", expected, got)
+		// Use this for compact report (excellent for quick manual usage):
+		t.Error(spew.Sprintf("Expected value:\n '%#v',\nGot value:\n '%#v'", expected, got))
+		// Use this for multi-line report (excellent for diff):
+		//t.Errorf("Expected value:\n%s\nGot value:\n%s", spew.Sdump(expected), spew.Sdump(got))
 	}
 }
