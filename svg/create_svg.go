@@ -108,6 +108,9 @@ type svgFlow struct {
 	Rects       []*svgRect
 	Lines       []*svgLine
 	Texts       []*svgText
+
+	completedMerge *myMergeData
+	allMerges      map[string]*myMergeData
 }
 
 type myMergeData struct {
@@ -188,6 +191,8 @@ func initSVGData() (sf *svgFlow, x0, y0 int) {
 		Rects:  make([]*svgRect, 0, 64),
 		Lines:  make([]*svgLine, 0, 64),
 		Texts:  make([]*svgText, 0, 64),
+
+		allMerges: make(map[string]*myMergeData),
 	}, 2, 1
 }
 func adjustDimensions(sf *svgFlow, xn, yn int) *svgFlow {
@@ -196,18 +201,13 @@ func adjustDimensions(sf *svgFlow, xn, yn int) *svgFlow {
 	return sf
 }
 
-// Unfortunately this has to be global as the next op can be in another
-// shapesToSVG call than the last merge.
-// ATTENTION: The op has to come directly after the last merge!
-var completedMerge *myMergeData
-
 func shapesToSVG(
 	shapes [][]interface{}, sf *svgFlow, x0 int, y0 int,
 	pluginArrowDataToSVG func(*Arrow, *svgFlow, int, int) (*svgFlow, int, int, *moveData),
-	pluginOpDataToSVG func(*Op, *svgFlow, *myMergeData, int, int) (*svgFlow, *svgRect, int, int, int),
+	pluginOpDataToSVG func(*Op, *svgFlow, int, int) (*svgFlow, *svgRect, int, int, int),
 	pluginRectDataToSVG func(*Rect, *svgFlow, int, int) (*svgFlow, int, int),
 	pluginSplitDataToSVG func(*Split, *svgFlow, *svgRect, int, int) (*svgFlow, int, int),
-	pluginMergeDataToSVG func(*Merge, *moveData, int, int) *myMergeData,
+	pluginMergeDataToSVG func(*Merge, *svgFlow, *moveData, int, int) *myMergeData,
 ) (nsf *svgFlow, xn, yn int) {
 	var xmax, ymax int
 	var mod *moveData
@@ -227,15 +227,15 @@ func shapesToSVG(
 				sf, x, y, mod = pluginArrowDataToSVG(s, sf, x, y)
 				lsr = nil
 			case *Op:
-				sf, lsr, y0, x, y = pluginOpDataToSVG(s, sf, completedMerge, x, y0)
-				completedMerge = nil
+				sf, lsr, y0, x, y = pluginOpDataToSVG(s, sf, x, y0)
+				sf.completedMerge = nil
 			case *Rect:
 				sf, x, y = pluginRectDataToSVG(s, sf, x, y)
 			case *Split:
 				sf, x, y = pluginSplitDataToSVG(s, sf, lsr, x, y)
 				lsr = nil
 			case *Merge:
-				completedMerge = pluginMergeDataToSVG(s, mod, x, y)
+				sf.completedMerge = pluginMergeDataToSVG(s, sf, mod, x, y)
 				mod = nil
 			default:
 				panic(fmt.Sprintf("unsupported type: %T", is))
@@ -249,14 +249,26 @@ func shapesToSVG(
 	return sf, xmax, ymax
 }
 
-// Unfortunately this has to be global as merges can be in different
-// shapesToSVG calls.
-// ATTENTION: The op has to come directly after the last merge!
-var allMerges = make(map[string]*myMergeData)
+func min(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
+}
+func max(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
+}
 
-func mergeDataToSVG(m *Merge, mod *moveData, x0, y0 int,
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func mergeDataToSVG(m *Merge, sf *svgFlow, mod *moveData, x0, y0 int,
 ) (completedMerge *myMergeData) {
-	md := allMerges[m.ID]
+	md := sf.allMerges[m.ID]
 	if md == nil { // first merge
 		md = &myMergeData{
 			x0:       x0,
@@ -265,7 +277,7 @@ func mergeDataToSVG(m *Merge, mod *moveData, x0, y0 int,
 			curSize:  1,
 			moveData: []*moveData{mod},
 		}
-		allMerges[m.ID] = md
+		sf.allMerges[m.ID] = md
 	} else { // additional merge
 		md.x0 = max(md.x0, x0)
 		md.y0 = min(md.y0, y0)
@@ -423,7 +435,7 @@ func rectDataToSVG(r *Rect, sf *svgFlow, x int, y int) (nsf *svgFlow, nx, ny int
 	return sf, x + width + 12, y + 12
 }
 
-func opDataToSVG(op *Op, sf *svgFlow, completedMerge *myMergeData, x0, y0 int,
+func opDataToSVG(op *Op, sf *svgFlow, x0, y0 int,
 ) (nsf *svgFlow, lsr *svgRect, ny0 int, xn, yn int) {
 	var y int
 
@@ -439,11 +451,11 @@ func opDataToSVG(op *Op, sf *svgFlow, completedMerge *myMergeData, x0, y0 int,
 		opH += 6
 	}
 
-	if completedMerge != nil {
-		x0 = completedMerge.x0
-		y0 = completedMerge.y0
+	if sf.completedMerge != nil {
+		x0 = sf.completedMerge.x0
+		y0 = sf.completedMerge.y0
 		ny0 = y0
-		opH = max(opH, completedMerge.yn-y0)
+		opH = max(opH, sf.completedMerge.yn-y0)
 	}
 
 	lsr, y, xn, yn = outerOpToSVG(op.Main, opW, opH, sf, x0, y0)
@@ -548,16 +560,4 @@ func maxLen(ss []string) int {
 		m = max(m, len(s))
 	}
 	return m
-}
-func min(a, b int) int {
-	if a <= b {
-		return a
-	}
-	return b
-}
-func max(a, b int) int {
-	if a >= b {
-		return a
-	}
-	return b
 }
