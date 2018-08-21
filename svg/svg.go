@@ -132,8 +132,7 @@ var tmpl = template.Must(template.New("diagram").Parse(svgDiagram))
 // If the flow data isn't valid or the SVG diagram can't be created with its
 // template, an error is returned.
 func FromFlowData(f *Flow) ([]byte, error) {
-	var err error
-	f, err = validateFlowData(f)
+	err := validateFlowData(f)
 	if err != nil {
 		return nil, err
 	}
@@ -143,23 +142,35 @@ func FromFlowData(f *Flow) ([]byte, error) {
 	return svgFlowToBytes(sf)
 }
 
-func validateFlowData(f *Flow) (*Flow, error) {
-	if f == nil || len(f.Shapes) <= 0 {
-		return nil, fmt.Errorf("flow is empty")
+func validateFlowData(f *Flow) error {
+	if f == nil {
+		return fmt.Errorf("flow is empty")
 	}
-	for i, row := range f.Shapes {
+	return validateShapes(f.Shapes)
+}
+
+func validateShapes(shapes [][]interface{}) error {
+	if len(shapes) <= 0 {
+		return fmt.Errorf("No shapes found")
+	}
+	for i, row := range shapes {
 		for j, ishape := range row {
-			switch ishape.(type) {
-			case *Arrow, *Op, *Split, *Merge:
+			switch shape := ishape.(type) {
+			case *Arrow, *Op, *Merge:
 				break
+			case *Split:
+				err := validateShapes(shape.Shapes)
+				if err != nil {
+					return err
+				}
 			default:
-				return nil, fmt.Errorf(
+				return fmt.Errorf(
 					"unsupported shape type %T at row index %d and column index %d",
 					ishape, i, j)
 			}
 		}
 	}
-	return f, nil
+	return nil
 }
 
 func svgFlowToBytes(sf *svgFlow) ([]byte, error) {
