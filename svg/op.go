@@ -4,37 +4,31 @@ func opDataToSVG(op *Op, sf *svgFlow, x0, y0 int,
 ) (nsf *svgFlow, lsr *svgRect, ny0 int, xn, yn int) {
 	var y int
 
-	opW, opH := textDimensions(op.Main)
-	opW += 2 * 12
-	opH += 6 + 10
+	opW := maxTextWidth(op.Main) + 2*12 // text + padding
+	opH := 0                            // outerOpToSVG should calculate itself
 	for _, f := range op.Plugins {
-		w, l := fillDimensions(f)
-		opH += l
+		w := maxPluginWidth(f)
 		opW = max(opW, w)
-	}
-	if len(op.Plugins) > 0 {
-		opH += 6
 	}
 
 	if sf.completedMerge != nil {
 		x0 = sf.completedMerge.x0
 		y0 = sf.completedMerge.y0
 		ny0 = y0
-		opH = max(opH, sf.completedMerge.yn-y0)
+		opH = sf.completedMerge.yn - y0 // now we have a minimum to enforce
 	}
 
 	lsr, y, xn, yn = outerOpToSVG(op.Main, opW, opH, sf, x0, y0)
 	for _, f := range op.Plugins {
-		y = fillDataToSVG(f, xn-x0, sf, x0, y)
+		y = pluginDataToSVG(f, xn-x0, sf, x0, y)
+	}
+	if len(op.Plugins) > 0 {
+		y += 6
+		lsr.Height = max(lsr.Height+6, y-y0)
+		yn = max(yn, y0+lsr.Height+2*6)
 	}
 
 	return sf, lsr, y0, xn, yn
-}
-
-func textDimensions(r *Rect) (width int, height int) {
-	width = maxLen(r.Text) * 12
-	height += len(r.Text) * 24
-	return
 }
 
 func outerOpToSVG(r *Rect, w int, h int, sf *svgFlow, x0, y0 int,
@@ -42,6 +36,7 @@ func outerOpToSVG(r *Rect, w int, h int, sf *svgFlow, x0, y0 int,
 	x := x0
 	y := y0 + 6
 	h0 := len(r.Text)*24 + 6*2
+	h = max(h, h0)
 
 	svgMainRect = &svgRect{
 		X: x, Y: y,
@@ -63,7 +58,7 @@ func outerOpToSVG(r *Rect, w int, h int, sf *svgFlow, x0, y0 int,
 	return svgMainRect, y0 + 6 + h0, x + w, y0 + h + 2*6
 }
 
-func fillDataToSVG(
+func pluginDataToSVG(
 	f *Plugin,
 	width int,
 	sf *svgFlow,
@@ -82,12 +77,14 @@ func fillDataToSVG(
 		y += 24
 	}
 
-	for _, r := range f.Rects {
-		sf.Lines = append(sf.Lines, &svgLine{
-			X1: x0, Y1: y,
-			X2: x0 + width, Y2: y,
-		})
-		y += 3
+	for i, r := range f.Rects {
+		if i > 0 || f.Title != "" {
+			sf.Lines = append(sf.Lines, &svgLine{
+				X1: x0, Y1: y,
+				X2: x0 + width, Y2: y,
+			})
+			y += 3
+		}
 		for _, t := range r.Text {
 			sf.Texts = append(sf.Texts, &svgText{
 				X: x + 6, Y: y + 24 - 6,
@@ -109,18 +106,20 @@ func fillDataToSVG(
 	return y
 }
 
-func fillDimensions(f *Plugin) (width int, height int) {
+func maxPluginWidth(f *Plugin) int {
+	width := 0
 	if f.Title != "" {
-		height = 24                       // title text
 		width = (len(f.Title)+1)*12 + 2*6 // title text and padding
 	}
-	height += 2 * 3 // padding
 	for _, r := range f.Rects {
-		w, h := textDimensions(r)
-		height += h + 3
+		w := maxTextWidth(r)
 		width = max(width, w+2*6)
 	}
-	return width, height
+	return width
+}
+
+func maxTextWidth(r *Rect) int {
+	return maxLen(r.Text) * 12
 }
 
 func maxLen(ss []string) int {
