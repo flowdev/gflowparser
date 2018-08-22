@@ -18,11 +18,11 @@ type parseTestData struct {
 }
 
 func TestParseNameIdent(t *testing.T) {
-	p, err := NewParseNameIdent()
+	p, err := NewNameIdentParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseNameIdent, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -68,11 +68,11 @@ func TestParseNameIdent(t *testing.T) {
 }
 
 func TestParsePackageIdent(t *testing.T) {
-	p, err := NewParsePackageIdent()
+	p, err := NewPackageIdentParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParsePackageIdent, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -118,11 +118,11 @@ func TestParsePackageIdent(t *testing.T) {
 }
 
 func TestParseLocalTypeIdent(t *testing.T) {
-	p, err := NewParseLocalTypeIdent()
+	p, err := NewLocalTypeIdentParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseLocalTypeIdent, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,

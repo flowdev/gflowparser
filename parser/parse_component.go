@@ -16,19 +16,19 @@ import (
 //
 // Details:
 type ParseType struct {
-	pLocalType *ParseLocalTypeIdent
-	pPack      *ParsePackageIdent
+	pLocalType *LocalTypeIdentParser
+	pPack      *PackageIdentParser
 }
 
 // NewParseType creates a new parser for a type declaration.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
 func NewParseType() (*ParseType, error) {
-	pPack, err := NewParsePackageIdent()
+	pPack, err := NewPackageIdentParser()
 	if err != nil {
 		return nil, err
 	}
-	pLType, err := NewParseLocalTypeIdent()
+	pLType, err := NewLocalTypeIdentParser()
 	if err != nil {
 		return nil, err
 	}
@@ -39,11 +39,11 @@ func NewParseType() (*ParseType, error) {
 func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
 	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, p.pPack.In, nil)
+		return gparselib.ParseOptional(pd2, ctx2, p.pPack.ParsePackageIdent, nil)
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{pOpt, p.pLocalType.In},
+		[]gparselib.SubparserOp{pOpt, p.pLocalType.ParseLocalTypeIdent},
 		parseTypeSemantic,
 	)
 }
@@ -71,7 +71,7 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 //
 // Details:
 type ParseCompDecl struct {
-	pName *ParseNameIdent
+	pName *NameIdentParser
 	pType *ParseType
 }
 
@@ -79,7 +79,7 @@ type ParseCompDecl struct {
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
 func NewParseCompDecl() (*ParseCompDecl, error) {
-	pName, err := NewParseNameIdent()
+	pName, err := NewNameIdentParser()
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (p *ParseCompDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	pLong := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pName.In, ParseASpc, p.pType.In},
+			[]gparselib.SubparserOp{p.pName.ParseNameIdent, ParseASpc, p.pType.In},
 			parseCompDeclSemantic,
 		)
 	}
@@ -208,7 +208,7 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 //
 // Details:
 type ParseTitledTypes struct {
-	pn  *ParseNameIdent
+	pn  *NameIdentParser
 	ptl *ParseTypeList
 	pt  *ParseType
 }
@@ -217,7 +217,7 @@ type ParseTitledTypes struct {
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
 func NewParseTitledTypes() (*ParseTitledTypes, error) {
-	pn, err := NewParseNameIdent()
+	pn, err := NewNameIdentParser()
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +240,7 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 	}
 	pBig := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
-			[]gparselib.SubparserOp{p.pn.In, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.In},
+			[]gparselib.SubparserOp{p.pn.ParseNameIdent, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.In},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				val0 := pd2.SubResults[0].Value
 				val4 := pd2.SubResults[4].Value

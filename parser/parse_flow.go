@@ -20,14 +20,14 @@ import (
 //
 // Details:
 type ParsePort struct {
-	pName *ParseNameIdent
+	pName *NameIdentParser
 }
 
 // NewParsePort creates a new parser for a port.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
 func NewParsePort() (*ParsePort, error) {
-	pName, err := NewParseNameIdent()
+	pName, err := NewNameIdentParser()
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (p *ParsePort) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 		return gparselib.ParseOptional(pd2, ctx2, pIndex, nil)
 	}
 	return gparselib.ParseAll(pd, ctx,
-		[]gparselib.SubparserOp{p.pName.In, pOpt},
+		[]gparselib.SubparserOp{p.pName.ParseNameIdent, pOpt},
 		parsePortSemantic,
 	)
 }

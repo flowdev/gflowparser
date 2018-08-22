@@ -11,7 +11,7 @@ import (
 	"github.com/flowdev/gparselib"
 )
 
-// ParseNameIdent parses a name identifier.
+// NameIdentParser parses a name identifier.
 // Regexp: [a-z][a-zA-Z0-9]*
 // Semantic result: The parsed text.
 //
@@ -22,21 +22,23 @@ import (
 //  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-type ParseNameIdent gparselib.ParseRegexper
+type NameIdentParser gparselib.ParseRegexper
 
-// NewParseNameIdent creates a new parser for the given regular expression.
+// NewNameIdentParser creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
-func NewParseNameIdent() (*ParseNameIdent, error) {
+func NewNameIdentParser() (*NameIdentParser, error) {
 	p, err := gparselib.NewParseRegexper(`^[a-z][a-zA-Z0-9]*`)
-	return (*ParseNameIdent)(p), err
+	return (*NameIdentParser)(p), err
 }
 
-// In is the input port of the ParseNameIdent operation.
-func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParseNameIdent is the input port of the NameIdentParser operation.
+func (p *NameIdentParser) ParseNameIdent(
+	pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
 	return ((*gparselib.ParseRegexper)(p)).ParseRegexp(pd, ctx, TextSemantic)
 }
 
-// ParsePackageIdent parses a package identifier.
+// PackageIdentParser parses a package identifier.
 // Regexp: [a-z][a-z0-9]*\.
 // Semantic result: The parsed text (without the dot).
 //
@@ -47,17 +49,19 @@ func (p *ParseNameIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparseli
 //  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-type ParsePackageIdent gparselib.ParseRegexper
+type PackageIdentParser gparselib.ParseRegexper
 
-// NewParsePackageIdent creates a new parser for the given regular expression.
+// NewPackageIdentParser creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
-func NewParsePackageIdent() (*ParsePackageIdent, error) {
+func NewPackageIdentParser() (*PackageIdentParser, error) {
 	p, err := gparselib.NewParseRegexper(`^[a-z][a-z0-9]*\.`)
-	return (*ParsePackageIdent)(p), err
+	return (*PackageIdentParser)(p), err
 }
 
-// In is the input port of the ParsePackageIdent operation.
-func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParsePackageIdent is the input port of the PackageIdentParser operation.
+func (p *PackageIdentParser) ParsePackageIdent(
+	pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
 	return ((*gparselib.ParseRegexper)(p)).ParseRegexp(pd, ctx,
 		func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 			pd.Result.Value = pd.Result.Text[:len(pd.Result.Text)-1]
@@ -65,7 +69,7 @@ func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gpars
 		})
 }
 
-// ParseLocalTypeIdent parses a local (without package) type identifier.
+// LocalTypeIdentParser parses a local (without package) type identifier.
 // Regexp: [A-Za-z][a-zA-Z0-9]*
 // Semantic result: The parsed text.
 //
@@ -76,17 +80,17 @@ func (p *ParsePackageIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gpars
 //  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
 //  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
 //  - [TextSemantic](./parseUtils.md#textsemantic)
-type ParseLocalTypeIdent gparselib.ParseRegexper
+type LocalTypeIdentParser gparselib.ParseRegexper
 
-// NewParseLocalTypeIdent creates a new parser for the given regular expression.
+// NewLocalTypeIdentParser creates a new parser for the given regular expression.
 // If the regular expression is invalid an error is returned.
-func NewParseLocalTypeIdent() (*ParseLocalTypeIdent, error) {
+func NewLocalTypeIdentParser() (*LocalTypeIdentParser, error) {
 	p, err := gparselib.NewParseRegexper(`^[A-Za-z][a-zA-Z0-9]*`)
-	return (*ParseLocalTypeIdent)(p), err
+	return (*LocalTypeIdentParser)(p), err
 }
 
-// In is the input port of the ParseLocalTypeIdent operation.
-func (p *ParseLocalTypeIdent) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParseLocalTypeIdent is the input port of the LocalTypeIdentParser operation.
+func (p *LocalTypeIdentParser) ParseLocalTypeIdent(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	return ((*gparselib.ParseRegexper)(p)).ParseRegexp(pd, ctx, TextSemantic)
 }
 
