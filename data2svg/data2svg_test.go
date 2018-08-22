@@ -160,7 +160,7 @@ func TestParserToSVGData(t *testing.T) {
 								Type:      data.Type{Package: "p", LocalType: "A"},
 								VagueType: false,
 							},
-							Plugins: []data.NameNTypes{
+							Plugins: []data.Plugin{
 								{
 									Types: []data.Type{data.Type{Package: "q", LocalType: "Z"}},
 								},
@@ -173,7 +173,7 @@ func TestParserToSVGData(t *testing.T) {
 								Type:      data.Type{Package: "p", LocalType: "B"},
 								VagueType: false,
 							},
-							Plugins: []data.NameNTypes{
+							Plugins: []data.Plugin{
 								{
 									Types: []data.Type{
 										data.Type{Package: "q", LocalType: "Y"},
@@ -190,7 +190,7 @@ func TestParserToSVGData(t *testing.T) {
 								Type:      data.Type{LocalType: "c"},
 								VagueType: true,
 							},
-							Plugins: []data.NameNTypes{
+							Plugins: []data.Plugin{
 								{
 									Name: "plugin1",
 									Types: []data.Type{

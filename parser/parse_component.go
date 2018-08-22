@@ -246,7 +246,7 @@ func (p *PluginParser) ParsePlugin(pd *gparselib.ParseData, ctx interface{},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				val0 := pd2.SubResults[0].Value
 				val4 := pd2.SubResults[4].Value
-				pd2.Result.Value = data.NameNTypes{
+				pd2.Result.Value = data.Plugin{
 					Name:   val0.(string),
 					Types:  val4.([]data.Type),
 					SrcPos: pd.Result.Pos,
@@ -260,7 +260,7 @@ func (p *PluginParser) ParsePlugin(pd *gparselib.ParseData, ctx interface{},
 		[]gparselib.SubparserOp{pBig, p.pt.ParseType},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 			if typ, ok := pd2.Result.Value.(data.Type); ok {
-				pd2.Result.Value = data.NameNTypes{
+				pd2.Result.Value = data.Plugin{
 					Types:  []data.Type{typ},
 					SrcPos: pd.Result.Pos,
 				}
@@ -328,11 +328,11 @@ func (p *PluginListParser) ParsePluginList(
 func parsePluginListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	firstList := pd.SubResults[0].Value
 	additionalLists := (pd.SubResults[1].Value).([]interface{})
-	alllists := make([](data.NameNTypes), len(additionalLists)+1)
-	alllists[0] = firstList.(data.NameNTypes)
+	alllists := make([](data.Plugin), len(additionalLists)+1)
+	alllists[0] = firstList.(data.Plugin)
 
 	for i, typ := range additionalLists {
-		alllists[i+1] = typ.(data.NameNTypes)
+		alllists[i+1] = typ.(data.Plugin)
 	}
 	pd.Result.Value = alllists
 	return pd, ctx
@@ -397,8 +397,8 @@ func (p *FullPluginsParser) ParseFullPlugins(pd *gparselib.ParseData, ctx interf
 func parseFullPluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	list := pd.SubResults[2].Value
 	if v, ok := list.([](data.Type)); ok {
-		pd.Result.Value = [](data.NameNTypes){
-			data.NameNTypes{Name: "", Types: v, SrcPos: v[0].SrcPos},
+		pd.Result.Value = [](data.Plugin){
+			data.Plugin{Name: "", Types: v, SrcPos: v[0].SrcPos},
 		}
 	} else {
 		pd.Result.Value = list
@@ -475,7 +475,7 @@ func parseComponentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparseli
 		SrcPos: pd.Result.Pos,
 	}
 	if pd.SubResults[3].Value != nil {
-		semVal.Plugins = (pd.SubResults[3].Value).([]data.NameNTypes)
+		semVal.Plugins = (pd.SubResults[3].Value).([]data.Plugin)
 	}
 	pd.Result.Value = semVal
 	return pd, ctx

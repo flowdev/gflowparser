@@ -254,8 +254,8 @@ func TestParseFlow(t *testing.T) {
 								Name: "a", Type: data.Type{LocalType: "B", SrcPos: 3},
 								SrcPos: 1,
 							},
-							Plugins: []data.NameNTypes{
-								data.NameNTypes{
+							Plugins: []data.Plugin{
+								data.Plugin{
 									Name: "c",
 									Types: []data.Type{
 										data.Type{LocalType: "D", SrcPos: 8},
@@ -263,7 +263,7 @@ func TestParseFlow(t *testing.T) {
 									},
 									SrcPos: 6,
 								},
-								data.NameNTypes{
+								data.Plugin{
 									Name: "f",
 									Types: []data.Type{
 										data.Type{LocalType: "G", SrcPos: 14},
@@ -294,20 +294,20 @@ func TestParseFlow(t *testing.T) {
 								Type:   data.Type{LocalType: "A", SrcPos: 1},
 								SrcPos: 1,
 							},
-							Plugins: []data.NameNTypes{
-								data.NameNTypes{
+							Plugins: []data.Plugin{
+								data.Plugin{
 									Types: []data.Type{
 										data.Type{LocalType: "p1", SrcPos: 3},
 									},
 									SrcPos: 3,
 								},
-								data.NameNTypes{
+								data.Plugin{
 									Types: []data.Type{
 										data.Type{LocalType: "p2", SrcPos: 6},
 									},
 									SrcPos: 6,
 								},
-								data.NameNTypes{
+								data.Plugin{
 									Types: []data.Type{
 										data.Type{LocalType: "p3", SrcPos: 9},
 									},
@@ -326,8 +326,8 @@ func TestParseFlow(t *testing.T) {
 								Type:   data.Type{LocalType: "D", SrcPos: 22},
 								SrcPos: 22,
 							},
-							Plugins: []data.NameNTypes{
-								data.NameNTypes{
+							Plugins: []data.Plugin{
+								data.Plugin{
 									Name: "plug",
 									Types: []data.Type{
 										data.Type{LocalType: "sp1", SrcPos: 29},
@@ -350,8 +350,8 @@ func TestParseFlow(t *testing.T) {
 								Type:   data.Type{LocalType: "G", SrcPos: 51},
 								SrcPos: 51,
 							},
-							Plugins: []data.NameNTypes{
-								data.NameNTypes{
+							Plugins: []data.Plugin{
+								data.Plugin{
 									Types: []data.Type{
 										data.Type{LocalType: "sp1", SrcPos: 53},
 										data.Type{LocalType: "sp2", SrcPos: 57},

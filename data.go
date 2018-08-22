@@ -25,18 +25,18 @@ type Port struct {
 // Component is the semantic representation of a component.
 type Component struct {
 	Decl    CompDecl
-	Plugins []NameNTypes
+	Plugins []Plugin
 	SrcPos  int
 }
 
-// NameNTypes is the semantic representation of a Name plus a list of types.
-type NameNTypes struct {
+// Plugin is the semantic representation of a component plugin.
+type Plugin struct {
 	Name   string
 	Types  []Type
 	SrcPos int
 }
 
-// CompDecl is the semantic representation of an operation declaration.
+// CompDecl is the semantic representation of an component declaration.
 type CompDecl struct {
 	Name      string
 	Type      Type

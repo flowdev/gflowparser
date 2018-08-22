@@ -218,7 +218,7 @@ func TestParsePlugin(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `a=A`,
-			expectedValue: data.NameNTypes{
+			expectedValue: data.Plugin{
 				Name: "a",
 				Types: []data.Type{
 					data.Type{LocalType: "A", SrcPos: 2},
@@ -228,7 +228,7 @@ func TestParsePlugin(t *testing.T) {
 		}, {
 			givenName:    "simple 2",
 			givenContent: `a`,
-			expectedValue: data.NameNTypes{
+			expectedValue: data.Plugin{
 				Types: []data.Type{
 					data.Type{LocalType: "a", SrcPos: 0},
 				},
@@ -237,7 +237,7 @@ func TestParsePlugin(t *testing.T) {
 		}, {
 			givenName:    "simple 3",
 			givenContent: `a=b, C`,
-			expectedValue: data.NameNTypes{
+			expectedValue: data.Plugin{
 				Name: "a",
 				Types: []data.Type{
 					data.Type{LocalType: "b", SrcPos: 2},
@@ -248,7 +248,7 @@ func TestParsePlugin(t *testing.T) {
 		}, {
 			givenName:    "simple 4",
 			givenContent: `tiTle = p.A, q.B`,
-			expectedValue: data.NameNTypes{
+			expectedValue: data.Plugin{
 				Name: "tiTle",
 				Types: []data.Type{
 					data.Type{Package: "p", LocalType: "A", SrcPos: 8},
@@ -259,7 +259,7 @@ func TestParsePlugin(t *testing.T) {
 		}, {
 			givenName:    "complex",
 			givenContent: "t \t \n= /* comment */ p.C, q.D",
-			expectedValue: data.NameNTypes{
+			expectedValue: data.Plugin{
 				Name: "t",
 				Types: []data.Type{
 					data.Type{Package: "p", LocalType: "C", SrcPos: 21},
@@ -290,8 +290,8 @@ func TestParsePluginList(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `a=A`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name:  "a",
 					Types: []data.Type{data.Type{LocalType: "A", SrcPos: 2}},
 				},
@@ -300,12 +300,12 @@ func TestParsePluginList(t *testing.T) {
 		}, {
 			givenName:    "simple 2",
 			givenContent: `a=b|c=D`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name:  "a",
 					Types: []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Name:   "c",
 					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 6}},
 					SrcPos: 4,
@@ -315,12 +315,12 @@ func TestParsePluginList(t *testing.T) {
 		}, {
 			givenName:    "simple 3",
 			givenContent: `a=b | c=D`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name:  "a",
 					Types: []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Name:   "c",
 					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 8}},
 					SrcPos: 6,
@@ -330,19 +330,19 @@ func TestParsePluginList(t *testing.T) {
 		}, {
 			givenName:    "simple 4",
 			givenContent: `a | b|c|d`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Types: []data.Type{data.Type{LocalType: "a", SrcPos: 0}},
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "b", SrcPos: 4}},
 					SrcPos: 4,
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "c", SrcPos: 6}},
 					SrcPos: 6,
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "d", SrcPos: 8}},
 					SrcPos: 8,
 				},
@@ -351,12 +351,12 @@ func TestParsePluginList(t *testing.T) {
 		}, {
 			givenName:    "complex",
 			givenContent: "a=b \t \n| /* comment */ c=D",
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name:  "a",
 					Types: []data.Type{data.Type{LocalType: "b", SrcPos: 2}},
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Name:   "c",
 					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 25}},
 					SrcPos: 23,
@@ -386,8 +386,8 @@ func TestParseFullPlugins(t *testing.T) {
 		}, {
 			givenName:    "simple 1",
 			givenContent: `[a=A]`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name:   "a",
 					Types:  []data.Type{data.Type{LocalType: "A", SrcPos: 3}},
 					SrcPos: 1,
@@ -397,8 +397,8 @@ func TestParseFullPlugins(t *testing.T) {
 		}, {
 			givenName:    "simple 2",
 			givenContent: `[a]`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "a", SrcPos: 1}},
 					SrcPos: 1,
 				},
@@ -407,8 +407,8 @@ func TestParseFullPlugins(t *testing.T) {
 		}, {
 			givenName:    "simple 3",
 			givenContent: `[ a=b,D ]`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name: "a",
 					Types: []data.Type{
 						data.Type{LocalType: "b", SrcPos: 4},
@@ -421,16 +421,16 @@ func TestParseFullPlugins(t *testing.T) {
 		}, {
 			givenName:    "simple 4",
 			givenContent: `[ a|B|c ]`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "a", SrcPos: 2}},
 					SrcPos: 2,
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "B", SrcPos: 4}},
 					SrcPos: 4,
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Types:  []data.Type{data.Type{LocalType: "c", SrcPos: 6}},
 					SrcPos: 6,
 				},
@@ -439,8 +439,8 @@ func TestParseFullPlugins(t *testing.T) {
 		}, {
 			givenName:    "simple 5",
 			givenContent: `[ a,B,c,D ]`,
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Types: []data.Type{
 						data.Type{LocalType: "a", SrcPos: 2},
 						data.Type{LocalType: "B", SrcPos: 4},
@@ -454,13 +454,13 @@ func TestParseFullPlugins(t *testing.T) {
 		}, {
 			givenName:    "complex",
 			givenContent: "[ \t \na=b|c=D /* comment */ ]",
-			expectedValue: []data.NameNTypes{
-				data.NameNTypes{
+			expectedValue: []data.Plugin{
+				data.Plugin{
 					Name:   "a",
 					Types:  []data.Type{data.Type{LocalType: "b", SrcPos: 7}},
 					SrcPos: 5,
 				},
-				data.NameNTypes{
+				data.Plugin{
 					Name:   "c",
 					Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 11}},
 					SrcPos: 9,
@@ -506,8 +506,8 @@ func TestParseComponent(t *testing.T) {
 					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 3},
 					SrcPos: 1,
 				},
-				Plugins: []data.NameNTypes{
-					data.NameNTypes{
+				Plugins: []data.Plugin{
+					data.Plugin{
 						Name: "",
 						Types: []data.Type{
 							data.Type{LocalType: "c", SrcPos: 5},
@@ -525,8 +525,8 @@ func TestParseComponent(t *testing.T) {
 					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 4},
 					SrcPos: 2,
 				},
-				Plugins: []data.NameNTypes{
-					data.NameNTypes{
+				Plugins: []data.Plugin{
+					data.Plugin{
 						Name:   "c",
 						Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 9}},
 						SrcPos: 7,
@@ -542,8 +542,8 @@ func TestParseComponent(t *testing.T) {
 					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 7},
 					SrcPos: 5,
 				},
-				Plugins: []data.NameNTypes{
-					data.NameNTypes{
+				Plugins: []data.Plugin{
+					data.Plugin{
 						Name:   "c",
 						Types:  []data.Type{data.Type{LocalType: "D", SrcPos: 28}},
 						SrcPos: 26,
@@ -559,8 +559,8 @@ func TestParseComponent(t *testing.T) {
 					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 3},
 					SrcPos: 1,
 				},
-				Plugins: []data.NameNTypes{
-					data.NameNTypes{
+				Plugins: []data.Plugin{
+					data.Plugin{
 						Name: "c",
 						Types: []data.Type{
 							data.Type{LocalType: "D", SrcPos: 8},
@@ -568,7 +568,7 @@ func TestParseComponent(t *testing.T) {
 						},
 						SrcPos: 6,
 					},
-					data.NameNTypes{
+					data.Plugin{
 						Name: "f",
 						Types: []data.Type{
 							data.Type{LocalType: "G", SrcPos: 14},
@@ -587,12 +587,12 @@ func TestParseComponent(t *testing.T) {
 					Name: "a", Type: data.Type{LocalType: "B", SrcPos: 3},
 					SrcPos: 1,
 				},
-				Plugins: []data.NameNTypes{
-					data.NameNTypes{
+				Plugins: []data.Plugin{
+					data.Plugin{
 						Types:  []data.Type{data.Type{LocalType: "c", SrcPos: 6}},
 						SrcPos: 6,
 					},
-					data.NameNTypes{
+					data.Plugin{
 						Types:  []data.Type{data.Type{LocalType: "d", SrcPos: 8}},
 						SrcPos: 8,
 					},
@@ -608,8 +608,8 @@ func TestParseComponent(t *testing.T) {
 					VagueType: true,
 					SrcPos:    1,
 				},
-				Plugins: []data.NameNTypes{
-					data.NameNTypes{
+				Plugins: []data.Plugin{
+					data.Plugin{
 						Types: []data.Type{
 							data.Type{LocalType: "b", SrcPos: 4},
 							data.Type{LocalType: "C", SrcPos: 6},

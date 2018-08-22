@@ -155,7 +155,7 @@ func compDeclToSVGData(decl data.CompDecl) []string {
 	return []string{decl.Name, typ}
 }
 
-func pluginToSVGData(plug data.NameNTypes) *svg.Plugin {
+func pluginToSVGData(plug data.Plugin) *svg.Plugin {
 	rects := make([]*svg.Rect, len(plug.Types))
 	for i, typ := range plug.Types {
 		rects[i] = &svg.Rect{
