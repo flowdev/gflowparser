@@ -101,7 +101,7 @@ func parsePortSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 // Details:
 type ParseArrow struct {
 	pPort *ParsePort
-	pData *ParseTypeList
+	pData *TypeListParser
 }
 
 // NewParseArrow creates a new parser for a flow arrow.
@@ -112,7 +112,7 @@ func NewParseArrow() (*ParseArrow, error) {
 	if err != nil {
 		return nil, err
 	}
-	pData, err := NewParseTypeList()
+	pData, err := NewTypeListParser()
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (p *ParseArrow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 		return gparselib.ParseAll(pd, ctx,
 			[]gparselib.SubparserOp{
 				pLeftParen, ParseSpaceComment,
-				p.pData.In, ParseSpaceComment,
+				p.pData.ParseTypeList, ParseSpaceComment,
 				pRightParen, ParseOptSpc,
 			},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
@@ -193,7 +193,7 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 // Details:
 type ParseFlow struct {
 	pArrow *ParseArrow
-	pComp  *ParseComponent
+	pComp  *ComponentParser
 }
 
 // Error messages for semantic errors.
@@ -229,7 +229,7 @@ func (p *ParseFlow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	pAnyPart := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAny(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pArrow.In, p.pComp.In},
+			[]gparselib.SubparserOp{p.pArrow.In, p.pComp.ParseComponent},
 			nil,
 		)
 	}

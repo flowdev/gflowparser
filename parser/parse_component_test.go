@@ -7,11 +7,11 @@ import (
 )
 
 func TestParseType(t *testing.T) {
-	p, err := NewParseType()
+	p, err := NewTypeParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseType, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -62,11 +62,11 @@ func TestParseType(t *testing.T) {
 }
 
 func TestParseCompDecl(t *testing.T) {
-	p, err := NewParseCompDecl()
+	p, err := NewCompDeclParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseCompDecl, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -137,11 +137,11 @@ func TestParseCompDecl(t *testing.T) {
 }
 
 func TestParseTypeList(t *testing.T) {
-	p, err := NewParseTypeList()
+	p, err := NewTypeListParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseTypeList, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -194,12 +194,12 @@ func TestParseTypeList(t *testing.T) {
 	})
 }
 
-func TestParseTitledTypes(t *testing.T) {
-	p, err := NewParseTitledTypes()
+func TestParsePlugin(t *testing.T) {
+	p, err := NewPluginParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParsePlugin, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -271,12 +271,12 @@ func TestParseTitledTypes(t *testing.T) {
 	})
 }
 
-func TestParseTitledTypesList(t *testing.T) {
-	p, err := NewParseTitledTypesList()
+func TestParsePluginList(t *testing.T) {
+	p, err := NewPluginListParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParsePluginList, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -367,12 +367,12 @@ func TestParseTitledTypesList(t *testing.T) {
 	})
 }
 
-func TestParsePlugins(t *testing.T) {
-	p, err := NewParsePlugins()
+func TestParseFullPlugins(t *testing.T) {
+	p, err := NewFullPluginsParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseFullPlugins, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -476,7 +476,7 @@ func TestParseComponent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseComponent, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,

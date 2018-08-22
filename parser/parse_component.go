@@ -7,7 +7,7 @@ import (
 	"github.com/flowdev/gparselib"
 )
 
-// ParseType parses a type declaration including optional package.
+// TypeParser parses a type declaration including optional package.
 // Semantic result: The optional package name and the local type name.
 //
 // flow:
@@ -15,15 +15,15 @@ import (
 //     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseLocalTypeIdent]] -> out
 //
 // Details:
-type ParseType struct {
+type TypeParser struct {
 	pLocalType *LocalTypeIdentParser
 	pPack      *PackageIdentParser
 }
 
-// NewParseType creates a new parser for a type declaration.
+// NewTypeParser creates a new parser for a type declaration.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseType() (*ParseType, error) {
+func NewTypeParser() (*TypeParser, error) {
 	pPack, err := NewPackageIdentParser()
 	if err != nil {
 		return nil, err
@@ -32,11 +32,12 @@ func NewParseType() (*ParseType, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ParseType{pPack: pPack, pLocalType: pLType}, nil
+	return &TypeParser{pPack: pPack, pLocalType: pLType}, nil
 }
 
-// In is the input port of the ParseType operation.
-func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParseType is the input port of the TypeParser operation.
+func (p *TypeParser) ParseType(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
 	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
 	) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseOptional(pd2, ctx2, p.pPack.ParsePackageIdent, nil)
@@ -47,7 +48,8 @@ func (p *ParseType) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 		parseTypeSemantic,
 	)
 }
-func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
 	val0 := pd.SubResults[0].Value
 	pack := ""
 	if val0 != nil {
@@ -61,7 +63,7 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	return pd, ctx
 }
 
-// ParseCompDecl parses an operation declaration.
+// CompDeclParser parses a component declaration.
 // Semantic result: The name and the type.
 //
 // flow:
@@ -70,38 +72,38 @@ func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 //     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseType]] -> out
 //
 // Details:
-type ParseCompDecl struct {
+type CompDeclParser struct {
 	pName *NameIdentParser
-	pType *ParseType
+	pType *TypeParser
 }
 
-// NewParseCompDecl creates a new parser for an operation declaration.
+// NewCompDeclParser creates a new parser for an operation declaration.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseCompDecl() (*ParseCompDecl, error) {
+func NewCompDeclParser() (*CompDeclParser, error) {
 	pName, err := NewNameIdentParser()
 	if err != nil {
 		return nil, err
 	}
-	pType, err := NewParseType()
+	pType, err := NewTypeParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParseCompDecl{pName: pName, pType: pType}, nil
+	return &CompDeclParser{pName: pName, pType: pType}, nil
 }
 
-// In is the input port of the ParseCompDecl operation.
-func (p *ParseCompDecl) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParseCompDecl is the input port of the CompDeclParser operation.
+func (p *CompDeclParser) ParseCompDecl(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pLong := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pName.ParseNameIdent, ParseASpc, p.pType.In},
+			[]gparselib.SubparserOp{p.pName.ParseNameIdent, ParseASpc, p.pType.ParseType},
 			parseCompDeclSemantic,
 		)
 	}
 	return gparselib.ParseAny(
 		pd, ctx,
-		[]gparselib.SubparserOp{pLong, p.pType.In},
+		[]gparselib.SubparserOp{pLong, p.pType.ParseType},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 			if typ, ok := pd2.Result.Value.(data.Type); ok {
 				name := nameFromType(typ.LocalType)
@@ -131,7 +133,7 @@ func nameFromType(localType string) string {
 	return strings.ToLower(localType[:1]) + localType[1:]
 }
 
-// ParseTypeList parses types separated by commas.
+// TypeListParser parses types separated by commas.
 // Semantic result: []data.Type
 //
 // flow:
@@ -144,23 +146,23 @@ func nameFromType(localType string) string {
 //                      ] -> out
 //
 // Details:
-type ParseTypeList struct {
-	pt *ParseType
+type TypeListParser struct {
+	pt *TypeParser
 }
 
-// NewParseTypeList creates a new parser for a type list.
+// NewTypeListParser creates a new parser for a type list.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseTypeList() (*ParseTypeList, error) {
-	p, err := NewParseType()
+func NewTypeListParser() (*TypeListParser, error) {
+	p, err := NewTypeParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParseTypeList{pt: p}, nil
+	return &TypeListParser{pt: p}, nil
 }
 
-// In is the input port of the ParseTypeList operation.
-func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
+// ParseTypeList is the input port of the TypeListParser operation.
+func (p *TypeListParser) ParseTypeList(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pComma := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, nil, `,`)
@@ -168,7 +170,7 @@ func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
 	pAdditionalType := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.pt.In},
+			[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.pt.ParseType},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				pd2.Result.Value = pd2.SubResults[3].Value
 				return pd2, ctx2
@@ -180,7 +182,7 @@ func (p *ParseTypeList) In(pd *gparselib.ParseData, ctx interface{},
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{p.pt.In, pAdditionalTypes},
+		[]gparselib.SubparserOp{p.pt.ParseType, pAdditionalTypes},
 		parseTypeListSemantic,
 	)
 }
@@ -197,7 +199,7 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	return pd, ctx
 }
 
-// ParseTitledTypes parses a name followed by the equals sign and types separated by commas.
+// PluginParser parses a name followed by the equals sign and types separated by commas.
 // Semantic result: The title and a slice of *data.Type.
 //
 // flow:
@@ -207,40 +209,40 @@ func parseTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 //                      ] -> out
 //
 // Details:
-type ParseTitledTypes struct {
+type PluginParser struct {
 	pn  *NameIdentParser
-	ptl *ParseTypeList
-	pt  *ParseType
+	ptl *TypeListParser
+	pt  *TypeParser
 }
 
-// NewParseTitledTypes creates a new parser for a titled type list.
+// NewPluginParser creates a new parser for a titled type list.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseTitledTypes() (*ParseTitledTypes, error) {
+func NewPluginParser() (*PluginParser, error) {
 	pn, err := NewNameIdentParser()
 	if err != nil {
 		return nil, err
 	}
-	ptl, err := NewParseTypeList()
+	ptl, err := NewTypeListParser()
 	if err != nil {
 		return nil, err
 	}
-	pt, err := NewParseType()
+	pt, err := NewTypeParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParseTitledTypes{pn: pn, ptl: ptl, pt: pt}, nil
+	return &PluginParser{pn: pn, ptl: ptl, pt: pt}, nil
 }
 
-// In is the input port of the ParseTitledTypes operation.
-func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
+// ParsePlugin is the input port of the PluginParser operation.
+func (p *PluginParser) ParsePlugin(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pEqual := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, nil, `=`)
 	}
 	pBig := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(pd, ctx,
-			[]gparselib.SubparserOp{p.pn.ParseNameIdent, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.In},
+			[]gparselib.SubparserOp{p.pn.ParseNameIdent, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.ParseTypeList},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				val0 := pd2.SubResults[0].Value
 				val4 := pd2.SubResults[4].Value
@@ -255,7 +257,7 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 	}
 	return gparselib.ParseAny(
 		pd, ctx,
-		[]gparselib.SubparserOp{pBig, p.pt.In},
+		[]gparselib.SubparserOp{pBig, p.pt.ParseType},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 			if typ, ok := pd2.Result.Value.(data.Type); ok {
 				pd2.Result.Value = data.NameNTypes{
@@ -268,7 +270,7 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 	)
 }
 
-// ParseTitledTypesList parses TitledTypes separated by a pipe '|' character.
+// PluginListParser parses Plugins separated by a pipe '|' character.
 // Semantic result: A slice of data.NameNTypes.
 //
 // flow:
@@ -281,23 +283,25 @@ func (p *ParseTitledTypes) In(pd *gparselib.ParseData, ctx interface{},
 //                      ] -> out
 //
 // Details:
-type ParseTitledTypesList struct {
-	ptt *ParseTitledTypes
+type PluginListParser struct {
+	pp *PluginParser
 }
 
-// NewParseTitledTypesList creates a new parser for multiple titled type lists.
+// NewPluginListParser creates a new parser for multiple titled type lists.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseTitledTypesList() (*ParseTitledTypesList, error) {
-	ptt, err := NewParseTitledTypes()
+func NewPluginListParser() (*PluginListParser, error) {
+	pp, err := NewPluginParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParseTitledTypesList{ptt: ptt}, nil
+	return &PluginListParser{pp: pp}, nil
 }
 
-// In is the input port of the ParseTitledTypesList operation.
-func (p *ParseTitledTypesList) In(pd *gparselib.ParseData, ctx interface{},
+// ParsePluginList is the input port of the PluginListParser
+// operation.
+func (p *PluginListParser) ParsePluginList(
+	pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pBar := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, nil, `|`)
@@ -305,7 +309,7 @@ func (p *ParseTitledTypesList) In(pd *gparselib.ParseData, ctx interface{},
 	pAdditionalList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, pBar, ParseSpaceComment, p.ptt.In},
+			[]gparselib.SubparserOp{ParseSpaceComment, pBar, ParseSpaceComment, p.pp.ParsePlugin},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				pd2.Result.Value = pd2.SubResults[3].Value
 				return pd2, ctx2
@@ -317,11 +321,11 @@ func (p *ParseTitledTypesList) In(pd *gparselib.ParseData, ctx interface{},
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{p.ptt.In, pAdditionalLists},
-		parseTitledTypesListSemantic,
+		[]gparselib.SubparserOp{p.pp.ParsePlugin, pAdditionalLists},
+		parsePluginListSemantic,
 	)
 }
-func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+func parsePluginListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	firstList := pd.SubResults[0].Value
 	additionalLists := (pd.SubResults[1].Value).([]interface{})
 	alllists := make([](data.NameNTypes), len(additionalLists)+1)
@@ -334,8 +338,8 @@ func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gp
 	return pd, ctx
 }
 
-// ParsePlugins parses the plugins of an operation starting with a '[' followed
-// by a TitledTypesList or a TypeList and a closing ']'.
+// FullPluginsParser parses the plugins of an operation starting with a '[' followed
+// by a PluginList or a TypeList and a closing ']'.
 // Semantic result: A slice of data.NameNTypes.
 //
 // flow:
@@ -348,33 +352,33 @@ func parseTitledTypesListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gp
 //                      ] -> out
 //
 // Details:
-type ParsePlugins struct {
-	pttl *ParseTitledTypesList
-	ptl  *ParseTypeList
+type FullPluginsParser struct {
+	pttl *PluginListParser
+	ptl  *TypeListParser
 }
 
-// NewParsePlugins creates a new parser for the plugins of an operation.
+// NewFullPluginsParser creates a new parser for the plugins of an operation.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParsePlugins() (*ParsePlugins, error) {
-	pttl, err := NewParseTitledTypesList()
+func NewFullPluginsParser() (*FullPluginsParser, error) {
+	pttl, err := NewPluginListParser()
 	if err != nil {
 		return nil, err
 	}
-	ptl, err := NewParseTypeList()
+	ptl, err := NewTypeListParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParsePlugins{pttl: pttl, ptl: ptl}, nil
+	return &FullPluginsParser{pttl: pttl, ptl: ptl}, nil
 }
 
-// In is the input port of the ParsePlugins operation.
-func (p *ParsePlugins) In(pd *gparselib.ParseData, ctx interface{},
+// ParseFullPlugins is the input port of the FullPluginsParser operation.
+func (p *FullPluginsParser) ParseFullPlugins(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseBest(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pttl.In, p.ptl.In},
+			[]gparselib.SubparserOp{p.pttl.ParsePluginList, p.ptl.ParseTypeList},
 			nil,
 		)
 	}
@@ -387,10 +391,10 @@ func (p *ParsePlugins) In(pd *gparselib.ParseData, ctx interface{},
 	return gparselib.ParseAll(
 		pd, ctx,
 		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, pList, ParseSpaceComment, pClose},
-		parsePluginsSemantic,
+		parseFullPluginsSemantic,
 	)
 }
-func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+func parseFullPluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	list := pd.SubResults[2].Value
 	if v, ok := list.([](data.Type)); ok {
 		pd.Result.Value = [](data.NameNTypes){
@@ -403,7 +407,7 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 	return pd, ctx
 }
 
-// ParseComponent parses a component including declaration and its plugins.
+// ComponentParser parses a component including declaration and its plugins.
 // Semantic result: A data.Component.
 //
 // flow:
@@ -417,33 +421,33 @@ func parsePluginsSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 //                      ] -> out
 //
 // Details:
-type ParseComponent struct {
-	pod *ParseCompDecl
-	pp  *ParsePlugins
+type ComponentParser struct {
+	pcd *CompDeclParser
+	pfp *FullPluginsParser
 }
 
 // NewParseComponent creates a new parser for a complete component.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseComponent() (*ParseComponent, error) {
-	pod, err := NewParseCompDecl()
+func NewParseComponent() (*ComponentParser, error) {
+	pcd, err := NewCompDeclParser()
 	if err != nil {
 		return nil, err
 	}
-	pp, err := NewParsePlugins()
+	pfp, err := NewFullPluginsParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParseComponent{pod: pod, pp: pp}, nil
+	return &ComponentParser{pcd: pcd, pfp: pfp}, nil
 }
 
-// In is the input port of the ParseComponent operation.
-func (p *ParseComponent) In(pd *gparselib.ParseData, ctx interface{},
+// ParseComponent is the input port of the ComponentParser operation.
+func (p *ComponentParser) ParseComponent(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pPlugins := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAll(
 			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, p.pp.In},
+			[]gparselib.SubparserOp{ParseSpaceComment, p.pfp.ParseFullPlugins},
 			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 				pd2.Result.Value = pd2.SubResults[1].Value
 				return pd2, ctx2
@@ -461,7 +465,7 @@ func (p *ParseComponent) In(pd *gparselib.ParseData, ctx interface{},
 	}
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, p.pod.In, pOpt, ParseSpaceComment, pClose},
+		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, p.pcd.ParseCompDecl, pOpt, ParseSpaceComment, pClose},
 		parseComponentSemantic,
 	)
 }
