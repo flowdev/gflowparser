@@ -421,14 +421,14 @@ func cleanSVGData(shapes [][]interface{}) {
 
 // FlowToSVG converts a flow DSL string into a SVG diagram string.
 type FlowToSVG struct {
-	pFlow *parser.ParseFlow
+	pFlow *parser.FlowParser
 }
 
 // NewFlowToSVG creates a new converter for a flow.
 // If any regular expression used by the parser is invalid an error is
 // returned.
 func NewFlowToSVG() (*FlowToSVG, error) {
-	pFlow, err := parser.NewParseFlow()
+	pFlow, err := parser.NewFlowParser()
 	if err != nil {
 		return nil, err
 	}
@@ -442,7 +442,7 @@ func NewFlowToSVG() (*FlowToSVG, error) {
 func (fts *FlowToSVG) ConvertFlowToSVG(flowContent, flowName string,
 ) ([]byte, string, error) {
 	pd := gparselib.NewParseData(flowName, flowContent)
-	pd, _ = fts.pFlow.In(pd, nil)
+	pd, _ = fts.pFlow.ParseFlow(pd, nil)
 
 	fb, err := checkParserFeedback(pd)
 	if err != nil {

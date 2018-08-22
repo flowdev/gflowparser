@@ -7,11 +7,11 @@ import (
 )
 
 func TestParsePort(t *testing.T) {
-	p, err := NewParsePort()
+	p, err := NewPortParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParsePort, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -62,11 +62,11 @@ func TestParsePort(t *testing.T) {
 }
 
 func TestParseArrow(t *testing.T) {
-	p, err := NewParseArrow()
+	p, err := NewArrowParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseArrow, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,
@@ -116,11 +116,11 @@ func TestParseArrow(t *testing.T) {
 }
 
 func TestParseFlow(t *testing.T) {
-	p, err := NewParseFlow()
+	p, err := NewFlowParser()
 	if err != nil {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-	runTests(t, p.In, []parseTestData{
+	runTests(t, p.ParseFlow, []parseTestData{
 		{
 			givenName:        "empty",
 			givenContent:     ``,

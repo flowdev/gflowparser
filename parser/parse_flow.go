@@ -8,7 +8,7 @@ import (
 	"github.com/flowdev/gparselib"
 )
 
-// ParsePort parses a port including optional index.
+// PortParser parses a port including optional index.
 // Semantic result: data.Port
 //
 // flow:
@@ -19,23 +19,23 @@ import (
 //     in (ParseData)-> [gparselib.ParseAll [ParseNameIdent, pOpt]] -> out
 //
 // Details:
-type ParsePort struct {
+type PortParser struct {
 	pName *NameIdentParser
 }
 
-// NewParsePort creates a new parser for a port.
+// NewPortParser creates a new parser for a port.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParsePort() (*ParsePort, error) {
+func NewPortParser() (*PortParser, error) {
 	pName, err := NewNameIdentParser()
 	if err != nil {
 		return nil, err
 	}
-	return &ParsePort{pName: pName}, nil
+	return &PortParser{pName: pName}, nil
 }
 
-// In is the input port of the ParsePort operation.
-func (p *ParsePort) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParsePort is the input port of the PortParser operation.
+func (p *PortParser) ParsePort(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pColon := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, nil, `:`)
 	}
@@ -77,7 +77,7 @@ func parsePortSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	return pd, ctx
 }
 
-// ParseArrow parses a flow arrow including ports and data types.
+// ArrowParser parses a flow arrow including ports and data types.
 // Semantic result: data.Arrow
 //
 // flow:
@@ -99,16 +99,16 @@ func parsePortSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 //                      ] -> out
 //
 // Details:
-type ParseArrow struct {
-	pPort *ParsePort
+type ArrowParser struct {
+	pPort *PortParser
 	pData *TypeListParser
 }
 
-// NewParseArrow creates a new parser for a flow arrow.
+// NewArrowParser creates a new parser for a flow arrow.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseArrow() (*ParseArrow, error) {
-	pPort, err := NewParsePort()
+func NewArrowParser() (*ArrowParser, error) {
+	pPort, err := NewPortParser()
 	if err != nil {
 		return nil, err
 	}
@@ -116,13 +116,13 @@ func NewParseArrow() (*ParseArrow, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ParseArrow{pPort: pPort, pData: pData}, nil
+	return &ArrowParser{pPort: pPort, pData: pData}, nil
 }
 
-// In is the input port of the ParsePort operation.
-func (p *ParseArrow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParseArrow is the input port of the ArrowParser operation.
+func (p *ArrowParser) ParseArrow(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pOptPort := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, p.pPort.In, nil)
+		return gparselib.ParseOptional(pd2, ctx2, p.pPort.ParsePort, nil)
 	}
 	pLeftParen := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, nil, `(`)
@@ -178,7 +178,7 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 	return pd, ctx
 }
 
-// ParseFlow parses a complete flow.
+// FlowParser parses a complete flow.
 // Semantic result: data.Flow
 //
 // flow:
@@ -191,8 +191,8 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 //     in (ParseData)-> [gparselib.ParseMulti1 [pPartLine]] -> out
 //
 // Details:
-type ParseFlow struct {
-	pArrow *ParseArrow
+type FlowParser struct {
+	pArrow *ArrowParser
 	pComp  *ComponentParser
 }
 
@@ -209,11 +209,11 @@ const (
 	errMsgFirstData = "The first arrow of this flow line is missing its data declaration"
 )
 
-// NewParseFlow creates a new parser for a flow.
+// NewFlowParser creates a new parser for a flow.
 // If any regular expression used by the subparsers is invalid an error is
 // returned.
-func NewParseFlow() (*ParseFlow, error) {
-	pArrow, err := NewParseArrow()
+func NewFlowParser() (*FlowParser, error) {
+	pArrow, err := NewArrowParser()
 	if err != nil {
 		return nil, err
 	}
@@ -221,15 +221,16 @@ func NewParseFlow() (*ParseFlow, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ParseFlow{pArrow: pArrow, pComp: pComp}, nil
+	return &FlowParser{pArrow: pArrow, pComp: pComp}, nil
 }
 
-// In is the input port of the ParseFlow operation.
-func (p *ParseFlow) In(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+// ParseFlow is the input port of the FlowParser operation.
+func (p *FlowParser) ParseFlow(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
 	pAnyPart := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAny(
 			pd, ctx,
-			[]gparselib.SubparserOp{p.pArrow.In, p.pComp.ParseComponent},
+			[]gparselib.SubparserOp{p.pArrow.ParseArrow, p.pComp.ParseComponent},
 			nil,
 		)
 	}
@@ -301,7 +302,6 @@ func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	}
 	return pd, ctx
 }
-
 func parseFlowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	lines := make([][]interface{}, len(pd.SubResults))
 	for i, subResult := range pd.SubResults {
