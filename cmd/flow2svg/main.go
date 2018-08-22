@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/flowdev/gflowparser"
+	"github.com/flowdev/gflowparser/data2svg"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	fts, err := gflowparser.NewFlowToSVG()
+	fts, err := data2svg.NewFlowToSVG()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: %s.\n", err)
 		os.Exit(3)

@@ -1,4 +1,4 @@
-package gflowparser
+package data2svg
 
 import "testing"
 

@@ -1,11 +1,11 @@
-package gflowparser
+package data2svg
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
 
-	"github.com/flowdev/gflowparser/data"
+	data "github.com/flowdev/gflowparser"
 	"github.com/flowdev/gflowparser/parser"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"

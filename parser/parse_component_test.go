@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/flowdev/gflowparser/data"
+	data "github.com/flowdev/gflowparser"
 )
 
 func TestParseType(t *testing.T) {

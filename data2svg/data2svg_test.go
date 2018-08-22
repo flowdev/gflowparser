@@ -1,11 +1,11 @@
-package gflowparser
+package data2svg
 
 import (
 	"reflect"
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/flowdev/gflowparser/data"
+	data "github.com/flowdev/gflowparser"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"
 )

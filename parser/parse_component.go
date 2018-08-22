@@ -3,7 +3,7 @@ package parser
 import (
 	"strings"
 
-	"github.com/flowdev/gflowparser/data"
+	data "github.com/flowdev/gflowparser"
 	"github.com/flowdev/gparselib"
 )
 
