@@ -136,6 +136,21 @@ var BigTestFlowData = Flow{
 					Text: []string{"BigMerge"},
 				},
 			},
+		}, { // empty to force more space
+		}, {
+			&Op{
+				Main: &Rect{
+					Text: []string{"recursive"},
+				},
+			},
+			&Arrow{
+				DataType: "Data",
+				HasSrcOp: true, SrcPort: "",
+				HasDstOp: true, DstPort: "",
+			},
+			&Rect{
+				Text: []string{"recursive"},
+			},
 		},
 	},
 }

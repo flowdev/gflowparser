@@ -153,7 +153,7 @@ func validateShapes(shapes [][]interface{}) error {
 	for i, row := range shapes {
 		for j, ishape := range row {
 			switch shape := ishape.(type) {
-			case *Arrow, *Op, *Merge:
+			case *Arrow, *Op, *Merge, *Rect:
 				break
 			case *Split:
 				err := validateShapes(shape.Shapes)
