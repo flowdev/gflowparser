@@ -23,7 +23,7 @@ func TestParserToSVGData(t *testing.T) {
 	specs := []struct {
 		name     string
 		given    data.Flow
-		expected *svg.Flow
+		expected [][]interface{}
 		hasError bool
 	}{
 		{
@@ -45,25 +45,23 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
-			expected: &svg.Flow{
-				Shapes: [][]interface{}{
-					{
-						&svg.Arrow{
-							HasSrcOp: false, SrcPort: "a",
-							DataType: "(b)",
-							HasDstOp: true, DstPort: "",
-						},
-						&decl{
-							name: "c",
-							i:    0, j: 1,
-							svgOp: &svg.Op{
-								Main: &svg.Rect{
-									Text: []string{"c"},
-								},
-								Plugins: []*svg.Plugin{},
+			expected: [][]interface{}{
+				{
+					&svg.Arrow{
+						HasSrcOp: false, SrcPort: "a",
+						DataType: "(b)",
+						HasDstOp: true, DstPort: "",
+					},
+					&decl{
+						name: "c",
+						i:    0, j: 1,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c"},
 							},
-							svgMerge: &svg.Merge{ID: "c", Size: 1},
+							Plugins: []*svg.Plugin{},
 						},
+						svgMerge: &svg.Merge{ID: "c", Size: 1},
 					},
 				},
 			},
@@ -105,46 +103,44 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
-			expected: &svg.Flow{
-				Shapes: [][]interface{}{
-					{
-						&svg.Arrow{
-							HasSrcOp: false, SrcPort: "a",
-							DataType: "(b)",
-							HasDstOp: true, DstPort: "in",
-						},
-						&decl{
-							name: "c",
-							i:    0, j: 1,
-							svgOp: &svg.Op{
-								Main: &svg.Rect{
-									Text: []string{"c"},
-								},
-								Plugins: []*svg.Plugin{},
+			expected: [][]interface{}{
+				{
+					&svg.Arrow{
+						HasSrcOp: false, SrcPort: "a",
+						DataType: "(b)",
+						HasDstOp: true, DstPort: "in",
+					},
+					&decl{
+						name: "c",
+						i:    0, j: 1,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c"},
 							},
-							svgMerge: &svg.Merge{ID: "c", Size: 1},
+							Plugins: []*svg.Plugin{},
 						},
-						&svg.Arrow{
-							HasSrcOp: true, SrcPort: "out",
-							DataType: "(b)",
-							HasDstOp: true, DstPort: "in",
-						},
-						&decl{
-							name: "d",
-							i:    0, j: 3,
-							svgOp: &svg.Op{
-								Main: &svg.Rect{
-									Text: []string{"d", "D"},
-								},
-								Plugins: []*svg.Plugin{},
+						svgMerge: &svg.Merge{ID: "c", Size: 1},
+					},
+					&svg.Arrow{
+						HasSrcOp: true, SrcPort: "out",
+						DataType: "(b)",
+						HasDstOp: true, DstPort: "in",
+					},
+					&decl{
+						name: "d",
+						i:    0, j: 3,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"d", "D"},
 							},
-							svgMerge: &svg.Merge{ID: "d", Size: 1},
+							Plugins: []*svg.Plugin{},
 						},
-						&svg.Arrow{
-							HasSrcOp: true, SrcPort: "out",
-							DataType: "(b)",
-							HasDstOp: false, DstPort: "out",
-						},
+						svgMerge: &svg.Merge{ID: "d", Size: 1},
+					},
+					&svg.Arrow{
+						HasSrcOp: true, SrcPort: "out",
+						DataType: "(b)",
+						HasDstOp: false, DstPort: "out",
 					},
 				},
 			},
@@ -212,75 +208,73 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
-			expected: &svg.Flow{
-				Shapes: [][]interface{}{
-					{
-						&decl{
-							name: "a",
-							i:    0, j: 0,
-							svgOp: &svg.Op{
-								Main: &svg.Rect{
-									Text: []string{"a", "p.A"},
-								},
-								Plugins: []*svg.Plugin{
-									{
-										Rects: []*svg.Rect{
-											{Text: []string{"q.Z"}},
-										},
+			expected: [][]interface{}{
+				{
+					&decl{
+						name: "a",
+						i:    0, j: 0,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"a", "p.A"},
+							},
+							Plugins: []*svg.Plugin{
+								{
+									Rects: []*svg.Rect{
+										{Text: []string{"q.Z"}},
 									},
 								},
 							},
-							svgMerge: &svg.Merge{ID: "a", Size: 0},
 						},
-						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
-						&decl{
-							name: "b",
-							i:    0, j: 2,
-							svgOp: &svg.Op{
-								Main: &svg.Rect{
-									Text: []string{"b", "p.B"},
-								},
-								Plugins: []*svg.Plugin{
-									{
-										Rects: []*svg.Rect{
-											{Text: []string{"q.Y"}},
-											{Text: []string{"q.X"}},
-											{Text: []string{"q.W"}},
-										},
+						svgMerge: &svg.Merge{ID: "a", Size: 0},
+					},
+					&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+					&decl{
+						name: "b",
+						i:    0, j: 2,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"b", "p.B"},
+							},
+							Plugins: []*svg.Plugin{
+								{
+									Rects: []*svg.Rect{
+										{Text: []string{"q.Y"}},
+										{Text: []string{"q.X"}},
+										{Text: []string{"q.W"}},
 									},
 								},
 							},
-							svgMerge: &svg.Merge{ID: "b", Size: 1},
 						},
-						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
-						&decl{
-							name: "c",
-							i:    0, j: 4,
-							svgOp: &svg.Op{
-								Main: &svg.Rect{
-									Text: []string{"c"},
-								},
-								Plugins: []*svg.Plugin{
-									{
-										Title: "plugin1",
-										Rects: []*svg.Rect{
-											{Text: []string{"q.V"}},
-											{Text: []string{"q.U"}},
-										},
-									}, {
-										Title: "plugin2",
-										Rects: []*svg.Rect{
-											{Text: []string{"q.T"}},
-										},
-									}, {
-										Rects: []*svg.Rect{
-											{Text: []string{"q.Plugin3"}},
-										},
+						svgMerge: &svg.Merge{ID: "b", Size: 1},
+					},
+					&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+					&decl{
+						name: "c",
+						i:    0, j: 4,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c"},
+							},
+							Plugins: []*svg.Plugin{
+								{
+									Title: "plugin1",
+									Rects: []*svg.Rect{
+										{Text: []string{"q.V"}},
+										{Text: []string{"q.U"}},
+									},
+								}, {
+									Title: "plugin2",
+									Rects: []*svg.Rect{
+										{Text: []string{"q.T"}},
+									},
+								}, {
+									Rects: []*svg.Rect{
+										{Text: []string{"q.Plugin3"}},
 									},
 								},
 							},
-							svgMerge: &svg.Merge{ID: "c", Size: 1},
 						},
+						svgMerge: &svg.Merge{ID: "c", Size: 1},
 					},
 				},
 			},
@@ -332,12 +326,13 @@ func TestParserToSVGData(t *testing.T) {
 			t.Errorf("Expected no error but got: %s", err)
 			continue
 		}
-		if len(gotAll) != len(spec.expected.Shapes) {
+
+		if len(gotAll) != len(spec.expected) {
 			t.Errorf("Expected %d part lines, got: %d",
-				len(spec.expected.Shapes), len(gotAll))
+				len(spec.expected), len(gotAll))
 			continue
 		}
-		for i, expectedLine := range spec.expected.Shapes {
+		for i, expectedLine := range spec.expected {
 			t.Logf("Testing part line: %d\n", i+1)
 			gotLine := gotAll[i]
 			if len(gotLine) != len(expectedLine) {

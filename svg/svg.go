@@ -131,7 +131,7 @@ var tmpl = template.Must(template.New("diagram").Parse(svgDiagram))
 // FromFlowData creates a SVG diagram from flow data.
 // If the flow data isn't valid or the SVG diagram can't be created with its
 // template, an error is returned.
-func FromFlowData(f *Flow) ([]byte, error) {
+func FromFlowData(f Flow) ([]byte, error) {
 	err := validateFlowData(f)
 	if err != nil {
 		return nil, err
@@ -142,10 +142,7 @@ func FromFlowData(f *Flow) ([]byte, error) {
 	return svgFlowToBytes(sf)
 }
 
-func validateFlowData(f *Flow) error {
-	if f == nil {
-		return fmt.Errorf("flow is empty")
-	}
+func validateFlowData(f Flow) error {
 	return validateShapes(f.Shapes)
 }
 
@@ -182,7 +179,7 @@ func svgFlowToBytes(sf *svgFlow) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func flowDataToSVGFlow(f *Flow) *svgFlow {
+func flowDataToSVGFlow(f Flow) *svgFlow {
 	sf, x, y := initSVGData()
 	sf, x, y = shapesToSVG(
 		f.Shapes,

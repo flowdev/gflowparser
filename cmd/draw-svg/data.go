@@ -2,7 +2,7 @@ package main
 
 import "github.com/flowdev/gflowparser/svg"
 
-var flowData = &svg.Flow{
+var flowData = svg.Flow{
 	Shapes: [][]interface{}{
 		{
 			&svg.Arrow{

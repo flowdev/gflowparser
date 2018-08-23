@@ -1,6 +1,6 @@
 package svg
 
-var BigTestFlowData = &Flow{
+var BigTestFlowData = Flow{
 	Shapes: [][]interface{}{
 		{
 			&Arrow{
