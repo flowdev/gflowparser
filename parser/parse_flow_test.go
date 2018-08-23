@@ -128,32 +128,32 @@ func TestParseFlow(t *testing.T) {
 			expectedErrCount: 5,
 		}, {
 			givenName:        "first input port missing",
-			givenContent:     `(dat)->[A]`,
+			givenContent:     `(dat)->[A];`,
 			expectedValue:    nil,
 			expectedErrCount: 2,
 		}, {
 			givenName:        "component missing",
-			givenContent:     `aPort (pack.Data)-> bPort`,
+			givenContent:     `aPort (pack.Data)-> bPort;`,
 			expectedValue:    nil,
 			expectedErrCount: 5,
 		}, {
 			givenName:        "data of first arrow missing",
-			givenContent:     `[A]->out`,
+			givenContent:     `[A]->out;`,
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "last output port missing",
+			givenContent:     `a(b)->[c]->;`,
 			expectedValue:    nil,
 			expectedErrCount: 2,
 		}, {
 			givenName:        "two consecutive arrows",
-			givenContent:     `in(Data)->->out`,
+			givenContent:     `in(Data)->->out;`,
 			expectedValue:    nil,
 			expectedErrCount: 2,
 		}, {
 			givenName:        "two consecutive components",
-			givenContent:     `[A][B]`,
-			expectedValue:    nil,
-			expectedErrCount: 2,
-		}, {
-			givenName:        "no end",
-			givenContent:     `a(b)->[c]`,
+			givenContent:     `[A][B];`,
 			expectedValue:    nil,
 			expectedErrCount: 2,
 		}, {
@@ -206,7 +206,7 @@ func TestParseFlow(t *testing.T) {
 			expectedErrCount: 0,
 		}, {
 			givenName:    "complex 1",
-			givenContent: "[A](b)->c // my comment\nd \t (e)-> \t f \t [G] \t -> \t h;",
+			givenContent: "[A](b)->c // my comment\nd \t (e)-> \t f \t [G] \t -> \t h",
 			expectedValue: data.Flow{
 				Parts: [][]interface{}{
 					{

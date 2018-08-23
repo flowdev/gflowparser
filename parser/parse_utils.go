@@ -163,13 +163,14 @@ func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 
 // Error messages for semantic errors.
 const (
-	errMsgNoEnd = "A statement must be ended by a semicolon (';') or a new line"
+	errMsgNoEnd = "A statement must be ended by a semicolon (';'), a new line or the end of the input"
 )
 
 // ParseStatementEnd parses optional space and comments as defined by
 // `ParseSpaceComment` followed by a semicolon (`;`) and more optional space
 // and comments.
-// The semicolon can be omited if the space or comments contain a new line.
+// The semicolon can be omited if the space or comments contain a new line or
+// at the end of the input.
 // Semantic result: The parsed text.
 func ParseStatementEnd(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pSemicolon := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
@@ -178,13 +179,26 @@ func ParseStatementEnd(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Par
 	pOptSemi := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseOptional(pd, ctx, pSemicolon, nil)
 	}
+	pEOF := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseEOF(pd, ctx,
+			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+				pd2.Result.Value = true
+				return pd2, ctx2
+			},
+		)
+	}
+	pOptEOF := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseOptional(pd, ctx, pEOF, nil)
+	}
+
 	return gparselib.ParseAll(pd, ctx,
-		[]gparselib.SubparserOp{ParseSpaceComment, pOptSemi, ParseSpaceComment},
+		[]gparselib.SubparserOp{ParseSpaceComment, pOptSemi, ParseSpaceComment, pOptEOF},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 			spcCmnt1 := pd2.SubResults[0].Value.(SpaceCommentSemValue)
 			semi := pd2.SubResults[1].Value
 			spcCmnt2 := pd2.SubResults[2].Value.(SpaceCommentSemValue)
-			if spcCmnt1.NewLine || semi != nil || spcCmnt2.NewLine {
+			eof := pd2.SubResults[3].Value
+			if spcCmnt1.NewLine || semi != nil || spcCmnt2.NewLine || eof != nil {
 				pd2.Result.Value = pd2.Result.Text
 			} else {
 				pd2.AddError(pd2.Result.Pos, errMsgNoEnd, nil)

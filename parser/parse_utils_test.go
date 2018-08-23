@@ -294,8 +294,8 @@ func TestParseStatementEnd(t *testing.T) {
 		{
 			givenName:        "empty",
 			givenContent:     ``,
-			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedValue:    "",
+			expectedErrCount: 0,
 		}, {
 			givenName:        "no match 1",
 			givenContent:     `baaa`,
@@ -303,7 +303,7 @@ func TestParseStatementEnd(t *testing.T) {
 			expectedErrCount: 1,
 		}, {
 			givenName:        "no match 2",
-			givenContent:     " /* bla */ \t /** blu ; */ \t ",
+			givenContent:     " /* bla */ \t /** blu ; */ \t a",
 			expectedValue:    nil,
 			expectedErrCount: 1,
 		}, {
@@ -365,14 +365,13 @@ func runTests(t *testing.T, p testParseOp, specs []parseTestData) {
 				t.Errorf("Expected no error but found at least one.")
 			}
 		} else {
+			t.Logf("Actual errors are: %s", printErrors(pd2.Result.Feedback))
 			if len(pd2.Result.Feedback) != spec.expectedErrCount {
-				t.Logf("Actual errors are: %s", printErrors(pd2.Result.Feedback))
 				t.Fatalf(
 					"Expected %d errors, got %d.",
 					spec.expectedErrCount, len(pd2.Result.Feedback),
 				)
 			} else if pd2.Result.Feedback[spec.expectedErrCount-1].Msg.String() == "" {
-				t.Logf("Actual errors are: %s", printErrors(pd2.Result.Feedback))
 				t.Errorf("Expected an error message.")
 			}
 		}
