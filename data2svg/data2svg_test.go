@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
-	data "github.com/flowdev/gflowparser"
+	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"
 )

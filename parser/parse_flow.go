@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	data "github.com/flowdev/gflowparser"
+	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gparselib"
 )
 

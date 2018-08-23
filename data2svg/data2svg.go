@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
-	data "github.com/flowdev/gflowparser"
+	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/svg"
 )
 
