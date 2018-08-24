@@ -1,18 +1,18 @@
-package parser
+package parser_test
 
 import (
 	"bytes"
 	"testing"
 
+	"github.com/flowdev/gflowparser/parser"
 	"github.com/flowdev/gparselib"
 )
 
 func TestCheckFeedback(t *testing.T) {
 	errPrefix := "Found errors while parsing flow:\n"
 	specs := []struct {
-		name        string
-		givenResult *gparselib.ParseResult
-		// Feedback: []*FeedbackItem
+		name             string
+		givenResult      *gparselib.ParseResult
 		expectedFeedback string
 		expectedError    string
 	}{
@@ -63,7 +63,7 @@ func TestCheckFeedback(t *testing.T) {
 	}
 	for _, spec := range specs {
 		t.Logf("Testing spec: %s\n", spec.name)
-		gotFeedback, gotError := CheckFeedback(spec.givenResult)
+		gotFeedback, gotError := parser.CheckFeedback(spec.givenResult)
 
 		if spec.expectedError != "" && gotError != nil {
 			if spec.expectedError != gotError.Error() {
