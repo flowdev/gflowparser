@@ -302,7 +302,8 @@ func handleMerges(allShapes [][]interface{}, myShapes [][]interface{},
 						s.svgSplit.Shapes,
 					)
 				}
-				if s.svgMerge == nil || s.svgMerge.Size <= 1 { // no merge
+				if s.svgMerge == nil || s.svgMerge.Size <= 0 ||
+					(s.svgMerge.Size == 1 && j > 0) { // no merge
 					s.svgMerge = nil
 					continue
 				}
@@ -340,7 +341,11 @@ func addDeclLineAfterLastMerge(shapes [][]interface{}, dl []interface{}, name st
 			switch s := sl[j].(type) {
 			case *merge:
 				if s.name == name { // this is the last merge
-					shapes[i] = append(sl, dl...)
+					if s.svg.Size <= 1 { // remove merge
+						shapes[i] = append(sl[:j], dl...)
+					} else {
+						shapes[i] = append(sl, dl...)
+					}
 					return true
 				}
 			case *decl:
