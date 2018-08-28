@@ -227,32 +227,44 @@ func NewFlowParser() (*FlowParser, error) {
 // ParseFlow is the input port of the FlowParser operation.
 func (p *FlowParser) ParseFlow(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pAnyPart := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	pAnyPart := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseAny(
-			pd, ctx,
+			pd2, ctx2,
 			[]gparselib.SubparserOp{p.pArrow.ParseArrow, p.pComp.ParseComponent},
 			nil,
 		)
 	}
 	pFullPart := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(pd, ctx,
+		return gparselib.ParseAll(pd2, ctx2,
 			[]gparselib.SubparserOp{pAnyPart, ParseOptSpc},
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = pd2.SubResults[0].Value
-				return pd2, ctx2
+			func(pd3 *gparselib.ParseData, ctx3 interface{}) (*gparselib.ParseData, interface{}) {
+				pd3.Result.Value = pd3.SubResults[0].Value
+				return pd3, ctx3
 			},
 		)
 	}
-	pPartString := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseMulti(pd, ctx, pFullPart, nil, 2, math.MaxInt32)
+	pPartString := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseMulti(pd2, ctx2, pFullPart, nil, 2, math.MaxInt32)
 	}
 	pPartLine := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(pd, ctx,
+		return gparselib.ParseAll(pd2, ctx2,
 			[]gparselib.SubparserOp{pPartString, ParseStatementEnd},
 			parsePartLineSemantic,
 		)
 	}
-	return gparselib.ParseMulti1(pd, ctx, pPartLine, parseFlowSemantic)
+	pLines := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseMulti1(pd2, ctx2, pPartLine, parseFlowSemantic)
+	}
+	pEOF := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+		return gparselib.ParseEOF(pd2, ctx2, nil)
+	}
+	return gparselib.ParseAll(pd, ctx,
+		[]gparselib.SubparserOp{pLines, pEOF},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			pd2.Result.Value = pd2.SubResults[0].Value
+			return pd2, ctx2
+		},
+	)
 }
 func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	partLine := pd.SubResults[0].Value.([]interface{})

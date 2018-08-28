@@ -228,8 +228,13 @@ func prependShapeLine(split *svg.Split, sl []interface{}) *svg.Split {
 	if split == nil || len(split.Shapes) == 0 {
 		return &svg.Split{Shapes: [][]interface{}{sl}}
 	}
-	split.Shapes = append([][]interface{}{sl}, split.Shapes...)
+	split.Shapes = append([][]interface{}{copyShapeLine(sl)}, split.Shapes...)
 	return split
+}
+func copyShapeLine(sl []interface{}) []interface{} {
+	result := make([]interface{}, len(sl))
+	copy(result, sl)
+	return result
 }
 func deleteShapeLine(shapes [][]interface{}, clsts clusters, i int,
 ) ([][]interface{}, clusters) {
@@ -291,21 +296,24 @@ func handleMerges(allShapes [][]interface{}, myShapes [][]interface{},
 		sl := myShapes[i]
 		for j := len(sl) - 1; j >= 0; j-- {
 			if s, ok := sl[j].(*decl); ok {
-				if s.svgMerge == nil || s.svgMerge.Size <= 1 { // no merge
-					s.svgMerge = nil
-					continue
-				}
 				if s.svgSplit != nil { // handle merges in splits
 					s.svgSplit.Shapes = handleMerges(
 						allShapes,
 						s.svgSplit.Shapes,
 					)
 				}
-				addDeclLineAfterLastMerge(
+				if s.svgMerge == nil || s.svgMerge.Size <= 1 { // no merge
+					s.svgMerge = nil
+					continue
+				}
+				found := addDeclLineAfterLastMerge(
 					allShapes,
-					sl[j:],
+					copyShapeLine(sl[j:]),
 					s.name,
 				)
+				if !found {
+					panic("Unable to find merge with ID: " + s.name)
+				}
 				if j > 0 {
 					myShapes[i] = append(sl[:j], s.svgMerge)
 					sl = myShapes[i]
@@ -377,6 +385,7 @@ func insertEmptyShapeRow(shapes [][]interface{}, i int) [][]interface{} {
 // shapes itself doesn't change (only some of its rows might be appended to).
 func cleanSVGData(shapes [][]interface{}) {
 	for i, sl := range shapes {
+		var svgSplit *svg.Split
 		for j, si := range sl {
 			switch s := si.(type) {
 			case *merge:
@@ -388,13 +397,15 @@ func cleanSVGData(shapes [][]interface{}) {
 					if j < len(sl)-1 {
 						panic("decls with splits have to be at the end of their row!")
 					}
-					shapes[i] = append(sl, s.svgSplit)
-					break // stop iterating over sl, we just changed it
+					svgSplit = s.svgSplit
 				}
 			case *svg.Merge, *svg.Rect, *svg.Arrow, *svg.Op:
 				// nothing to do
 			default:
 				panic(fmt.Sprintf("found unexpected shape type: %T", si))
+			}
+			if svgSplit != nil {
+				shapes[i] = append(sl, svgSplit)
 			}
 		}
 	}

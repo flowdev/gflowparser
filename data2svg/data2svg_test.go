@@ -1,4 +1,4 @@
-package data2svg
+package data2svg_test
 
 import (
 	"reflect"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/flowdev/gflowparser/data"
+	"github.com/flowdev/gflowparser/data2svg"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"
 )
@@ -18,12 +19,11 @@ func init() {
 	spew.Config.SpewKeys = true
 }
 
-// func parserToSVGData(flowDat data.Flow) *svg.Flow {
-func TestParserToSVGData(t *testing.T) {
+func TestConvert(t *testing.T) {
 	specs := []struct {
 		name     string
 		given    data.Flow
-		expected [][]interface{}
+		expected svg.Flow
 		hasError bool
 	}{
 		{
@@ -45,23 +45,20 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
-			expected: [][]interface{}{
-				{
-					&svg.Arrow{
-						HasSrcOp: false, SrcPort: "a",
-						DataType: "(b)",
-						HasDstOp: true, DstPort: "",
-					},
-					&decl{
-						name: "c",
-						i:    0, j: 1,
-						svgOp: &svg.Op{
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Arrow{
+							DataType: "(b)",
+							HasSrcOp: false, SrcPort: "a",
+							HasDstOp: true,
+						},
+						&svg.Op{
 							Main: &svg.Rect{
 								Text: []string{"c"},
 							},
 							Plugins: []*svg.Plugin{},
 						},
-						svgMerge: &svg.Merge{ID: "c", Size: 1},
 					},
 				},
 			},
@@ -73,8 +70,10 @@ func TestParserToSVGData(t *testing.T) {
 					{
 						data.Arrow{
 							FromPort: &data.Port{Name: "a"},
-							Data:     []data.Type{data.Type{LocalType: "b"}},
-							ToPort:   &data.Port{Name: "in"},
+							Data: []data.Type{
+								data.Type{Package: "pack", LocalType: "b"},
+							},
+							ToPort: &data.Port{Name: "in"},
 						},
 						data.Component{
 							Decl: data.CompDecl{
@@ -84,9 +83,21 @@ func TestParserToSVGData(t *testing.T) {
 							},
 						},
 						data.Arrow{
-							FromPort: &data.Port{Name: "out"},
-							Data:     []data.Type{data.Type{LocalType: "b"}},
-							ToPort:   &data.Port{Name: "in"},
+							FromPort: &data.Port{
+								Name:     "out",
+								HasIndex: true,
+								Index:    3,
+							},
+							Data: []data.Type{
+								data.Type{LocalType: "b"},
+								data.Type{Package: "pack", LocalType: "Btype"},
+								data.Type{Package: "pack", LocalType: "btype"},
+							},
+							ToPort: &data.Port{
+								Name:     "in",
+								HasIndex: true,
+								Index:    2,
+							},
 						},
 						data.Component{
 							Decl: data.CompDecl{
@@ -103,44 +114,32 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
-			expected: [][]interface{}{
-				{
-					&svg.Arrow{
-						HasSrcOp: false, SrcPort: "a",
-						DataType: "(b)",
-						HasDstOp: true, DstPort: "in",
-					},
-					&decl{
-						name: "c",
-						i:    0, j: 1,
-						svgOp: &svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"c"},
-							},
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Arrow{
+							DataType: "(pack.b)",
+							HasSrcOp: false, SrcPort: "a",
+							HasDstOp: true, DstPort: "in",
+						},
+						&svg.Op{
+							Main:    &svg.Rect{Text: []string{"c"}},
 							Plugins: []*svg.Plugin{},
 						},
-						svgMerge: &svg.Merge{ID: "c", Size: 1},
-					},
-					&svg.Arrow{
-						HasSrcOp: true, SrcPort: "out",
-						DataType: "(b)",
-						HasDstOp: true, DstPort: "in",
-					},
-					&decl{
-						name: "d",
-						i:    0, j: 3,
-						svgOp: &svg.Op{
-							Main: &svg.Rect{
-								Text: []string{"d", "D"},
-							},
+						&svg.Arrow{
+							DataType: "(b, pack.Btype, pack.btype)",
+							HasSrcOp: true, SrcPort: "out[3]",
+							HasDstOp: true, DstPort: "in[2]",
+						},
+						&svg.Op{
+							Main:    &svg.Rect{Text: []string{"d", "D"}},
 							Plugins: []*svg.Plugin{},
 						},
-						svgMerge: &svg.Merge{ID: "d", Size: 1},
-					},
-					&svg.Arrow{
-						HasSrcOp: true, SrcPort: "out",
-						DataType: "(b)",
-						HasDstOp: false, DstPort: "out",
+						&svg.Arrow{
+							DataType: "(b)",
+							HasSrcOp: true, SrcPort: "out",
+							HasDstOp: false, DstPort: "out",
+						},
 					},
 				},
 			},
@@ -162,7 +161,7 @@ func TestParserToSVGData(t *testing.T) {
 								},
 							},
 						},
-						data.Arrow{},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
 						data.Component{
 							Decl: data.CompDecl{
 								Name:      "b",
@@ -172,6 +171,7 @@ func TestParserToSVGData(t *testing.T) {
 							Plugins: []data.Plugin{
 								{
 									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "Z"},
 										data.Type{Package: "q", LocalType: "Y"},
 										data.Type{Package: "q", LocalType: "X"},
 										data.Type{Package: "q", LocalType: "W"},
@@ -205,76 +205,367 @@ func TestParserToSVGData(t *testing.T) {
 								},
 							},
 						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "d",
+								Type:      data.Type{LocalType: "D"},
+								VagueType: false,
+							},
+							Plugins: []data.Plugin{
+								{
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "T"},
+									},
+								}, {
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "U"},
+									},
+								}, {
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "V"},
+									},
+								}, {
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "W"},
+									},
+								}, {
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "X"},
+									},
+								}, {
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "Y"},
+									},
+								}, {
+									Types: []data.Type{
+										data.Type{Package: "q", LocalType: "Z"},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
-			expected: [][]interface{}{
-				{
-					&decl{
-						name: "a",
-						i:    0, j: 0,
-						svgOp: &svg.Op{
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Op{
 							Main: &svg.Rect{
 								Text: []string{"a", "p.A"},
 							},
 							Plugins: []*svg.Plugin{
-								{
+								&svg.Plugin{
+									Title: "",
 									Rects: []*svg.Rect{
-										{Text: []string{"q.Z"}},
+										&svg.Rect{Text: []string{"q.Z"}},
 									},
 								},
 							},
 						},
-						svgMerge: &svg.Merge{ID: "a", Size: 0},
-					},
-					&svg.Arrow{HasSrcOp: true, HasDstOp: true},
-					&decl{
-						name: "b",
-						i:    0, j: 2,
-						svgOp: &svg.Op{
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true, HasDstOp: true,
+						},
+						&svg.Op{
 							Main: &svg.Rect{
 								Text: []string{"b", "p.B"},
 							},
 							Plugins: []*svg.Plugin{
-								{
+								&svg.Plugin{
+									Title: "",
 									Rects: []*svg.Rect{
-										{Text: []string{"q.Y"}},
-										{Text: []string{"q.X"}},
-										{Text: []string{"q.W"}},
+										&svg.Rect{Text: []string{"q.Z"}},
+										&svg.Rect{Text: []string{"q.Y"}},
+										&svg.Rect{Text: []string{"q.X"}},
+										&svg.Rect{Text: []string{"q.W"}},
 									},
 								},
 							},
 						},
-						svgMerge: &svg.Merge{ID: "b", Size: 1},
-					},
-					&svg.Arrow{HasSrcOp: true, HasDstOp: true},
-					&decl{
-						name: "c",
-						i:    0, j: 4,
-						svgOp: &svg.Op{
+						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+						&svg.Op{
 							Main: &svg.Rect{
 								Text: []string{"c"},
 							},
 							Plugins: []*svg.Plugin{
-								{
+								&svg.Plugin{
 									Title: "plugin1",
 									Rects: []*svg.Rect{
-										{Text: []string{"q.V"}},
-										{Text: []string{"q.U"}},
+										&svg.Rect{Text: []string{"q.V"}},
+										&svg.Rect{Text: []string{"q.U"}},
 									},
-								}, {
+								},
+								&svg.Plugin{
 									Title: "plugin2",
 									Rects: []*svg.Rect{
-										{Text: []string{"q.T"}},
+										&svg.Rect{Text: []string{"q.T"}},
 									},
-								}, {
+								},
+								&svg.Plugin{
+									Title: "",
 									Rects: []*svg.Rect{
-										{Text: []string{"q.Plugin3"}},
+										&svg.Rect{Text: []string{"q.Plugin3"}},
 									},
 								},
 							},
 						},
-						svgMerge: &svg.Merge{ID: "c", Size: 1},
+						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"d", "D"},
+							},
+							Plugins: []*svg.Plugin{
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.T"}},
+									},
+								},
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.U"}},
+									},
+								},
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.V"}},
+									},
+								},
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.W"}},
+									},
+								},
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.X"}},
+									},
+								},
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.Y"}},
+									},
+								},
+								&svg.Plugin{
+									Title: "",
+									Rects: []*svg.Rect{
+										&svg.Rect{Text: []string{"q.Z"}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			hasError: false,
+		}, {
+			name: "splits & merge",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{ // [a A] (data)-> [b B] -> [c C]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", VagueType: false,
+								Type: data.Type{LocalType: "A"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "b", VagueType: false,
+								Type: data.Type{LocalType: "B"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "c", VagueType: false,
+								Type: data.Type{LocalType: "C"},
+							},
+						},
+					}, { // [a] (data)-> [d D] -> [c]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", VagueType: true,
+								Type: data.Type{LocalType: "a"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "d", VagueType: false,
+								Type: data.Type{LocalType: "D"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "c", VagueType: true,
+								Type: data.Type{LocalType: "c"},
+							},
+						},
+					}, { // [a] (data)-> [e E] -> [c]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", VagueType: true,
+								Type: data.Type{LocalType: "a"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "e", VagueType: false,
+								Type: data.Type{LocalType: "E"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "c", VagueType: true,
+								Type: data.Type{LocalType: "c"},
+							},
+						},
+					}, { // [b] (data)-> [f F] -> [g] -> [c]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "b", VagueType: true,
+								Type: data.Type{LocalType: "b"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "f", VagueType: false,
+								Type: data.Type{LocalType: "F"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "g", VagueType: true,
+								Type: data.Type{LocalType: "g"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "c", VagueType: true,
+								Type: data.Type{LocalType: "c"},
+							},
+						},
+					},
+				},
+			},
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"a", "A"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Split{
+							Shapes: [][]interface{}{
+								{
+									&svg.Arrow{
+										DataType: "(data)",
+										HasSrcOp: true,
+										HasDstOp: true,
+									},
+									&svg.Op{
+										Main: &svg.Rect{
+											Text: []string{"b", "B"},
+										},
+										Plugins: []*svg.Plugin{},
+									},
+									&svg.Split{
+										Shapes: [][]interface{}{
+											{
+												&svg.Arrow{
+													HasSrcOp: true,
+													HasDstOp: true,
+												},
+												&svg.Merge{ID: "c", Size: 4},
+											}, {
+												&svg.Arrow{
+													DataType: "(data)",
+													HasSrcOp: true,
+													HasDstOp: true,
+												},
+												&svg.Op{
+													Main: &svg.Rect{
+														Text: []string{"f", "F"},
+													},
+													Plugins: []*svg.Plugin{},
+												},
+												&svg.Arrow{
+													HasSrcOp: true,
+													HasDstOp: true,
+												},
+												&svg.Op{
+													Main: &svg.Rect{
+														Text: []string{"g"},
+													},
+													Plugins: []*svg.Plugin{},
+												},
+												&svg.Arrow{
+													HasSrcOp: true,
+													HasDstOp: true,
+												},
+												&svg.Merge{ID: "c", Size: 4},
+											},
+										},
+									},
+								}, {
+									&svg.Arrow{
+										DataType: "(data)",
+										HasSrcOp: true,
+										HasDstOp: true,
+									},
+									&svg.Op{
+										Main: &svg.Rect{
+											Text: []string{"d", "D"},
+										},
+										Plugins: []*svg.Plugin{},
+									},
+									&svg.Arrow{
+										HasSrcOp: true,
+										HasDstOp: true,
+									},
+									&svg.Merge{ID: "c", Size: 4},
+								}, {
+									&svg.Arrow{
+										DataType: "(data)",
+										HasSrcOp: true,
+										HasDstOp: true,
+									},
+									&svg.Op{
+										Main: &svg.Rect{
+											Text: []string{"e", "E"},
+										},
+										Plugins: []*svg.Plugin{},
+									},
+									&svg.Arrow{
+										HasSrcOp: true,
+										HasDstOp: true,
+									},
+									&svg.Merge{ID: "c", Size: 4},
+									&svg.Op{
+										Main: &svg.Rect{
+											Text: []string{"c", "C"},
+										},
+										Plugins: []*svg.Plugin{},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -306,14 +597,14 @@ func TestParserToSVGData(t *testing.T) {
 					},
 				},
 			},
-			expected: nil,
+			expected: svg.Flow{},
 			hasError: true,
 		},
 	}
 
 	for _, spec := range specs {
 		t.Logf("Testing spec: %s\n", spec.name)
-		gotAll, _, _, err := parserPartsToSVGData(
+		got, err := data2svg.Convert(
 			spec.given,
 			gparselib.NewSourceData("test data", "sad but true: <undefined>"),
 		)
@@ -327,25 +618,7 @@ func TestParserToSVGData(t *testing.T) {
 			continue
 		}
 
-		if len(gotAll) != len(spec.expected) {
-			t.Errorf("Expected %d part lines, got: %d",
-				len(spec.expected), len(gotAll))
-			continue
-		}
-		for i, expectedLine := range spec.expected {
-			t.Logf("Testing part line: %d\n", i+1)
-			gotLine := gotAll[i]
-			if len(gotLine) != len(expectedLine) {
-				t.Errorf("Expected %d parts in line %d, got: %d",
-					len(expectedLine), i+1, len(gotLine))
-				continue
-			}
-			for j, expectedPart := range expectedLine {
-				t.Logf("Testing part: %d\n", j+1)
-				gotPart := gotLine[j]
-				checkValue(expectedPart, gotPart, t)
-			}
-		}
+		checkValue(spec.expected, got, t)
 	}
 }
 
@@ -355,8 +628,8 @@ func checkValue(expected, got interface{}, t *testing.T) {
 	} else if !reflect.DeepEqual(got, expected) {
 		t.Logf("The acutal value isn't equal to the expected one:")
 		// Use this for compact report (excellent for quick manual usage):
-		t.Error(spew.Sprintf("Expected value:\n '%#v',\nGot value:\n '%#v'", expected, got))
+		//t.Error(spew.Sprintf("Expected value:\n '%#v',\nGot value:\n '%#v'", expected, got))
 		// Use this for multi-line report (excellent for diff):
-		//t.Errorf("Expected value:\n%s\nGot value:\n%s", spew.Sdump(expected), spew.Sdump(got))
+		t.Errorf("Expected value:\n%s\nGot value:\n%s", spew.Sdump(expected), spew.Sdump(got))
 	}
 }
