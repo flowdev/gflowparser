@@ -311,6 +311,8 @@ func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	}
 	if !pd.Result.HasError() {
 		pd.Result.Value = partLine
+	} else {
+		pd.ResetSourcePos(-1)
 	}
 	return pd, ctx
 }
