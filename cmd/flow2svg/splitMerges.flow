@@ -1,0 +1,8 @@
+[a A] (data)-> [b B] -> [c C]
+[a] (data)-> [h] -> [b] -> [i]
+[a] (data)-> [d D] -> [c]
+[a] (data)-> [e E] -> [c]
+[b] (data)-> [f F] -> [g] -> [c]
+[j J] (data)-> [a]
+[k K] (data)-> [a]
+[l] (data)-> [k]

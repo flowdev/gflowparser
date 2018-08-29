@@ -1,23 +1,16 @@
 package data2svg_test
 
 import (
+	"io/ioutil"
 	"reflect"
 	"testing"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/data2svg"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"
+	"github.com/sanity-io/litter"
 )
-
-func init() {
-	spew.Config.Indent = "    "
-	spew.Config.DisablePointerAddresses = true
-	spew.Config.DisableCapacities = true
-	spew.Config.SortKeys = true
-	spew.Config.SpewKeys = true
-}
 
 func TestConvert(t *testing.T) {
 	specs := []struct {
@@ -64,7 +57,7 @@ func TestConvert(t *testing.T) {
 			},
 			hasError: false,
 		}, {
-			name: "full arrows",
+			name: "full_arrows",
 			given: data.Flow{
 				Parts: [][]interface{}{
 					{
@@ -145,7 +138,7 @@ func TestConvert(t *testing.T) {
 			},
 			hasError: false,
 		}, {
-			name: "full components",
+			name: "full_components",
 			given: data.Flow{
 				Parts: [][]interface{}{
 					{
@@ -256,7 +249,6 @@ func TestConvert(t *testing.T) {
 							},
 							Plugins: []*svg.Plugin{
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.Z"}},
 									},
@@ -273,7 +265,6 @@ func TestConvert(t *testing.T) {
 							},
 							Plugins: []*svg.Plugin{
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.Z"}},
 										&svg.Rect{Text: []string{"q.Y"}},
@@ -303,7 +294,6 @@ func TestConvert(t *testing.T) {
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.Plugin3"}},
 									},
@@ -317,43 +307,36 @@ func TestConvert(t *testing.T) {
 							},
 							Plugins: []*svg.Plugin{
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.T"}},
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.U"}},
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.V"}},
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.W"}},
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.X"}},
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.Y"}},
 									},
 								},
 								&svg.Plugin{
-									Title: "",
 									Rects: []*svg.Rect{
 										&svg.Rect{Text: []string{"q.Z"}},
 									},
@@ -365,7 +348,7 @@ func TestConvert(t *testing.T) {
 			},
 			hasError: false,
 		}, {
-			name: "splits & merge",
+			name: "splits_n_merges",
 			given: data.Flow{
 				Parts: [][]interface{}{
 					{ // [a A] (data)-> [b B] -> [c C]
@@ -387,6 +370,34 @@ func TestConvert(t *testing.T) {
 							Decl: data.CompDecl{
 								Name: "c", VagueType: false,
 								Type: data.Type{LocalType: "C"},
+							},
+						},
+					}, { // [a] (data)-> [h] -> [b] -> [i]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", VagueType: true,
+								Type: data.Type{LocalType: "a"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "h", VagueType: true,
+								Type: data.Type{LocalType: "h"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "b", VagueType: true,
+								Type: data.Type{LocalType: "b"},
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "i", VagueType: true,
+								Type: data.Type{LocalType: "i"},
 							},
 						},
 					}, { // [a] (data)-> [d D] -> [c]
@@ -459,12 +470,87 @@ func TestConvert(t *testing.T) {
 								Type: data.Type{LocalType: "c"},
 							},
 						},
+					}, { // [j J] (data)-> [a]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "j", VagueType: false,
+								Type: data.Type{LocalType: "J"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", VagueType: true,
+								Type: data.Type{LocalType: "a"},
+							},
+						},
+					}, { // [k K] (data)-> [a]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "k", VagueType: false,
+								Type: data.Type{LocalType: "K"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "a", VagueType: true,
+								Type: data.Type{LocalType: "a"},
+							},
+						},
+					}, { // [l] (data)-> [k]
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "l", VagueType: true,
+								Type: data.Type{LocalType: "l"},
+							},
+						},
+						data.Arrow{Data: []data.Type{data.Type{LocalType: "data"}}},
+						data.Component{
+							Decl: data.CompDecl{
+								Name: "k", VagueType: true,
+								Type: data.Type{LocalType: "k"},
+							},
+						},
 					},
 				},
 			},
 			expected: svg.Flow{
 				Shapes: [][]interface{}{
 					{
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"j", "J"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true, HasDstOp: true,
+						},
+						&svg.Merge{ID: "a", Size: 2},
+					}, {}, { // TODO: The unnecessary empty slice isn't nice.
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"l"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true, HasDstOp: true,
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"k", "K"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true, HasDstOp: true,
+						},
+						&svg.Merge{ID: "a", Size: 2},
 						&svg.Op{
 							Main: &svg.Rect{
 								Text: []string{"a", "A"},
@@ -476,9 +562,22 @@ func TestConvert(t *testing.T) {
 								{
 									&svg.Arrow{
 										DataType: "(data)",
-										HasSrcOp: true,
-										HasDstOp: true,
+										HasSrcOp: true, HasDstOp: true,
 									},
+									&svg.Merge{ID: "b", Size: 2},
+								}, {
+									&svg.Arrow{
+										DataType: "(data)",
+										HasSrcOp: true, HasDstOp: true,
+									},
+									&svg.Op{
+										Main: &svg.Rect{
+											Text: []string{"h"},
+										},
+										Plugins: []*svg.Plugin{},
+									},
+									&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+									&svg.Merge{ID: "b", Size: 2},
 									&svg.Op{
 										Main: &svg.Rect{
 											Text: []string{"b", "B"},
@@ -488,16 +587,20 @@ func TestConvert(t *testing.T) {
 									&svg.Split{
 										Shapes: [][]interface{}{
 											{
-												&svg.Arrow{
-													HasSrcOp: true,
-													HasDstOp: true,
-												},
+												&svg.Arrow{HasSrcOp: true, HasDstOp: true},
 												&svg.Merge{ID: "c", Size: 4},
+											}, {
+												&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+												&svg.Op{
+													Main: &svg.Rect{
+														Text: []string{"i"},
+													},
+													Plugins: []*svg.Plugin{},
+												},
 											}, {
 												&svg.Arrow{
 													DataType: "(data)",
-													HasSrcOp: true,
-													HasDstOp: true,
+													HasSrcOp: true, HasDstOp: true,
 												},
 												&svg.Op{
 													Main: &svg.Rect{
@@ -505,20 +608,14 @@ func TestConvert(t *testing.T) {
 													},
 													Plugins: []*svg.Plugin{},
 												},
-												&svg.Arrow{
-													HasSrcOp: true,
-													HasDstOp: true,
-												},
+												&svg.Arrow{HasSrcOp: true, HasDstOp: true},
 												&svg.Op{
 													Main: &svg.Rect{
 														Text: []string{"g"},
 													},
 													Plugins: []*svg.Plugin{},
 												},
-												&svg.Arrow{
-													HasSrcOp: true,
-													HasDstOp: true,
-												},
+												&svg.Arrow{HasSrcOp: true, HasDstOp: true},
 												&svg.Merge{ID: "c", Size: 4},
 											},
 										},
@@ -526,8 +623,7 @@ func TestConvert(t *testing.T) {
 								}, {
 									&svg.Arrow{
 										DataType: "(data)",
-										HasSrcOp: true,
-										HasDstOp: true,
+										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Op{
 										Main: &svg.Rect{
@@ -535,16 +631,12 @@ func TestConvert(t *testing.T) {
 										},
 										Plugins: []*svg.Plugin{},
 									},
-									&svg.Arrow{
-										HasSrcOp: true,
-										HasDstOp: true,
-									},
+									&svg.Arrow{HasSrcOp: true, HasDstOp: true},
 									&svg.Merge{ID: "c", Size: 4},
 								}, {
 									&svg.Arrow{
 										DataType: "(data)",
-										HasSrcOp: true,
-										HasDstOp: true,
+										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Op{
 										Main: &svg.Rect{
@@ -552,19 +644,256 @@ func TestConvert(t *testing.T) {
 										},
 										Plugins: []*svg.Plugin{},
 									},
-									&svg.Arrow{
-										HasSrcOp: true,
-										HasDstOp: true,
-									},
+									&svg.Arrow{HasSrcOp: true, HasDstOp: true},
 									&svg.Merge{ID: "c", Size: 4},
+									&svg.Op{
+										Main: &svg.Rect{
+											Text: []string{
+												"c",
+												"C",
+											},
+										},
+										Plugins: []*svg.Plugin{},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			hasError: false,
+		}, {
+			name: "circles",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "i"},
+							Data:     []data.Type{data.Type{LocalType: "data"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "a",
+								Type:      data.Type{LocalType: "A"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "b",
+								Type:      data.Type{LocalType: "B"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "a",
+								Type:      data.Type{LocalType: "a"},
+								VagueType: true,
+							},
+						},
+					}, {
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "b",
+								Type:      data.Type{LocalType: "b"},
+								VagueType: true,
+							},
+						},
+						data.Arrow{
+							Data: []data.Type{data.Type{LocalType: "data"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "C"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "a",
+								Type:      data.Type{LocalType: "a"},
+								VagueType: true,
+							},
+						},
+					},
+				},
+			},
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Arrow{
+							DataType: "(data)", SrcPort: "i",
+							HasSrcOp: false, HasDstOp: true,
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"a", "A"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"b", "B"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Split{
+							Shapes: [][]interface{}{
+								{
+									&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+									&svg.Rect{
+										Text: []string{"a"},
+									},
+								}, {
+									&svg.Arrow{
+										DataType: "(data)",
+										HasSrcOp: true, HasDstOp: true,
+									},
 									&svg.Op{
 										Main: &svg.Rect{
 											Text: []string{"c", "C"},
 										},
 										Plugins: []*svg.Plugin{},
 									},
+									&svg.Arrow{HasSrcOp: true, HasDstOp: true},
+									&svg.Rect{
+										Text: []string{"a"},
+									},
 								},
 							},
+						},
+					},
+				},
+			},
+			hasError: false,
+		}, {
+			name: "empty_rows",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "a",
+								Type:      data.Type{LocalType: "A"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{
+							Data: []data.Type{data.Type{LocalType: "data"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "b",
+								Type:      data.Type{LocalType: "B"},
+								VagueType: false,
+							},
+						},
+					}, {
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "C"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{
+							Data: []data.Type{data.Type{LocalType: "data"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "d",
+								Type:      data.Type{LocalType: "D"},
+								VagueType: false,
+							},
+						},
+					}, {
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "e",
+								Type:      data.Type{LocalType: "E"},
+								VagueType: false,
+							},
+						},
+						data.Arrow{
+							Data: []data.Type{data.Type{LocalType: "data"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "f",
+								Type:      data.Type{LocalType: "F"},
+								VagueType: false,
+							},
+						},
+					},
+				},
+			},
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					[]interface{}{
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"a", "A"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true, HasDstOp: true,
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"b", "B"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+					}, {}, {
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c", "C"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true, HasDstOp: true,
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"d", "D"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+					}, {}, {
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{
+									"e",
+									"E",
+								},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							DataType: "(data)",
+							HasSrcOp: true,
+							SrcPort:  "",
+							HasDstOp: true,
+							DstPort:  "",
+						},
+						&svg.Op{
+							Main: &svg.Rect{
+								Text: []string{
+									"f",
+									"F",
+								},
+							},
+							Plugins: []*svg.Plugin{},
 						},
 					},
 				},
@@ -618,18 +947,25 @@ func TestConvert(t *testing.T) {
 			continue
 		}
 
-		checkValue(spec.expected, got, t)
+		checkValue(spec.expected, got, spec.name, t)
 	}
 }
 
-func checkValue(expected, got interface{}, t *testing.T) {
+func checkValue(expected, got interface{}, name string, t *testing.T) {
 	if expected != nil && got == nil {
 		t.Errorf("Expected a value.")
 	} else if !reflect.DeepEqual(got, expected) {
-		t.Logf("The acutal value isn't equal to the expected one:")
-		// Use this for compact report (excellent for quick manual usage):
-		//t.Error(spew.Sprintf("Expected value:\n '%#v',\nGot value:\n '%#v'", expected, got))
-		// Use this for multi-line report (excellent for diff):
-		t.Errorf("Expected value:\n%s\nGot value:\n%s", spew.Sdump(expected), spew.Sdump(got))
+		goprint := litter.Options{
+			HidePrivateFields: false,
+			HomePackage:       "data2svg",
+			StripPackageNames: false,
+		}
+		t.Errorf("The acutal value isn't equal to the expected one. Please diff '%s.exp' and '%s.got'.", name, name)
+		if err := ioutil.WriteFile(name+".exp", []byte(goprint.Sdump(expected)), 0644); err != nil {
+			panic("Unable to write file: " + name + ".exp")
+		}
+		if err := ioutil.WriteFile(name+".got", []byte(goprint.Sdump(got)), 0644); err != nil {
+			panic("Unable to write file: " + name + ".got")
+		}
 	}
 }

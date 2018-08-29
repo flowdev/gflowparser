@@ -32,7 +32,7 @@ func (c clusters) getCluster(idx int) (mn, mx int) {
 		if idx < c[i] {
 			return idx, idx
 		}
-		if c[i] <= idx && idx >= c[i+1] {
+		if c[i] <= idx && idx <= c[i+1] {
 			return c[i], c[i+1]
 		}
 	}
@@ -47,7 +47,9 @@ func (c clusters) deleteLine(idx int) clusters {
 			firstIdx = i - 1
 		} else if c[i] > idx { // move max or min to the front
 			c[i]--
-			firstIdx = i - (i & 1) // firstIdx is always min
+			if firstIdx < 0 {
+				firstIdx = i - (i & 1) // firstIdx is always min
+			}
 		}
 	}
 	if firstIdx < 0 {
@@ -57,16 +59,6 @@ func (c clusters) deleteLine(idx int) clusters {
 		return append(c[:firstIdx], c[firstIdx+2:]...)
 	}
 	return c
-}
-
-func (c clusters) addLine(idx int) {
-	for i := 0; i < len(c); i++ { // move indices to the back
-		if i&1 != 0 && c[i] == idx-1 { // move max to the back but not min
-			c[i]++
-		} else if c[i] >= idx { // move max or min to the back
-			c[i]++
-		}
-	}
 }
 
 func mergeClusters(c clusters, i int) clusters {

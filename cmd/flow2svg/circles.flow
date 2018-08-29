@@ -1,0 +1,2 @@
+i (data)-> [a A] -> [b B] -> [a]
+[b] (data)-> [c C] -> [a]

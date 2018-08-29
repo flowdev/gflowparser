@@ -82,8 +82,7 @@ func parserPartsToSVGData(flowDat data.Flow, w Whereer,
 					} else if j < m { // we only need a split
 						svgLine[j] = &split{name: dcl.name, srcPos: p.SrcPos}
 					} else { // we don't need anything at all???!!!
-						return nil, nil, nil, fmt.Errorf(errMsgLoneComp,
-							dcl.name, w.Where(p.SrcPos))
+						panic(fmt.Sprintf(errMsgLoneComp, dcl.name, w.Where(p.SrcPos)))
 					}
 				} else {
 					dcl := &decl{

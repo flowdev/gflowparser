@@ -1,8 +1,11 @@
 package data2svg
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
-func TestGrowClusters(t *testing.T) {
+func TestAddCluster(t *testing.T) {
 	specs := []struct {
 		givenClusters    clusters
 		givenMin         int
@@ -68,23 +71,111 @@ func TestGrowClusters(t *testing.T) {
 	}
 
 	for i, spec := range specs {
-		t.Logf("TestGrowClusters[%d]:", i)
-		act := spec.givenClusters.addCluster(spec.givenMin, spec.givenMax)
-		checkClusters(t, spec.expectedClusters, act)
+		t.Logf("TestAddCluster[%d]:", i)
+		got := spec.givenClusters.addCluster(spec.givenMin, spec.givenMax)
+		checkClusters(t, spec.expectedClusters, got)
 	}
 }
 
-func checkClusters(t *testing.T, exp, act clusters) {
-	if len(exp) != len(act) {
-		t.Errorf("Expected clusters length of %d, got %d.", len(exp), len(act))
-		return
+func TestGetCluster(t *testing.T) {
+	specs := []struct {
+		givenClusters clusters
+		givenIdx      int
+		expectedMin   int
+		expectedMax   int
+	}{
+		{
+			givenClusters: clusters(nil),
+			givenIdx:      2,
+			expectedMin:   2,
+			expectedMax:   2,
+		}, {
+			givenClusters: clusters([]int{2, 3, 7, 9}),
+			givenIdx:      1,
+			expectedMin:   1,
+			expectedMax:   1,
+		}, {
+			givenClusters: clusters([]int{2, 3, 7, 9}),
+			givenIdx:      2,
+			expectedMin:   2,
+			expectedMax:   3,
+		}, {
+			givenClusters: clusters([]int{2, 3, 7, 9}),
+			givenIdx:      3,
+			expectedMin:   2,
+			expectedMax:   3,
+		}, {
+			givenClusters: clusters([]int{2, 3, 7, 9}),
+			givenIdx:      8,
+			expectedMin:   7,
+			expectedMax:   9,
+		},
 	}
-	for i, e := range exp {
-		if e != act[i] {
-			t.Errorf("Expected value %d at index %d, got %d.", 3, i, act[i])
-			t.Logf("Expected clusters: %v", exp)
-			t.Logf("Actual   clusters: %v", act)
-			return
+
+	for i, spec := range specs {
+		t.Logf("TestGetCluster[%d]:", i)
+		gotMin, gotMax := spec.givenClusters.getCluster(spec.givenIdx)
+		if gotMin != spec.expectedMin {
+			t.Errorf("Expected min %d, got %d.", spec.expectedMin, gotMin)
 		}
+		if gotMax != spec.expectedMax {
+			t.Errorf("Expected max %d, got %d.", spec.expectedMax, gotMax)
+		}
+	}
+}
+
+func TestDeleteLine(t *testing.T) {
+	specs := []struct {
+		givenClusters    clusters
+		givenIdx         int
+		expectedClusters clusters
+	}{
+		{
+			givenClusters:    clusters([]int{}),
+			givenIdx:         2,
+			expectedClusters: clusters([]int{}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         10,
+			expectedClusters: clusters([]int{2, 3, 7, 9}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         9,
+			expectedClusters: clusters([]int{2, 3, 7, 8}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         8,
+			expectedClusters: clusters([]int{2, 3, 7, 8}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         7,
+			expectedClusters: clusters([]int{2, 3, 7, 8}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         5,
+			expectedClusters: clusters([]int{2, 3, 6, 8}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         0,
+			expectedClusters: clusters([]int{1, 2, 6, 8}),
+		}, {
+			givenClusters:    clusters([]int{2, 3, 7, 9}),
+			givenIdx:         3,
+			expectedClusters: clusters([]int{6, 8}),
+		},
+	}
+
+	for i, spec := range specs {
+		t.Logf("TestDeleteLine[%d]:", i)
+		got := spec.givenClusters.deleteLine(spec.givenIdx)
+		checkClusters(t, spec.expectedClusters, got)
+	}
+}
+
+func checkClusters(t *testing.T, exp, got clusters) {
+	if !reflect.DeepEqual(got, exp) {
+		t.Error("Expected and actual clusters differ:")
+		t.Logf("Expected clusters: %v", exp)
+		t.Logf("Actual   clusters: %v", got)
 	}
 }
