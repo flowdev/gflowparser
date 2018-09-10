@@ -3,18 +3,22 @@ package gflowparser_test
 import (
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/flowdev/gflowparser"
+	"github.com/flowdev/gflowparser/data"
 )
 
 func TestConvertFlowDSLToSVG(t *testing.T) {
 	specs := []struct {
-		givenFlowName    string
-		givenFlowContent string
-		expectedSVG      string
-		expectedFeedback string
-		expectedError    string
+		givenFlowName     string
+		givenFlowContent  string
+		expectedSVG       string
+		expectedCompTypes []data.Type
+		expectedDataTypes []data.Type
+		expectedFeedback  string
+		expectedError     string
 	}{
 		{
 			givenFlowName:    "simple success",
@@ -40,6 +44,12 @@ func TestConvertFlowDSLToSVG(t *testing.T) {
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="221" y="31" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
 </svg>
 `,
+			expectedCompTypes: []data.Type{
+				{LocalType: "a", SrcPos: 13},
+			},
+			expectedDataTypes: []data.Type{
+				{LocalType: "data", SrcPos: 4},
+			},
 			expectedFeedback: "",
 			expectedError:    ``,
 		}, {
@@ -68,7 +78,7 @@ Literal '[' expected.
 	}
 	for _, spec := range specs {
 		t.Logf("Testing flow: %s\n", spec.givenFlowName)
-		gotSVG, gotFeedback, gotError := gflowparser.ConvertFlowDSLToSVG(
+		gotSVG, gotCompTypes, gotDataTypes, gotFeedback, gotError := gflowparser.ConvertFlowDSLToSVG(
 			spec.givenFlowContent, spec.givenFlowName)
 
 		if spec.expectedError != "" && gotError != nil {
@@ -83,6 +93,14 @@ Literal '[' expected.
 		}
 		if spec.expectedError != "" || gotError != nil {
 			continue
+		}
+		if !reflect.DeepEqual(gotCompTypes, spec.expectedCompTypes) {
+			t.Errorf("Expected component types '%#v' but got: '%#v'",
+				spec.expectedCompTypes, gotCompTypes)
+		}
+		if !reflect.DeepEqual(gotDataTypes, spec.expectedDataTypes) {
+			t.Errorf("Expected component types '%#v' but got: '%#v'",
+				spec.expectedDataTypes, gotDataTypes)
 		}
 		if spec.expectedFeedback != gotFeedback {
 			t.Errorf("Expected feedback '%s' but got: '%s'",

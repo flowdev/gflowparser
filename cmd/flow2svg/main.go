@@ -16,7 +16,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	buf, fb, err := gflowparser.ConvertFlowDSLToSVG(string(buf), "standard input")
+	buf, _, _, fb, err := gflowparser.ConvertFlowDSLToSVG(string(buf), "standard input")
 	if err != nil {
 		fmt.Fprintf(os.Stderr,
 			"ERROR: Unable to convert flow to SVG:\n%s", err)
