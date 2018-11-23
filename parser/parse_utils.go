@@ -11,17 +11,7 @@ import (
 	"github.com/flowdev/gparselib"
 )
 
-// NameIdentParser parses a name identifier.
-// Regexp: [a-z][a-zA-Z0-9]*
-// Semantic result: The parsed text.
-//
-// flow:
-//     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
-//
-// Details:
-//  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
-//  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
-//  - [TextSemantic](./parseUtils.md#textsemantic)
+// NameIdentParser is a RegexpParser for parsing a name identifier.
 type NameIdentParser gparselib.RegexpParser
 
 // NewNameIdentParser creates a new parser for the given regular expression.
@@ -31,7 +21,12 @@ func NewNameIdentParser() (*NameIdentParser, error) {
 	return (*NameIdentParser)(p), err
 }
 
-// ParseNameIdent is the input port of the NameIdentParser operation.
+// ParseNameIdent parses a name identifier.
+// Regexp: [a-z][a-zA-Z0-9]*
+// Semantic result: The parsed text.
+//
+// flow:
+//     in (gparselib.ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
 func (p *NameIdentParser) ParseNameIdent(
 	pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
