@@ -117,8 +117,19 @@ func spaceCommentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 
 // ParseSpaceComment parses any amount of space (including newline) and line
 // (`//` ... <NL>) and block (`/*` ... `*/`) comments.
-// Semantic result: The parsed text plus a signal whether a newline was
-// parsed.
+// * Semantic result: The parsed text plus a signal whether a newline was
+//   parsed.
+//
+// flow:
+//     in (gparselib.ParseData)-> [pSpc gparselib.ParseSpace[semantics=TextSemantic]] -> out
+//     in (gparselib.ParseData)-> [pLnCmnt gparselib.ParseLineComment[semantics=TextSemantic]] -> out
+//     in (gparselib.ParseData)-> [pBlkCmnt gparselib.ParseBlockComment[semantics=TextSemantic]] -> out
+//     in (gparselib.ParseData)-> [pAny gparselib.ParseAny[
+//             subparser = pSpc, pLnCmnt, pBlkCmnt |
+//             semantics = TextSemantic ]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseMulti0[
+//             subparser = pAny |
+//             semantics = spaceCommentSemantic ]] -> out
 func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseSpace(pd2, ctx2, TextSemantic, true)
@@ -159,7 +170,18 @@ const (
 // and comments.
 // The semicolon can be omited if the space or comments contain a new line or
 // at the end of the input.
-// Semantic result: The parsed text.
+// * Semantic result: The parsed text.
+//
+// flow:
+//     in (gparselib.ParseData)-> [pSemicolon gparselib.ParseLiteral[semantics=TextSemantic]] -> out
+//     in (gparselib.ParseData)-> [pOptSemi gparselib.ParseOptional[
+//             subparser = pSemicolon | semantics = nil ]] -> out
+//     in (gparselib.ParseData)-> [pEOF gparselib.ParseEOF[semantics=BooleanSemantic]] -> out
+//     in (gparselib.ParseData)-> [pOptEOF gparselib.ParseOptional[
+//             subparser = pEOF | semantics = nil ]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll[
+//             subparser = ParseSpaceComment, pOptSemi, ParseSpaceComment, pOptEOF |
+//             semantics = checkSemicolonOrNewLineOrEOF ]] -> out
 func ParseStatementEnd(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pSemicolon := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 		return gparselib.ParseLiteral(pd, ctx, TextSemantic, `;`)
