@@ -33,17 +33,7 @@ func (p *NameIdentParser) ParseNameIdent(
 	return ((*gparselib.RegexpParser)(p)).ParseRegexp(pd, ctx, TextSemantic)
 }
 
-// PackageIdentParser parses a package identifier.
-// Regexp: [a-z][a-z0-9]*\.
-// Semantic result: The parsed text (without the dot).
-//
-// flow:
-//     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
-//
-// Details:
-//  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
-//  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
-//  - [TextSemantic](./parseUtils.md#textsemantic)
+// PackageIdentParser is a RegexpParser for parsing a package identifier.
 type PackageIdentParser gparselib.RegexpParser
 
 // NewPackageIdentParser creates a new parser for the given regular expression.
@@ -53,7 +43,12 @@ func NewPackageIdentParser() (*PackageIdentParser, error) {
 	return (*PackageIdentParser)(p), err
 }
 
-// ParsePackageIdent is the input port of the PackageIdentParser operation.
+// ParsePackageIdent parses a package identifier.
+// * Regexp: [a-z][a-z0-9]*\.
+// * Semantic result: The parsed text (without the dot).
+//
+// flow:
+//     in (gparselib.ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
 func (p *PackageIdentParser) ParsePackageIdent(
 	pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
