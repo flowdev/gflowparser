@@ -59,17 +59,7 @@ func (p *PackageIdentParser) ParsePackageIdent(
 		})
 }
 
-// LocalTypeIdentParser parses a local (without package) type identifier.
-// Regexp: [A-Za-z][a-zA-Z0-9]*
-// Semantic result: The parsed text.
-//
-// flow:
-//     in (ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
-//
-// Details:
-//  - [ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L74-L79)
-//  - [ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simpleParser.go#L163)
-//  - [TextSemantic](./parseUtils.md#textsemantic)
+// LocalTypeIdentParser is a RegexpParser for parsing a local type identifier.
 type LocalTypeIdentParser gparselib.RegexpParser
 
 // NewLocalTypeIdentParser creates a new parser for the given regular expression.
@@ -79,22 +69,30 @@ func NewLocalTypeIdentParser() (*LocalTypeIdentParser, error) {
 	return (*LocalTypeIdentParser)(p), err
 }
 
-// ParseLocalTypeIdent is the input port of the LocalTypeIdentParser operation.
+// ParseLocalTypeIdent parses a local (without package) type identifier.
+// * Regexp: [A-Za-z][a-zA-Z0-9]*
+// * Semantic result: The parsed text.
+//
+// flow:
+//     in (gparselib.ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
 func (p *LocalTypeIdentParser) ParseLocalTypeIdent(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	return ((*gparselib.RegexpParser)(p)).ParseRegexp(pd, ctx, TextSemantic)
 }
 
 // ParseOptSpc parses optional space but no newline.
-// Semantic result: The parsed text.
+// * Semantic result: The parsed text.
+//
+// flow:
+//     in (gparselib.ParseData)-> [gparselib.ParseRegexp[subparser=ParseASpc|semantics=TextSemantic]] -> out
 func ParseOptSpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseSpace(pd2, ctx2, TextSemantic, false)
-	}
-	return gparselib.ParseOptional(pd, ctx, pSpc, TextSemantic)
+	return gparselib.ParseOptional(pd, ctx, ParseASpc, TextSemantic)
 }
 
 // ParseASpc parses space but no newline.
-// Semantic result: The parsed text.
+// * Semantic result: The parsed text.
+//
+// flow:
+//     in (gparselib.ParseData)-> [gparselib.ParseSpace[semantics=TextSemantic]] -> out
 func ParseASpc(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	return gparselib.ParseSpace(pd, ctx, TextSemantic, false)
 }
