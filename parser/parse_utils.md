@@ -2,8 +2,8 @@
 
 ## Flow: ParseNameIdent
 ParseNameIdent parses a name identifier.
-Regexp: [a-z][a-zA-Z0-9]*
-Semantic result: The parsed text.
+* Regexp: [a-z][a-zA-Z0-9]*
+* Semantic result: The parsed text.
 
 ![Flow: ParseNameIdent](./ParseNameIdent.svg)
 

@@ -22,8 +22,8 @@ func NewNameIdentParser() (*NameIdentParser, error) {
 }
 
 // ParseNameIdent parses a name identifier.
-// Regexp: [a-z][a-zA-Z0-9]*
-// Semantic result: The parsed text.
+// * Regexp: [a-z][a-zA-Z0-9]*
+// * Semantic result: The parsed text.
 //
 // flow:
 //     in (gparselib.ParseData)-> [gparselib.ParseRegexp[semantics=TextSemantic]] -> out
