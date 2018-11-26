@@ -104,7 +104,7 @@
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="907" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="921" textLength="96" lengthAdjust="spacingAndGlyphs">parseAll</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="945" textLength="216" lengthAdjust="spacingAndGlyphs">gparselib.ParseAll</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="978" textLength="120" lengthAdjust="spacingAndGlyphs">subparser:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="978" textLength="132" lengthAdjust="spacingAndGlyphs">subparsers:</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1005" textLength="204" lengthAdjust="spacingAndGlyphs">ParseSpaceComment</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1032" textLength="96" lengthAdjust="spacingAndGlyphs">pOptSemi</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1059" textLength="204" lengthAdjust="spacingAndGlyphs">ParseSpaceComment</text>

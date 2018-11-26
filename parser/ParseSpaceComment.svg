@@ -90,7 +90,7 @@
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="599" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="613" textLength="48" lengthAdjust="spacingAndGlyphs">pAny</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="637" textLength="216" lengthAdjust="spacingAndGlyphs">gparselib.ParseAny</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="670" textLength="120" lengthAdjust="spacingAndGlyphs">subparser:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="670" textLength="132" lengthAdjust="spacingAndGlyphs">subparsers:</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="697" textLength="48" lengthAdjust="spacingAndGlyphs">pSpc</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="724" textLength="84" lengthAdjust="spacingAndGlyphs">pLnCmnt</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="751" textLength="96" lengthAdjust="spacingAndGlyphs">pBlkCmnt</text>
