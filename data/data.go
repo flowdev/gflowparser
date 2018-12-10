@@ -1,5 +1,8 @@
 package data
 
+// ContinuationSignal signals that a port is really part of a wrapped arrow.
+const ContinuationSignal = "..."
+
 // Flow is the semantic representation of a complete flow.
 type Flow struct {
 	Parts [][]interface{}
@@ -20,6 +23,11 @@ type Port struct {
 	HasIndex bool
 	Index    int
 	SrcPos   int
+}
+
+// Continuation tells if the port is really part of a wrapped arrow.
+func (p *Port) Continuation() bool {
+	return p.Name == ContinuationSignal
 }
 
 // Component is the semantic representation of a component.

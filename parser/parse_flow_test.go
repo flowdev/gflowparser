@@ -16,17 +16,27 @@ func TestParsePort(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 3,
 		}, {
 			givenName:        "no match 1",
 			givenContent:     `1:a`,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 3,
 		}, {
 			givenName:        "no match 2",
 			givenContent:     `_a`,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 3,
+		}, {
+			givenName:        "no match 3",
+			givenContent:     `... 1`,
+			expectedValue:    nil,
+			expectedErrCount: 3,
+		}, {
+			givenName:        "no match 4",
+			givenContent:     `..1`,
+			expectedValue:    nil,
+			expectedErrCount: 3,
 		}, {
 			givenName:        "simple 1",
 			givenContent:     `aB`,
@@ -46,6 +56,11 @@ func TestParsePort(t *testing.T) {
 			givenName:        "simple 4",
 			givenContent:     `abcDef`,
 			expectedValue:    data.Port{Name: "abcDef"},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "continuation",
+			givenContent:     `...5`,
+			expectedValue:    data.Port{Name: "...", Index: 5},
 			expectedErrCount: 0,
 		}, {
 			givenName:        "complex 1",
@@ -199,6 +214,74 @@ func TestParseFlow(t *testing.T) {
 							Data:   []data.Type{data.Type{LocalType: "b", SrcPos: 4}},
 							ToPort: &data.Port{Name: "c", SrcPos: 8},
 							SrcPos: 3,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:        "continuation err: data",
+			givenContent:     "[A] (b)->...1 \n ...1 (e)-> [G] -> h",
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "continuation err: double end",
+			givenContent:     "in (d)-> [A]->...1 \n in2 (d2)-> [G] -> ...1",
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "continuation err: missing end",
+			givenContent:     "...1 (e)-> [G] -> h",
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "continuation err: missing start",
+			givenContent:     "in (d)-> [A]->...2",
+			expectedValue:    nil,
+			expectedErrCount: 1,
+		}, {
+			givenName:        "continuation err: in middle",
+			givenContent:     "[A] (b)-> [C] ->...1 [G] -> h",
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:        "continuation err: number mismatch",
+			givenContent:     "in (d)-> [A]->...1 \n ...2 (e)-> [G] -> h",
+			expectedValue:    nil,
+			expectedErrCount: 2,
+		}, {
+			givenName:    "continuation 1",
+			givenContent: "in (d)-> [A] ->...1 \n ...1 (e)-> [G]",
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "in", SrcPos: 0},
+							Data:     []data.Type{{LocalType: "d", SrcPos: 4}},
+							SrcPos:   0,
+						},
+						data.Component{Decl: data.CompDecl{
+							Name:   "a",
+							Type:   data.Type{LocalType: "A", SrcPos: 10},
+							SrcPos: 10,
+						}, SrcPos: 9},
+						data.Arrow{
+							ToPort: &data.Port{Name: "...", Index: 1, SrcPos: 15},
+							SrcPos: 13,
+						},
+					}, {
+						data.Arrow{
+							FromPort: &data.Port{Name: "...", Index: 1, SrcPos: 22},
+							Data:     []data.Type{data.Type{LocalType: "e", SrcPos: 28}},
+							SrcPos:   22,
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:   "g",
+								Type:   data.Type{LocalType: "G", SrcPos: 34},
+								SrcPos: 34,
+							},
+							SrcPos: 33,
 						},
 					},
 				},

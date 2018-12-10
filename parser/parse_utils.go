@@ -133,32 +133,19 @@ func spaceCommentSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.
 //             subparser = pAny |
 //             semantics = spaceCommentSemantic ]] -> out
 func ParseSpaceComment(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pSpc := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseSpace(pd2, ctx2, TextSemantic, true)
+	pSpc := gparselib.NewParseSpacePlugin(TextSemantic, true)
+	pLnCmnt, err := gparselib.NewParseLineCommentPlugin(TextSemantic, `//`)
+	if err != nil {
+		panic(err) // can only be a programming error!
 	}
-	pLnCmnt := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		var err error
-		pd2, ctx2, err = gparselib.ParseLineComment(pd2, ctx2, TextSemantic, `//`)
-		if err != nil {
-			panic(err) // can only be a programming error!
-		}
-		return pd2, ctx2
+	pBlkCmnt, err := gparselib.NewParseBlockCommentPlugin(TextSemantic, `/*`, `*/`)
+	if err != nil {
+		panic(err) // can only be a programming error!
 	}
-	pBlkCmnt := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		var err error
-		pd2, ctx2, err = gparselib.ParseBlockComment(pd2, ctx2, TextSemantic, `/*`, `*/`)
-		if err != nil {
-			panic(err) // can only be a programming error!
-		}
-		return pd2, ctx2
-	}
-	pAny := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAny(
-			pd2, ctx2,
-			[]gparselib.SubparserOp{pSpc, pLnCmnt, pBlkCmnt},
-			TextSemantic,
-		)
-	}
+	pAny := gparselib.NewParseAnyPlugin(
+		[]gparselib.SubparserOp{pSpc, pLnCmnt, pBlkCmnt},
+		TextSemantic,
+	)
 	return gparselib.ParseMulti0(pd, ctx, pAny, spaceCommentSemantic)
 }
 
@@ -185,23 +172,15 @@ const (
 //             subparsers = ParseSpaceComment, pOptSemi, ParseSpaceComment, pOptEOF |
 //             semantics = checkSemicolonOrNewLineOrEOF ]] -> out
 func ParseStatementEnd(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pSemicolon := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, TextSemantic, `;`)
-	}
-	pOptSemi := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd, ctx, pSemicolon, nil)
-	}
-	pEOF := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseEOF(pd, ctx,
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = true
-				return pd2, ctx2
-			},
-		)
-	}
-	pOptEOF := func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd, ctx, pEOF, nil)
-	}
+	pSemicolon := gparselib.NewParseLiteralPlugin(TextSemantic, `;`)
+	pOptSemi := gparselib.NewParseOptionalPlugin(pSemicolon, nil)
+	pEOF := gparselib.NewParseEOFPlugin(
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			pd2.Result.Value = true
+			return pd2, ctx2
+		},
+	)
+	pOptEOF := gparselib.NewParseOptionalPlugin(pEOF, nil)
 
 	return gparselib.ParseAll(pd, ctx,
 		[]gparselib.SubparserOp{ParseSpaceComment, pOptSemi, ParseSpaceComment, pOptEOF},

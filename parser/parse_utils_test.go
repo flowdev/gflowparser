@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/flowdev/gparselib"
 )
 
@@ -355,8 +356,8 @@ func runTests(t *testing.T, p testParseOp, specs []parseTestData) {
 				spec.expectedValue, pd2.Result.Value,
 			)
 			t.Errorf(
-				"Expected value '%#v', got '%#v'.",
-				spec.expectedValue, pd2.Result.Value,
+				"Expected value: %s\nGot: %s",
+				spew.Sdump(spec.expectedValue), spew.Sdump(pd2.Result.Value),
 			)
 		}
 		if spec.expectedErrCount <= 0 {
