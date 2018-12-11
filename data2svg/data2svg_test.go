@@ -138,6 +138,93 @@ func TestConvert(t *testing.T) {
 			},
 			hasError: false,
 		}, {
+			name: "continuations",
+			given: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "a"},
+							Data: []data.Type{
+								data.Type{Package: "pack", LocalType: "b"},
+							},
+							ToPort: &data.Port{Name: "in"},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "c"},
+								VagueType: true,
+							},
+						},
+						data.Arrow{
+							FromPort: &data.Port{
+								Name:     "out",
+								HasIndex: true,
+								Index:    3,
+							},
+							ToPort: &data.Port{
+								Name:  "...",
+								Index: 2,
+							},
+						},
+					}, {
+						data.Arrow{
+							FromPort: &data.Port{
+								Name:  "...",
+								Index: 2,
+							},
+							Data: []data.Type{
+								data.Type{LocalType: "b"},
+								data.Type{Package: "pack", LocalType: "Btype"},
+								data.Type{Package: "pack", LocalType: "btype"},
+							},
+							ToPort: &data.Port{
+								Name:     "in",
+								HasIndex: true,
+								Index:    2,
+							},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "d",
+								Type:      data.Type{LocalType: "D"},
+								VagueType: false,
+							},
+						},
+					},
+				},
+			},
+			expected: svg.Flow{
+				Shapes: [][]interface{}{
+					{
+						&svg.Arrow{
+							DataType: "(pack.b)",
+							HasSrcOp: false, SrcPort: "a",
+							HasDstOp: true, DstPort: "in",
+						},
+						&svg.Op{
+							Main:    &svg.Rect{Text: []string{"c"}},
+							Plugins: []*svg.Plugin{},
+						},
+						&svg.Arrow{
+							HasSrcOp: true, SrcPort: "out[3]",
+							HasDstOp: false, DstPort: "...2",
+						},
+					}, {}, {
+						&svg.Arrow{
+							DataType: "(b, pack.Btype, pack.btype)",
+							HasSrcOp: false, SrcPort: "...2",
+							HasDstOp: true, DstPort: "in[2]",
+						},
+						&svg.Op{
+							Main:    &svg.Rect{Text: []string{"d", "D"}},
+							Plugins: []*svg.Plugin{},
+						},
+					},
+				},
+			},
+			hasError: false,
+		}, {
 			name: "full_components",
 			given: data.Flow{
 				Parts: [][]interface{}{

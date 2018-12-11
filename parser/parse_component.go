@@ -38,13 +38,10 @@ func NewTypeParser() (*TypeParser, error) {
 // ParseType is the input port of the TypeParser operation.
 func (p *TypeParser) ParseType(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pOpt := func(pd2 *gparselib.ParseData, ctx2 interface{},
-	) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd2, ctx2, p.pPack.ParsePackageIdent, nil)
-	}
+	pOptPack := gparselib.NewParseOptionalPlugin(p.pPack.ParsePackageIdent, nil)
 	return gparselib.ParseAll(
 		pd, ctx,
-		[]gparselib.SubparserOp{pOpt, p.pLocalType.ParseLocalTypeIdent},
+		[]gparselib.SubparserOp{pOptPack, p.pLocalType.ParseLocalTypeIdent},
 		parseTypeSemantic,
 	)
 }
@@ -94,13 +91,10 @@ func NewCompDeclParser() (*CompDeclParser, error) {
 
 // ParseCompDecl is the input port of the CompDeclParser operation.
 func (p *CompDeclParser) ParseCompDecl(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-	pLong := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(
-			pd, ctx,
-			[]gparselib.SubparserOp{p.pName.ParseNameIdent, ParseASpc, p.pType.ParseType},
-			parseCompDeclSemantic,
-		)
-	}
+	pLong := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{p.pName.ParseNameIdent, ParseASpc, p.pType.ParseType},
+		parseCompDeclSemantic,
+	)
 	return gparselib.ParseAny(
 		pd, ctx,
 		[]gparselib.SubparserOp{pLong, p.pType.ParseType},
@@ -164,22 +158,15 @@ func NewTypeListParser() (*TypeListParser, error) {
 // ParseTypeList is the input port of the TypeListParser operation.
 func (p *TypeListParser) ParseTypeList(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pComma := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `,`)
-	}
-	pAdditionalType := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(
-			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.pt.ParseType},
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = pd2.SubResults[3].Value
-				return pd2, ctx2
-			},
-		)
-	}
-	pAdditionalTypes := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseMulti0(pd, ctx, pAdditionalType, nil)
-	}
+	pComma := gparselib.NewParseLiteralPlugin(nil, `,`)
+	pAdditionalType := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{ParseSpaceComment, pComma, ParseSpaceComment, p.pt.ParseType},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			pd2.Result.Value = pd2.SubResults[3].Value
+			return pd2, ctx2
+		},
+	)
+	pAdditionalTypes := gparselib.NewParseMulti0Plugin(pAdditionalType, nil)
 	return gparselib.ParseAll(
 		pd, ctx,
 		[]gparselib.SubparserOp{p.pt.ParseType, pAdditionalTypes},
@@ -237,24 +224,20 @@ func NewPluginParser() (*PluginParser, error) {
 // ParsePlugin is the input port of the PluginParser operation.
 func (p *PluginParser) ParsePlugin(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pEqual := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `=`)
-	}
-	pBig := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(pd, ctx,
-			[]gparselib.SubparserOp{p.pn.ParseNameIdent, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.ParseTypeList},
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				val0 := pd2.SubResults[0].Value
-				val4 := pd2.SubResults[4].Value
-				pd2.Result.Value = data.Plugin{
-					Name:   val0.(string),
-					Types:  val4.([]data.Type),
-					SrcPos: pd.Result.Pos,
-				}
-				return pd2, ctx2
-			},
-		)
-	}
+	pEqual := gparselib.NewParseLiteralPlugin(nil, `=`)
+	pBig := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{p.pn.ParseNameIdent, ParseSpaceComment, pEqual, ParseSpaceComment, p.ptl.ParseTypeList},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			val0 := pd2.SubResults[0].Value
+			val4 := pd2.SubResults[4].Value
+			pd2.Result.Value = data.Plugin{
+				Name:   val0.(string),
+				Types:  val4.([]data.Type),
+				SrcPos: pd.Result.Pos,
+			}
+			return pd2, ctx2
+		},
+	)
 	return gparselib.ParseAny(
 		pd, ctx,
 		[]gparselib.SubparserOp{pBig, p.pt.ParseType},
@@ -303,22 +286,15 @@ func NewPluginListParser() (*PluginListParser, error) {
 func (p *PluginListParser) ParsePluginList(
 	pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pBar := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `|`)
-	}
-	pAdditionalList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(
-			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, pBar, ParseSpaceComment, p.pp.ParsePlugin},
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = pd2.SubResults[3].Value
-				return pd2, ctx2
-			},
-		)
-	}
-	pAdditionalLists := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseMulti0(pd, ctx, pAdditionalList, nil)
-	}
+	pBar := gparselib.NewParseLiteralPlugin(nil, `|`)
+	pAdditionalList := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{ParseSpaceComment, pBar, ParseSpaceComment, p.pp.ParsePlugin},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			pd2.Result.Value = pd2.SubResults[3].Value
+			return pd2, ctx2
+		},
+	)
+	pAdditionalLists := gparselib.NewParseMulti0Plugin(pAdditionalList, nil)
 	return gparselib.ParseAll(
 		pd, ctx,
 		[]gparselib.SubparserOp{p.pp.ParsePlugin, pAdditionalLists},
@@ -375,19 +351,12 @@ func NewFullPluginsParser() (*FullPluginsParser, error) {
 // ParseFullPlugins is the input port of the FullPluginsParser operation.
 func (p *FullPluginsParser) ParseFullPlugins(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pList := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseBest(
-			pd, ctx,
-			[]gparselib.SubparserOp{p.pttl.ParsePluginList, p.ptl.ParseTypeList},
-			nil,
-		)
-	}
-	pOpen := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `[`)
-	}
-	pClose := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `]`)
-	}
+	pList := gparselib.NewParseBestPlugin(
+		[]gparselib.SubparserOp{p.pttl.ParsePluginList, p.ptl.ParseTypeList},
+		nil,
+	)
+	pOpen := gparselib.NewParseLiteralPlugin(nil, `[`)
+	pClose := gparselib.NewParseLiteralPlugin(nil, `]`)
 	return gparselib.ParseAll(
 		pd, ctx,
 		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, pList, ParseSpaceComment, pClose},
@@ -444,25 +413,16 @@ func NewParseComponent() (*ComponentParser, error) {
 // ParseComponent is the input port of the ComponentParser operation.
 func (p *ComponentParser) ParseComponent(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
-	pPlugins := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseAll(
-			pd, ctx,
-			[]gparselib.SubparserOp{ParseSpaceComment, p.pfp.ParseFullPlugins},
-			func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-				pd2.Result.Value = pd2.SubResults[1].Value
-				return pd2, ctx2
-			},
-		)
-	}
-	pOpt := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseOptional(pd, ctx, pPlugins, nil)
-	}
-	pOpen := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `[`)
-	}
-	pClose := func(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
-		return gparselib.ParseLiteral(pd, ctx, nil, `]`)
-	}
+	pPlugins := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{ParseSpaceComment, p.pfp.ParseFullPlugins},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			pd2.Result.Value = pd2.SubResults[1].Value
+			return pd2, ctx2
+		},
+	)
+	pOpt := gparselib.NewParseOptionalPlugin(pPlugins, nil)
+	pOpen := gparselib.NewParseLiteralPlugin(nil, `[`)
+	pClose := gparselib.NewParseLiteralPlugin(nil, `]`)
 	return gparselib.ParseAll(
 		pd, ctx,
 		[]gparselib.SubparserOp{pOpen, ParseSpaceComment, p.pcd.ParseCompDecl, pOpt, ParseSpaceComment, pClose},

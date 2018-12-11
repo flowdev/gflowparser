@@ -167,6 +167,9 @@ func portToSVGData(port *data.Port) string {
 	if port == nil {
 		return ""
 	}
+	if port.Continuation() {
+		return fmt.Sprintf("...%d", port.Index)
+	}
 	if port.HasIndex {
 		return fmt.Sprintf("%s[%d]", port.Name, port.Index)
 	}
