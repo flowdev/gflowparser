@@ -79,6 +79,64 @@ func parseContinuationPortSemantic(pd *gparselib.ParseData, ctx interface{}) (*g
 	return pd, ctx
 }
 
+// MultiTypeListParser is a parser for multiple type lists.
+type MultiTypeListParser struct {
+	ptl *TypeListParser
+}
+
+// NewMultiTypeListParser creates a new parser for type lists (types separated
+// by ',') separated by '|'.
+// If a subparser can't be created an error is returned.
+func NewMultiTypeListParser() (*MultiTypeListParser, error) {
+	ptl, err := NewTypeListParser()
+	if err != nil {
+		return nil, err
+	}
+	return &MultiTypeListParser{ptl: ptl}, nil
+}
+
+// ParseMultiTypeList parses multiple type lists (types separated
+// by ',') separated by '|'.
+//
+// flow:
+//     in (ParseData)-> [pAdditionalTypeList gparselib.ParseAll
+//                          [ParseSpaceComment, gparselib.ParseLiteral, ParseSpaceComment, ParseTypeList]
+//                      ] -> out
+//     in (ParseData)-> [pAdditionalTypeLists gparselib.ParseMulti0 [pAdditionalTypeList]] -> out
+//     in (ParseData)-> [gparselib.ParseAll
+//                          [ParseTypeList, pAdditionalTypeLists]
+//                      ] -> out
+func (p *MultiTypeListParser) ParseMultiTypeList(pd *gparselib.ParseData, ctx interface{},
+) (*gparselib.ParseData, interface{}) {
+	pBar := gparselib.NewParseLiteralPlugin(nil, `|`)
+	pAdditionalTypeList := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{ParseSpaceComment, pBar, ParseSpaceComment, p.ptl.ParseTypeList},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			pd2.Result.Value = pd2.SubResults[3].Value
+			return pd2, ctx2
+		},
+	)
+	pAdditionalTypeLists := gparselib.NewParseMulti0Plugin(pAdditionalTypeList, nil)
+	return gparselib.ParseAll(
+		pd, ctx,
+		[]gparselib.SubparserOp{p.ptl.ParseTypeList, pAdditionalTypeLists},
+		parseMultiTypeListSemantic,
+	)
+}
+func parseMultiTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
+	firstList := pd.SubResults[0].Value
+	additionalLists := (pd.SubResults[1].Value).([]interface{})
+	alltypes := make([]data.Type, 0, 64)
+	alltypes = append(alltypes, firstList.([]data.Type)...)
+
+	for _, list := range additionalLists {
+		alltypes = append(alltypes, data.SeparatorType)
+		alltypes = append(alltypes, list.([]data.Type)...)
+	}
+	pd.Result.Value = alltypes
+	return pd, ctx
+}
+
 // ArrowParser parses a flow arrow including ports and data types.
 // Semantic result: data.Arrow
 //
@@ -103,7 +161,7 @@ func parseContinuationPortSemantic(pd *gparselib.ParseData, ctx interface{}) (*g
 // Details:
 type ArrowParser struct {
 	pPort *PortParser
-	pData *TypeListParser
+	pData *MultiTypeListParser
 }
 
 // NewArrowParser creates a new parser for a flow arrow.
@@ -114,7 +172,7 @@ func NewArrowParser() (*ArrowParser, error) {
 	if err != nil {
 		return nil, err
 	}
-	pData, err := NewTypeListParser()
+	pData, err := NewMultiTypeListParser()
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +188,7 @@ func (p *ArrowParser) ParseArrow(pd *gparselib.ParseData, ctx interface{}) (*gpa
 	pData := gparselib.NewParseAllPlugin(
 		[]gparselib.SubparserOp{
 			pLeftParen, ParseSpaceComment,
-			p.pData.ParseTypeList, ParseSpaceComment,
+			p.pData.ParseMultiTypeList, ParseSpaceComment,
 			pRightParen, ParseOptSpc,
 		},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {

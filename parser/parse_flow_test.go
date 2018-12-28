@@ -118,12 +118,39 @@ func TestParseArrow(t *testing.T) {
 			},
 			expectedErrCount: 0,
 		}, {
-			givenName:    "complex",
+			givenName:    "complex 1",
 			givenContent: "aPort \t ( // comment1\n Data // comment2\n ) \t -> \t bPort",
 			expectedValue: data.Arrow{
 				FromPort: &data.Port{Name: "aPort"},
 				Data:     []data.Type{data.Type{LocalType: "Data", SrcPos: 23}},
 				ToPort:   &data.Port{Name: "bPort", SrcPos: 50},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex 2",
+			givenContent: "aPort ( Data1 , Data2, data3 ) -> bPort",
+			expectedValue: data.Arrow{
+				FromPort: &data.Port{Name: "aPort"},
+				Data: []data.Type{
+					data.Type{LocalType: "Data1", SrcPos: 8},
+					data.Type{LocalType: "Data2", SrcPos: 16},
+					data.Type{LocalType: "data3", SrcPos: 23},
+				},
+				ToPort: &data.Port{Name: "bPort", SrcPos: 34},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "complex 3",
+			givenContent: "aPort ( Data1, Data2 |\n\t data3 ) -> bPort",
+			expectedValue: data.Arrow{
+				FromPort: &data.Port{Name: "aPort"},
+				Data: []data.Type{
+					data.Type{LocalType: "Data1", SrcPos: 8},
+					data.Type{LocalType: "Data2", SrcPos: 15},
+					data.SeparatorType,
+					data.Type{LocalType: "data3", SrcPos: 25},
+				},
+				ToPort: &data.Port{Name: "bPort", SrcPos: 36},
 			},
 			expectedErrCount: 0,
 		},

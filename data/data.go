@@ -58,3 +58,14 @@ type Type struct {
 	LocalType string
 	SrcPos    int
 }
+
+// SeparatorType is a special (impossible) type to indicate a separator instead
+// of a real type.
+var SeparatorType = Type{
+	Package: "", LocalType: "<SEPARATOR>", SrcPos: -1,
+}
+
+// Separator tells if the type is really a separator instead.
+func (t Type) Separator() bool {
+	return t == SeparatorType
+}
