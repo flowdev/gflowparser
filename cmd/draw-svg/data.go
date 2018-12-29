@@ -6,7 +6,7 @@ var flowData = svg.Flow{
 	Shapes: [][]interface{}{
 		{
 			&svg.Arrow{
-				DataType: "flowData",
+				DataType: []string{"flowData"},
 				HasSrcOp: false, SrcPort: "in",
 				HasDstOp: true, DstPort: "",
 			},
@@ -19,7 +19,7 @@ var flowData = svg.Flow{
 				Shapes: [][]interface{}{
 					{
 						&svg.Arrow{
-							DataType: "flowData",
+							DataType: []string{"flowData"},
 							HasSrcOp: true, SrcPort: "",
 							HasDstOp: true, DstPort: "",
 						},
@@ -29,7 +29,7 @@ var flowData = svg.Flow{
 							},
 						},
 						&svg.Arrow{
-							DataType: "svgFlow",
+							DataType: []string{"svgFlow"},
 							HasSrcOp: true, SrcPort: "",
 							HasDstOp: true, DstPort: "",
 						},
@@ -42,13 +42,13 @@ var flowData = svg.Flow{
 							Shapes: [][]interface{}{
 								{
 									&svg.Arrow{
-										DataType: "bytes",
+										DataType: []string{"bytes"},
 										HasSrcOp: true, SrcPort: "",
 										HasDstOp: false, DstPort: "out",
 									},
 								}, {
 									&svg.Arrow{
-										DataType: "error",
+										DataType: []string{"error"},
 										HasSrcOp: true, SrcPort: "err",
 										HasDstOp: false, DstPort: "err",
 									},
@@ -57,7 +57,7 @@ var flowData = svg.Flow{
 						},
 					}, {
 						&svg.Arrow{
-							DataType: "error",
+							DataType: []string{"error"},
 							HasSrcOp: true, SrcPort: "err",
 							HasDstOp: false, DstPort: "err",
 						},
@@ -66,7 +66,7 @@ var flowData = svg.Flow{
 			},
 		}, {}, {
 			&svg.Arrow{
-				DataType: "flowData",
+				DataType: []string{"flowData"},
 				HasSrcOp: false, SrcPort: "in",
 				HasDstOp: true, DstPort: "",
 			},
@@ -76,7 +76,7 @@ var flowData = svg.Flow{
 				},
 			},
 			&svg.Arrow{
-				DataType: "(flowShapes, svgFlow, x0, y0)",
+				DataType: []string{"(flowShapes, svgFlow, x0, y0)"},
 				HasSrcOp: true, SrcPort: "",
 				HasDstOp: true, DstPort: "",
 			},
@@ -92,7 +92,7 @@ var flowData = svg.Flow{
 				},
 			},
 			&svg.Arrow{
-				DataType: "(svgFlow, xn, yn)",
+				DataType: []string{"(svgFlow, xn, yn)"},
 				HasSrcOp: true, SrcPort: "",
 				HasDstOp: true, DstPort: "",
 			},
@@ -102,7 +102,7 @@ var flowData = svg.Flow{
 				},
 			},
 			&svg.Arrow{
-				DataType: "svgFlow",
+				DataType: []string{"svgFlow"},
 				HasSrcOp: true, SrcPort: "",
 				HasDstOp: false, DstPort: "out",
 			},

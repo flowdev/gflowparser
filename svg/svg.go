@@ -26,7 +26,7 @@ const svgDiagram = `<?xml version="1.0" ?>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="{{.X1}}" y1="{{.Y1}}" x2="{{.X2}}" y2="{{.Y2}}"/>
 {{- end}}
 {{range .Texts}}
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="{{.X}}" y="{{.Y}}" textLength="{{.Width}}" lengthAdjust="spacingAndGlyphs">{{.Text}}</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="{{.X}}" y="{{.Y}}" textLength="{{.Width}}" lengthAdjust="spacingAndGlyphs" xml:space="preserve">{{.Text}}</text>
 {{- end}}
 </svg>
 `
@@ -34,7 +34,7 @@ const svgDiagram = `<?xml version="1.0" ?>
 // Arrow contains all information for displaying an Arrow including data type
 // and ports.
 type Arrow struct {
-	DataType string
+	DataType []string
 	HasSrcOp bool
 	SrcPort  string
 	HasDstOp bool
@@ -121,7 +121,7 @@ type myMergeData struct {
 }
 type moveData struct {
 	arrow       *svgArrow
-	dataText    *svgText
+	dataTexts   []*svgText
 	dstPortText *svgText
 	yn          int
 }
@@ -211,8 +211,8 @@ func adjustDimensions(sf *svgFlow, xn, yn int) *svgFlow {
 
 func shapesToSVG(
 	shapes [][]interface{}, sf *svgFlow, x0 int, y0 int,
-	pluginArrowDataToSVG func(*Arrow, *svgFlow, int, int) (*svgFlow, int, int, *moveData),
-	pluginOpDataToSVG func(*Op, *svgFlow, int, int) (*svgFlow, *svgRect, int, int, int),
+	pluginArrowDataToSVG func(*Arrow, *svgFlow, *svgRect, int, int) (*svgFlow, int, int, *moveData),
+	pluginOpDataToSVG func(*Op, *svgFlow, int, int, int) (*svgFlow, *svgRect, int, int, int),
 	pluginRectDataToSVG func(*Rect, *svgFlow, int, int) (*svgFlow, int, int),
 	pluginSplitDataToSVG func(*Split, *svgFlow, *svgRect, int, int) (*svgFlow, int, int),
 	pluginMergeDataToSVG func(*Merge, *svgFlow, *moveData, int, int) *myMergeData,
@@ -228,23 +228,28 @@ func shapesToSVG(
 			y0 += 48
 			continue
 		}
+		ya := y0
 		for _, is := range ss {
 			y := y0
 			switch s := is.(type) {
 			case *Arrow:
-				sf, x, y, mod = pluginArrowDataToSVG(s, sf, x, y)
+				sf, x, y, mod = pluginArrowDataToSVG(s, sf, lsr, x, y)
+				ya = y - 48 // use the upper arrow Y not the lowest Y
 				lsr = nil
 			case *Op:
-				sf, lsr, y0, x, y = pluginOpDataToSVG(s, sf, x, y0)
+				sf, lsr, y0, x, y = pluginOpDataToSVG(s, sf, x, y0, ymax)
 				sf.completedMerge = nil
+				ya = y0
 			case *Rect:
-				sf, x, y = pluginRectDataToSVG(s, sf, x, y)
+				sf, x, y = pluginRectDataToSVG(s, sf, x, ya)
 			case *Split:
 				sf, x, y = pluginSplitDataToSVG(s, sf, lsr, x, y)
 				lsr = nil
+				ya = y0
 			case *Merge:
 				sf.completedMerge = pluginMergeDataToSVG(s, sf, mod, x, y)
 				mod = nil
+				ya = y0
 			default:
 				panic(fmt.Sprintf("unsupported type: %T", is))
 			}

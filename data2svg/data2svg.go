@@ -1,8 +1,8 @@
 package data2svg
 
 import (
-	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/flowdev/gflowparser/data"
 	"github.com/flowdev/gflowparser/svg"
@@ -148,19 +148,30 @@ func pluginToSVGData(plug data.Plugin) *svg.Plugin {
 	}
 }
 
-func arrDataToSVGData(dat []data.Type) string {
+func arrDataToSVGData(dat []data.Type) []string {
 	if len(dat) == 0 {
-		return ""
+		return nil
 	}
-	buf := bytes.Buffer{}
-	buf.WriteString("(")
-	buf.WriteString(typeToSVGData(dat[0]))
-	for i := 1; i < len(dat); i++ {
-		buf.WriteString(", ")
-		buf.WriteString(typeToSVGData(dat[i]))
+	ret := make([]string, 0, 8)
+
+	b := strings.Builder{}
+	b.WriteString("(")
+	for _, typ := range dat {
+		if typ == data.SeparatorType { // we want a new string
+			b.WriteString(",")
+			ret = append(ret, b.String())
+			b.Reset()
+			b.WriteString(" ")
+		} else {
+			if b.Len() > 1 { // we need a ',' to separate types
+				b.WriteString(", ")
+			}
+			b.WriteString(typeToSVGData(typ))
+		}
 	}
-	buf.WriteString(")")
-	return buf.String()
+	b.WriteString(")")
+	ret = append(ret, b.String())
+	return ret
 }
 
 func portToSVGData(port *data.Port) string {

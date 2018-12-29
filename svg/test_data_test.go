@@ -4,7 +4,7 @@ var BigTestFlowData = Flow{
 	Shapes: [][]interface{}{
 		{
 			&Arrow{
-				DataType: "Data",
+				DataType: []string{"Data"},
 				HasSrcOp: false, SrcPort: "in",
 				HasDstOp: true, DstPort: "",
 			},
@@ -17,7 +17,7 @@ var BigTestFlowData = Flow{
 				Shapes: [][]interface{}{
 					{
 						&Arrow{
-							DataType: "Data",
+							DataType: []string{"Data"},
 							HasSrcOp: true, SrcPort: "special",
 							HasDstOp: true, DstPort: "in",
 						},
@@ -42,7 +42,7 @@ var BigTestFlowData = Flow{
 							},
 						},
 						&Arrow{
-							DataType: "BigDataType",
+							DataType: []string{"BigDataType"},
 							HasSrcOp: true, SrcPort: "out",
 							HasDstOp: true, DstPort: "in1",
 						},
@@ -52,7 +52,7 @@ var BigTestFlowData = Flow{
 						},
 					}, {
 						&Arrow{
-							DataType: "Data",
+							DataType: []string{"Data"},
 							HasSrcOp: true, SrcPort: "out",
 							HasDstOp: true, DstPort: "in",
 						},
@@ -62,7 +62,7 @@ var BigTestFlowData = Flow{
 							},
 						},
 						&Arrow{
-							DataType: "Data2",
+							DataType: []string{"Data2"},
 							HasSrcOp: true, SrcPort: "",
 							HasDstOp: false, DstPort: "...",
 						},
@@ -74,7 +74,7 @@ var BigTestFlowData = Flow{
 				Shapes: [][]interface{}{
 					{
 						&Arrow{
-							DataType: "",
+							DataType: []string{},
 							HasSrcOp: false, SrcPort: "...",
 							HasDstOp: true, DstPort: "in",
 						},
@@ -84,7 +84,7 @@ var BigTestFlowData = Flow{
 							},
 						},
 						&Arrow{
-							DataType: "Data",
+							DataType: []string{"Data"},
 							HasSrcOp: true, SrcPort: "out",
 							HasDstOp: true, DstPort: "in2",
 						},
@@ -94,7 +94,7 @@ var BigTestFlowData = Flow{
 						},
 					}, {
 						&Arrow{
-							DataType: "Data3",
+							DataType: []string{"Data3"},
 							HasSrcOp: false, SrcPort: "in2",
 							HasDstOp: true, DstPort: "in",
 						},
@@ -119,7 +119,7 @@ var BigTestFlowData = Flow{
 							},
 						},
 						&Arrow{
-							DataType: "Data",
+							DataType: []string{"(Data,", " data2,", " Data3)"},
 							HasSrcOp: true, SrcPort: "out",
 							HasDstOp: true, DstPort: "in3",
 						},
@@ -138,14 +138,29 @@ var BigTestFlowData = Flow{
 			},
 		}, { // empty to force more space
 		}, {
+			&Arrow{
+				DataType: []string{"(Data,", " data2,", " Data3)"},
+				HasSrcOp: false, SrcPort: "in3",
+				HasDstOp: true, DstPort: "",
+			},
 			&Op{
 				Main: &Rect{
 					Text: []string{"recursive"},
 				},
 			},
 			&Arrow{
-				DataType: "Data",
+				DataType: []string{"(Data)"},
 				HasSrcOp: true, SrcPort: "",
+				HasDstOp: true, DstPort: "",
+			},
+			&Op{
+				Main: &Rect{
+					Text: []string{"secondOp"},
+				},
+			},
+			&Arrow{
+				DataType: []string{"(Data,", " data2,", " Data3)"},
+				HasSrcOp: true, SrcPort: "out",
 				HasDstOp: true, DstPort: "",
 			},
 			&Rect{

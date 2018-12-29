@@ -1,11 +1,11 @@
 package svg
 
-func opDataToSVG(op *Op, sf *svgFlow, x0, y0 int,
+func opDataToSVG(op *Op, sf *svgFlow, x0, y0, y1 int,
 ) (nsf *svgFlow, lsr *svgRect, ny0 int, xn, yn int) {
 	var y int
 
 	opW := maxTextWidth(op.Main) + 2*12 // text + padding
-	opH := 0                            // outerOpToSVG should calculate itself
+	opH := y1 - y0
 	for _, f := range op.Plugins {
 		w := maxPluginWidth(f)
 		opW = max(opW, w)
@@ -15,7 +15,7 @@ func opDataToSVG(op *Op, sf *svgFlow, x0, y0 int,
 		x0 = sf.completedMerge.x0
 		y0 = sf.completedMerge.y0
 		ny0 = y0
-		opH = sf.completedMerge.yn - y0 // now we have a minimum to enforce
+		opH = max(opH, sf.completedMerge.yn-y0)
 	}
 
 	lsr, y, xn, yn = outerOpToSVG(op.Main, opW, opH, sf, x0, y0)

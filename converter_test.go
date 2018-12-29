@@ -35,13 +35,13 @@ func TestConvertFlowDSLToSVG(t *testing.T) {
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="210" y1="17" x2="218" y2="25"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="210" y1="33" x2="218" y2="25"/>
 
-	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="36" height="36" x="140" y="7" rx="10" ry="10"/>
+	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="36" height="48" x="140" y="7" rx="10" ry="10"/>
 
 
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="72" lengthAdjust="spacingAndGlyphs">(data)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="152" y="31" textLength="12" lengthAdjust="spacingAndGlyphs">a</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="221" y="31" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="72" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(data)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="152" y="31" textLength="12" lengthAdjust="spacingAndGlyphs" xml:space="preserve">a</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="221" y="31" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
 </svg>
 `,
 			expectedCompTypes: []data.Type{

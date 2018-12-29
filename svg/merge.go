@@ -37,8 +37,10 @@ func moveXTo(med *myMergeData, newX int) {
 		if mod.dstPortText != nil {
 			mod.dstPortText.X += xShift
 		}
-		if mod.dataText != nil {
-			mod.dataText.X += xShift / 2
+		if len(mod.dataTexts) != 0 {
+			for _, dt := range mod.dataTexts {
+				dt.X += xShift / 2
+			}
 		}
 	}
 }

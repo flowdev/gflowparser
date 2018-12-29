@@ -42,7 +42,7 @@ func TestConvert(t *testing.T) {
 				Shapes: [][]interface{}{
 					{
 						&svg.Arrow{
-							DataType: "(b)",
+							DataType: []string{"(b)"},
 							HasSrcOp: false, SrcPort: "a",
 							HasDstOp: true,
 						},
@@ -101,8 +101,14 @@ func TestConvert(t *testing.T) {
 						},
 						data.Arrow{
 							FromPort: &data.Port{Name: "out"},
-							Data:     []data.Type{data.Type{LocalType: "b"}},
-							ToPort:   &data.Port{Name: "out"},
+							Data: []data.Type{
+								data.Type{LocalType: "b"},
+								data.SeparatorType,
+								data.Type{Package: "pack", LocalType: "Btype"},
+								data.SeparatorType,
+								data.Type{Package: "pack", LocalType: "btype"},
+							},
+							ToPort: &data.Port{Name: "out"},
 						},
 					},
 				},
@@ -111,7 +117,7 @@ func TestConvert(t *testing.T) {
 				Shapes: [][]interface{}{
 					{
 						&svg.Arrow{
-							DataType: "(pack.b)",
+							DataType: []string{"(pack.b)"},
 							HasSrcOp: false, SrcPort: "a",
 							HasDstOp: true, DstPort: "in",
 						},
@@ -120,7 +126,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(b, pack.Btype, pack.btype)",
+							DataType: []string{"(b, pack.Btype, pack.btype)"},
 							HasSrcOp: true, SrcPort: "out[3]",
 							HasDstOp: true, DstPort: "in[2]",
 						},
@@ -129,7 +135,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(b)",
+							DataType: []string{"(b,", " pack.Btype,", " pack.btype)"},
 							HasSrcOp: true, SrcPort: "out",
 							HasDstOp: false, DstPort: "out",
 						},
@@ -198,7 +204,7 @@ func TestConvert(t *testing.T) {
 				Shapes: [][]interface{}{
 					{
 						&svg.Arrow{
-							DataType: "(pack.b)",
+							DataType: []string{"(pack.b)"},
 							HasSrcOp: false, SrcPort: "a",
 							HasDstOp: true, DstPort: "in",
 						},
@@ -212,7 +218,7 @@ func TestConvert(t *testing.T) {
 						},
 					}, {}, {
 						&svg.Arrow{
-							DataType: "(b, pack.Btype, pack.btype)",
+							DataType: []string{"(b, pack.Btype, pack.btype)"},
 							HasSrcOp: false, SrcPort: "...2",
 							HasDstOp: true, DstPort: "in[2]",
 						},
@@ -343,7 +349,7 @@ func TestConvert(t *testing.T) {
 							},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true, HasDstOp: true,
 						},
 						&svg.Op{
@@ -612,7 +618,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true, HasDstOp: true,
 						},
 						&svg.Merge{ID: "a", Size: 2},
@@ -624,7 +630,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true, HasDstOp: true,
 						},
 						&svg.Op{
@@ -634,7 +640,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true, HasDstOp: true,
 						},
 						&svg.Merge{ID: "a", Size: 2},
@@ -648,13 +654,13 @@ func TestConvert(t *testing.T) {
 							Shapes: [][]interface{}{
 								{
 									&svg.Arrow{
-										DataType: "(data)",
+										DataType: []string{"(data)"},
 										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Merge{ID: "b", Size: 2},
 								}, {
 									&svg.Arrow{
-										DataType: "(data)",
+										DataType: []string{"(data)"},
 										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Op{
@@ -686,7 +692,7 @@ func TestConvert(t *testing.T) {
 												},
 											}, {
 												&svg.Arrow{
-													DataType: "(data)",
+													DataType: []string{"(data)"},
 													HasSrcOp: true, HasDstOp: true,
 												},
 												&svg.Op{
@@ -709,7 +715,7 @@ func TestConvert(t *testing.T) {
 									},
 								}, {
 									&svg.Arrow{
-										DataType: "(data)",
+										DataType: []string{"(data)"},
 										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Op{
@@ -722,7 +728,7 @@ func TestConvert(t *testing.T) {
 									&svg.Merge{ID: "c", Size: 4},
 								}, {
 									&svg.Arrow{
-										DataType: "(data)",
+										DataType: []string{"(data)"},
 										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Op{
@@ -814,7 +820,7 @@ func TestConvert(t *testing.T) {
 				Shapes: [][]interface{}{
 					{
 						&svg.Arrow{
-							DataType: "(data)", SrcPort: "i",
+							DataType: []string{"(data)"}, SrcPort: "i",
 							HasSrcOp: false, HasDstOp: true,
 						},
 						&svg.Op{
@@ -839,7 +845,7 @@ func TestConvert(t *testing.T) {
 									},
 								}, {
 									&svg.Arrow{
-										DataType: "(data)",
+										DataType: []string{"(data)"},
 										HasSrcOp: true, HasDstOp: true,
 									},
 									&svg.Op{
@@ -930,7 +936,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true, HasDstOp: true,
 						},
 						&svg.Op{
@@ -947,7 +953,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true, HasDstOp: true,
 						},
 						&svg.Op{
@@ -967,7 +973,7 @@ func TestConvert(t *testing.T) {
 							Plugins: []*svg.Plugin{},
 						},
 						&svg.Arrow{
-							DataType: "(data)",
+							DataType: []string{"(data)"},
 							HasSrcOp: true,
 							SrcPort:  "",
 							HasDstOp: true,

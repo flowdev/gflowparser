@@ -1,29 +1,46 @@
 package svg
 
-func arrowDataToSVG(a *Arrow, sf *svgFlow, x int, y int,
+func arrowDataToSVG(a *Arrow, sf *svgFlow, lsr *svgRect, x int, y int,
 ) (nsf *svgFlow, nx, ny int, mod *moveData) {
-	var dstPortText, dataText *svgText
+	var srcPortText, dstPortText *svgText
+	dataTexts := make([]*svgText, 0, 8)
+
 	y += 24
 	portLen := 0 // length in chars NOT pixels
-
-	sf.Texts, x, portLen = addSrcPort(a, sf.Texts, x, y)
-
+	if a.HasSrcOp {
+		portLen = len(a.SrcPort)
+	}
 	if a.HasDstOp {
 		portLen += len(a.DstPort)
 	}
+
+	dataLen := maxLen(a.DataType)
 	width := max(
 		portLen+2,
-		len(a.DataType)+2,
+		dataLen+2,
 	)*12 + 6 + // 6 so the source port text isn't glued to the op
 		12 // last 12 is for tip of arrow
 
-	if a.DataType != "" {
-		dataText = &svgText{
-			X: x + ((width-12)-len(a.DataType)*12)/2, Y: y - 8,
-			Width: len(a.DataType) * 12,
-			Text:  a.DataType,
+	sf.Texts, x = addSrcPort(a, sf.Texts, x, y)
+	if a.SrcPort != "" { // remember this text as we might have to move it down
+		srcPortText = sf.Texts[len(sf.Texts)-1]
+	}
+
+	if len(a.DataType) != 0 {
+		dataX := x + ((width-12)-dataLen*12)/2
+		for i, text := range a.DataType {
+			if i > 0 {
+				y += 22
+				srcPortText.Y += 22
+			}
+			st := &svgText{
+				X: dataX, Y: y - 8,
+				Width: len(text) * 12,
+				Text:  text,
+			}
+			sf.Texts = append(sf.Texts, st)
+			dataTexts = append(dataTexts, st)
 		}
-		sf.Texts = append(sf.Texts, dataText)
 	}
 
 	sf.Arrows = append(sf.Arrows, &svgArrow{
@@ -39,16 +56,18 @@ func arrowDataToSVG(a *Arrow, sf *svgFlow, x int, y int,
 		dstPortText = sf.Texts[len(sf.Texts)-1]
 	}
 
-	return sf, x, y + 36, &moveData{
+	yn := y + 24
+	adjustLastRect(lsr, yn-12)
+
+	return sf, x, yn, &moveData{
 		arrow:       sf.Arrows[len(sf.Arrows)-1],
 		dstPortText: dstPortText,
-		dataText:    dataText,
-		yn:          y + 24,
+		dataTexts:   dataTexts,
+		yn:          yn,
 	}
 }
 
-func addSrcPort(a *Arrow, sts []*svgText, x, y int) ([]*svgText, int, int) {
-	portLen := 0
+func addSrcPort(a *Arrow, sts []*svgText, x, y int) ([]*svgText, int) {
 	if !a.HasSrcOp { // text before the arrow
 		if a.SrcPort != "" {
 			sts = append(sts, &svgText{
@@ -59,7 +78,6 @@ func addSrcPort(a *Arrow, sts []*svgText, x, y int) ([]*svgText, int, int) {
 		}
 		x += 12 * len(a.SrcPort)
 	} else { // text under the arrow
-		portLen += len(a.SrcPort)
 		if a.SrcPort != "" {
 			sts = append(sts, &svgText{
 				X: x + 6, Y: y + 20,
@@ -68,7 +86,7 @@ func addSrcPort(a *Arrow, sts []*svgText, x, y int) ([]*svgText, int, int) {
 			})
 		}
 	}
-	return sts, x, portLen
+	return sts, x
 }
 
 func addDstPort(a *Arrow, sts []*svgText, x, y int) ([]*svgText, int) {
