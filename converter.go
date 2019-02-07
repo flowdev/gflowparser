@@ -10,7 +10,7 @@ import (
 
 // ConvertFlowDSLToSVG transforms a flow given as DSL string into a SVG image
 // plus component (subflow) types, data types, (currently empty) feedback
-// string and potential error.
+// string and potential error(s).
 func ConvertFlowDSLToSVG(flowContent, flowName string,
 ) (
 	svgData []byte,
@@ -58,7 +58,7 @@ func extractTypes(flow data.Flow) (compTypes []data.Type, dataTypes []data.Type)
 				dataMap = addTypes(dataMap, p.Data)
 			case data.Component:
 				// check component, plugins, ...
-				compMap[typToString(p.Decl.Type)] = p.Decl.Type
+				compMap = addType(compMap, p.Decl.Type)
 				for _, plugin := range p.Plugins {
 					compMap = addTypes(compMap, plugin.Types)
 				}
@@ -76,8 +76,19 @@ func valuesOf(typeMap map[string]data.Type) []data.Type {
 }
 func addTypes(typeMap map[string]data.Type, types []data.Type) map[string]data.Type {
 	for _, t := range types {
-		typeMap[typToString(t)] = t
+		typeMap = addType(typeMap, t)
 	}
+	return typeMap
+}
+func addType(typeMap map[string]data.Type, typ data.Type) map[string]data.Type {
+	if typ.ListType != nil {
+		return addType(typeMap, *typ.ListType)
+	}
+	if typ.MapKeyType != nil {
+		typeMap = addType(typeMap, *typ.MapKeyType)
+		return addType(typeMap, *typ.MapValueType)
+	}
+	typeMap[typToString(typ)] = typ
 	return typeMap
 }
 func typToString(t data.Type) string {

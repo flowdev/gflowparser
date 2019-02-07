@@ -54,9 +54,12 @@ type CompDecl struct {
 
 // Type is the semantic representation of a type declaration.
 type Type struct {
-	Package   string
-	LocalType string
-	SrcPos    int
+	ListType     *Type
+	MapKeyType   *Type
+	MapValueType *Type
+	Package      string
+	LocalType    string
+	SrcPos       int
 }
 
 // SeparatorType is a special (impossible) type to indicate a separator instead

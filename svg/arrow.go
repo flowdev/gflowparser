@@ -31,7 +31,9 @@ func arrowDataToSVG(a *Arrow, sf *svgFlow, lsr *svgRect, x int, y int,
 		for i, text := range a.DataType {
 			if i > 0 {
 				y += 22
-				srcPortText.Y += 22
+				if srcPortText != nil {
+					srcPortText.Y += 22
+				}
 			}
 			st := &svgText{
 				X: dataX, Y: y - 8,

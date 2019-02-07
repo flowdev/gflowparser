@@ -188,6 +188,12 @@ func portToSVGData(port *data.Port) string {
 }
 
 func typeToSVGData(typ data.Type) string {
+	if typ.ListType != nil {
+		return "list(" + typeToSVGData(*typ.ListType) + ")"
+	}
+	if typ.MapKeyType != nil {
+		return "map(" + typeToSVGData(*typ.MapKeyType) + ", " + typeToSVGData(*typ.MapValueType) + ")"
+	}
 	if typ.Package != "" {
 		return typ.Package + "." + typ.LocalType
 	}

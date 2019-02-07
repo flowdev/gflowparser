@@ -38,23 +38,71 @@ func NewTypeParser() (*TypeParser, error) {
 // ParseType is the input port of the TypeParser operation.
 func (p *TypeParser) ParseType(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
+	pCloseParen := gparselib.NewParseLiteralPlugin(TextSemantic, `)`)
+	pList := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{
+			gparselib.NewParseLiteralPlugin(nil, `list(`), ParseSpaceComment,
+			p.ParseType, ParseSpaceComment,
+			pCloseParen,
+		},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			t := (pd2.SubResults[2].Value).(data.Type)
+			pd2.Result.Value = data.Type{
+				ListType: &t,
+				SrcPos:   pd.Result.Pos,
+			}
+			return pd2, ctx2
+		},
+	)
+
+	pMap := gparselib.NewParseAllPlugin(
+		[]gparselib.SubparserOp{
+			gparselib.NewParseLiteralPlugin(TextSemantic, `map(`), ParseSpaceComment,
+			p.ParseType, ParseSpaceComment,
+			gparselib.NewParseLiteralPlugin(nil, `,`), ParseSpaceComment,
+			p.ParseType, ParseSpaceComment,
+			pCloseParen,
+		},
+		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
+			tKey := (pd2.SubResults[2].Value).(data.Type)
+			tValue := (pd2.SubResults[6].Value).(data.Type)
+			pd2.Result.Value = data.Type{
+				MapKeyType:   &tKey,
+				MapValueType: &tValue,
+				SrcPos:       pd.Result.Pos,
+			}
+			return pd2, ctx2
+		},
+	)
+
 	pOptPack := gparselib.NewParseOptionalPlugin(p.pPack.ParsePackageIdent, nil)
-	return gparselib.ParseAll(
-		pd, ctx,
+	pSimpleType := gparselib.NewParseAllPlugin(
 		[]gparselib.SubparserOp{pOptPack, p.pLocalType.ParseLocalTypeIdent},
-		parseTypeSemantic,
+		parseSimpleTypeSemantic,
+	)
+
+	return gparselib.ParseAny(
+		pd, ctx,
+		[]gparselib.SubparserOp{pList, pMap, pSimpleType},
+		nil,
 	)
 }
-func parseTypeSemantic(pd *gparselib.ParseData, ctx interface{},
+func parseSimpleTypeSemantic(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	val0 := pd.SubResults[0].Value
 	pack := ""
 	if val0 != nil {
 		pack = (val0).(string)
 	}
+	lType := (pd.SubResults[1].Value).(string)
+	if pack == "" && (lType == "list" || lType == "map") {
+		pd.AddError(pd.Result.Pos, "keyword '"+lType+"' not allowed as type", nil)
+		pd.Result.Value = nil
+		return pd, ctx
+	}
 	pd.Result.Value = data.Type{
 		Package:   pack,
-		LocalType: (pd.SubResults[1].Value).(string),
+		LocalType: lType,
 		SrcPos:    pd.Result.Pos,
 	}
 	return pd, ctx

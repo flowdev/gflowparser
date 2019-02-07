@@ -16,17 +16,27 @@ func TestParseType(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 4,
 		}, {
 			givenName:        "no match 1",
 			givenContent:     `1A`,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 4,
 		}, {
 			givenName:        "no match 2",
 			givenContent:     `_A`,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 4,
+		}, {
+			givenName:        "no match list",
+			givenContent:     `list(_A)`,
+			expectedValue:    nil,
+			expectedErrCount: 7,
+		}, {
+			givenName:        "no match map",
+			givenContent:     `map(A, 1B)`,
+			expectedValue:    nil,
+			expectedErrCount: 7,
 		}, {
 			givenName:        "simple 1",
 			givenContent:     `Ab`,
@@ -57,6 +67,43 @@ func TestParseType(t *testing.T) {
 			givenContent:     `pack.a1Bc_d`,
 			expectedValue:    data.Type{Package: "pack", LocalType: "a1Bc"},
 			expectedErrCount: 0,
+		}, {
+			givenName:    "simple list",
+			givenContent: "list( \n p.Ab \t )",
+			expectedValue: data.Type{
+				ListType: &data.Type{Package: "p", LocalType: "Ab", SrcPos: 8},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "recursive list",
+			givenContent: "list(list(p.Ab))",
+			expectedValue: data.Type{
+				ListType: &data.Type{
+					ListType: &data.Type{Package: "p", LocalType: "Ab", SrcPos: 10},
+					SrcPos:   5,
+				},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "simple map",
+			givenContent: "map( \n p.Ab \t , \t abcDef \n )",
+			expectedValue: data.Type{
+				MapKeyType:   &data.Type{Package: "p", LocalType: "Ab", SrcPos: 7},
+				MapValueType: &data.Type{LocalType: "abcDef", SrcPos: 18},
+			},
+			expectedErrCount: 0,
+		}, {
+			givenName:    "recursive map",
+			givenContent: "map(Abc,map(abcDef,a0))",
+			expectedValue: data.Type{
+				MapKeyType: &data.Type{LocalType: "Abc", SrcPos: 4},
+				MapValueType: &data.Type{
+					MapKeyType:   &data.Type{LocalType: "abcDef", SrcPos: 12},
+					MapValueType: &data.Type{LocalType: "a0", SrcPos: 19},
+					SrcPos:       8,
+				},
+			},
+			expectedErrCount: 0,
 		},
 	})
 }
@@ -71,17 +118,17 @@ func TestParseCompDecl(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:        "no match 1",
 			givenContent:     `1A`,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:        "no match 2",
 			givenContent:     `_A`,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:    "simple 1",
 			givenContent: `A`,
@@ -146,17 +193,17 @@ func TestParseTypeList(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 4,
 		}, {
 			givenName:        "no match 1",
 			givenContent:     `1A`,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 4,
 		}, {
 			givenName:        "no match 2",
 			givenContent:     `_A`,
 			expectedValue:    nil,
-			expectedErrCount: 1,
+			expectedErrCount: 4,
 		}, {
 			givenName:    "simple 1",
 			givenContent: `A`,
@@ -204,17 +251,17 @@ func TestParsePlugin(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:        "no match 1",
 			givenContent:     `1A=bla`,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:        "no match 2",
 			givenContent:     `=b`,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:    "simple 1",
 			givenContent: `a=A`,
@@ -281,12 +328,12 @@ func TestParsePluginList(t *testing.T) {
 			givenName:        "empty",
 			givenContent:     ``,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:        "no match",
 			givenContent:     `|a=b`,
 			expectedValue:    nil,
-			expectedErrCount: 3,
+			expectedErrCount: 6,
 		}, {
 			givenName:    "simple 1",
 			givenContent: `a=A`,
