@@ -50,6 +50,7 @@ func ConvertFlowDSLToSVG(flowContent, flowName string,
 func extractTypes(flow data.Flow) (compTypes []data.Type, dataTypes []data.Type) {
 	dataMap := make(map[string]data.Type)
 	compMap := make(map[string]data.Type)
+	compNames := make(map[string]bool)
 
 	for _, partLine := range flow.Parts {
 		for _, part := range partLine {
@@ -58,7 +59,10 @@ func extractTypes(flow data.Flow) (compTypes []data.Type, dataTypes []data.Type)
 				dataMap = addTypes(dataMap, p.Data)
 			case data.Component:
 				// check component, plugins, ...
-				compMap = addType(compMap, p.Decl.Type)
+				if !p.Decl.VagueType || !compNames[p.Decl.Name] {
+					compMap = addType(compMap, p.Decl.Type)
+					compNames[p.Decl.Name] = true
+				}
 				for _, plugin := range p.Plugins {
 					compMap = addTypes(compMap, plugin.Types)
 				}
