@@ -1,0 +1,2 @@
+in (data)-> myInPort [component1] out (data)-> arrayIn:1 [component2] arrayOut:1 (data)-> out
+[component1] specialOut (data)-> arrayIn:2 [component2] arrayOut:2 (data)-> extraOut

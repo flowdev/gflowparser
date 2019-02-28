@@ -1,0 +1,2 @@
+in (localDataType, ExportedLocalDataType | otherpackage.ExportedDataType)-> [
+component] (ExportedLocalDataType | descriptiveNameForString)-> out
