@@ -46,8 +46,8 @@ component1] (ExportedLocalDataType | descriptiveNameForString)-> out
 Ports have lower case names and can have an optional index (array ports).
 The maximum index is fix at design time (compile time) as anything else would
 be too hard to debug.
-In the Go code port names are appended to the function or method name seperated
-by an underscore (`_`).
+In the Go code input port names are appended to the function or method name
+seperated by an underscore (`_`) (e.g. `func component1_myInPort(...)`).
 ```flowdev
 in (d)-> myInPort [component1] out (d)-> arrayIn:1 [component2] arrayOut:1 (d)-> out
 [component1] specialOut (data)-> arrayIn:2 [component2] arrayOut:2 (data)-> extraOut
