@@ -361,9 +361,9 @@ func addDeclLineAfterLastMerge(shapes [][]interface{}, dl []interface{}, name st
 			case *merge:
 				if s.name == name { // this is the last merge
 					if s.svg.Size <= 1 { // remove merge
-						shapes[i] = append(sl[:j], dl...)
+						shapes[i] = append(copyShapeLine(sl[:j]), dl...)
 					} else {
-						shapes[i] = append(sl, dl...)
+						shapes[i] = append(copyShapeLine(sl), dl...)
 					}
 					return true
 				}
