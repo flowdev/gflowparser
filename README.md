@@ -49,7 +49,7 @@ be too hard to debug.
 In the Go code input port names are appended to the function or method name
 seperated by an underscore (`_`) (e.g. `func component1_myInPort(...)`).
 ```flowdev
-in (d)-> myInPort [component1] out (d)-> arrayIn:1 [component2] arrayOut:1 (d)-> out
+in (data)-> myInPort [component1] out (data)-> arrayIn:1 [component2] arrayOut:1 (data)-> out
 [component1] specialOut (data)-> arrayIn:2 [component2] arrayOut:2 (data)-> extraOut
 ```
 ![ports](img/ports.svg)
