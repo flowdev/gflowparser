@@ -1,0 +1,1 @@
+in (data)-> [component [pluginType = package.Plugin1, plugin2, Plugin3]] (data)-> out

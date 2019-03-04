@@ -1,0 +1,2 @@
+in (data)-> [component1] (data)-> [Component2] (data)-> out
+in2 (data)-> [package.Component3] (data)-> [explicitName Component4] (data)-> out2
