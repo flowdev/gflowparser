@@ -1,6 +1,13 @@
 # gflowparser
 Flow DSL parser for the Go programming language build with flowdev/gparselib.
 
+## Status
+This project is already quite useful (especially when used via the `go2md` project).
+But the following points are still missing:
+1. [ ] Complete documentation
+1. [ ] Refactor the `data2svg` package into flows
+1. [ ] Add missing tests and fix bugs
+
 ## Flow DSL
 The flow DSL is used to show the flow of data between components. So it consists of two main objects:
 - components that perform computations, I/O, etc. and
@@ -61,7 +68,7 @@ line.  You can use continuations for that. A continuation is simply three dots
 ```flowdev
 in (data)-> [component1] -> ...1
 ...1 (data)-> [component2] -> ...2
-(data)-> [component3]
+...2 (data)-> [component3]
 ```
 ![continuations](img/continuations.svg)
 
