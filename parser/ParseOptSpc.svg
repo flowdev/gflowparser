@@ -17,13 +17,13 @@
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="94" x2="620" y2="94"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="151" x2="620" y2="151"/>
 
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="31" textLength="156" lengthAdjust="spacingAndGlyphs">parseOptional</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="55" textLength="276" lengthAdjust="spacingAndGlyphs">gparselib.ParseOptional</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="88" textLength="120" lengthAdjust="spacingAndGlyphs">subparser:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="115" textLength="108" lengthAdjust="spacingAndGlyphs">ParseASpc</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="145" textLength="120" lengthAdjust="spacingAndGlyphs">semantics:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="172" textLength="144" lengthAdjust="spacingAndGlyphs">TextSemantic</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="665" y="31" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="31" textLength="156" lengthAdjust="spacingAndGlyphs" xml:space="preserve">parseOptional</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="55" textLength="276" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseOptional</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="88" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">subparser:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="115" textLength="108" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseASpc</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="145" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">semantics:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="172" textLength="144" lengthAdjust="spacingAndGlyphs" xml:space="preserve">TextSemantic</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="665" y="31" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
 </svg>

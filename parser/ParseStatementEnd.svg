@@ -68,48 +68,48 @@
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="1065" x2="668" y2="1065"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="1122" x2="668" y2="1122"/>
 
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="31" textLength="120" lengthAdjust="spacingAndGlyphs">pSemicolon</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="55" textLength="264" lengthAdjust="spacingAndGlyphs">gparselib.ParseLiteral</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="88" textLength="120" lengthAdjust="spacingAndGlyphs">semantics:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="115" textLength="144" lengthAdjust="spacingAndGlyphs">TextSemantic</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="653" y="31" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="225" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="211" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="225" textLength="96" lengthAdjust="spacingAndGlyphs">pOptSemi</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="249" textLength="276" lengthAdjust="spacingAndGlyphs">gparselib.ParseOptional</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="282" textLength="120" lengthAdjust="spacingAndGlyphs">subparser:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="309" textLength="120" lengthAdjust="spacingAndGlyphs">pSemicolon</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="339" textLength="120" lengthAdjust="spacingAndGlyphs">semantics:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="366" textLength="36" lengthAdjust="spacingAndGlyphs">nil</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="665" y="225" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="476" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="462" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="476" textLength="48" lengthAdjust="spacingAndGlyphs">pEOF</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="500" textLength="216" lengthAdjust="spacingAndGlyphs">gparselib.ParseEOF</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="533" textLength="120" lengthAdjust="spacingAndGlyphs">semantics:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="560" textLength="180" lengthAdjust="spacingAndGlyphs">BooleanSemantic</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="605" y="476" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="670" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="656" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="670" textLength="84" lengthAdjust="spacingAndGlyphs">pOptEOF</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="694" textLength="276" lengthAdjust="spacingAndGlyphs">gparselib.ParseOptional</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="727" textLength="120" lengthAdjust="spacingAndGlyphs">subparser:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="754" textLength="48" lengthAdjust="spacingAndGlyphs">pEOF</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="784" textLength="120" lengthAdjust="spacingAndGlyphs">semantics:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="811" textLength="36" lengthAdjust="spacingAndGlyphs">nil</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="665" y="670" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="921" textLength="22" lengthAdjust="spacingAndGlyphs">in</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="907" textLength="252" lengthAdjust="spacingAndGlyphs">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="921" textLength="96" lengthAdjust="spacingAndGlyphs">parseAll</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="945" textLength="216" lengthAdjust="spacingAndGlyphs">gparselib.ParseAll</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="978" textLength="132" lengthAdjust="spacingAndGlyphs">subparsers:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1005" textLength="204" lengthAdjust="spacingAndGlyphs">ParseSpaceComment</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1032" textLength="96" lengthAdjust="spacingAndGlyphs">pOptSemi</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1059" textLength="204" lengthAdjust="spacingAndGlyphs">ParseSpaceComment</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1086" textLength="84" lengthAdjust="spacingAndGlyphs">pOptEOF</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1116" textLength="120" lengthAdjust="spacingAndGlyphs">semantics:</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1143" textLength="336" lengthAdjust="spacingAndGlyphs">checkSemicolonOrNewLineOrEOF</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="713" y="921" textLength="34" lengthAdjust="spacingAndGlyphs">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="31" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pSemicolon</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="55" textLength="264" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseLiteral</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="88" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">semantics:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="115" textLength="144" lengthAdjust="spacingAndGlyphs" xml:space="preserve">TextSemantic</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="653" y="31" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="225" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="211" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="225" textLength="96" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pOptSemi</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="249" textLength="276" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseOptional</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="282" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">subparser:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="309" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pSemicolon</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="339" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">semantics:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="366" textLength="36" lengthAdjust="spacingAndGlyphs" xml:space="preserve">nil</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="665" y="225" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="476" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="462" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="476" textLength="48" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pEOF</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="500" textLength="216" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseEOF</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="533" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">semantics:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="560" textLength="180" lengthAdjust="spacingAndGlyphs" xml:space="preserve">BooleanSemantic</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="605" y="476" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="670" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="656" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="670" textLength="84" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pOptEOF</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="694" textLength="276" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseOptional</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="727" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">subparser:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="754" textLength="48" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pEOF</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="784" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">semantics:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="811" textLength="36" lengthAdjust="spacingAndGlyphs" xml:space="preserve">nil</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="665" y="670" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="921" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="907" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="921" textLength="96" lengthAdjust="spacingAndGlyphs" xml:space="preserve">parseAll</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="945" textLength="216" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseAll</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="978" textLength="132" lengthAdjust="spacingAndGlyphs" xml:space="preserve">subparsers:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1005" textLength="204" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseSpaceComment</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1032" textLength="96" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pOptSemi</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1059" textLength="204" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseSpaceComment</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1086" textLength="84" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pOptEOF</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1116" textLength="120" lengthAdjust="spacingAndGlyphs" xml:space="preserve">semantics:</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="1143" textLength="336" lengthAdjust="spacingAndGlyphs" xml:space="preserve">checkSemicolonOrNewLineOrEOF</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="713" y="921" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
 </svg>
