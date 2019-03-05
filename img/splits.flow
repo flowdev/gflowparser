@@ -1,0 +1,6 @@
+in (data)-> [component1] (data)-> [Component2] (data)-> out
+[component1] error (err)-> error
+[component2] error (err)-> error
+in2 (data)-> [package.Component3] (data)-> [explicitName Component4] (data)-> out2
+[component3] error (err)-> error
+[explicitName] error (err)-> error

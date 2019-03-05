@@ -108,4 +108,40 @@ in (data)-> [component [simplePlugin | pluginType = package.Plugin1, plugin2, Pl
 I hope you recognise the thicker separator line between plugins of different
 types.
 
-### Splits, merges and circles
+### Splits
+Components can have got multiple output ports and/or be connected to multiple
+downstream components. The first time a component is used it is defined with
+optional name and type. All other times only the unique name is used to refer
+to it.
+```flowdev
+in (data)-> [component1] (data)-> [Component2] (data)-> out
+[component1] error (err)-> error
+[component2] error (err)-> error
+in2 (data)-> [package.Component3] (data)-> [explicitName Component4] (data)-> out2
+[component3] error (err)-> error
+[explicitName] error (err)-> error
+```
+![splits](img/splits.svg)
+
+### Merges
+Merges are the opposite of splits and the same rules apply. Merges are used for
+components that have got multiple input ports and/or that are connected to
+multiple upstream components.
+```flowdev
+in (data)-> [component1] (data)-> [Component2] (data)-> out
+in2 (data2)-> [component1]
+in3 (data3)-> [component2]
+in4 (data4)-> [package.Component3] (data)-> [explicitName Component4] (data)-> out2
+in5 (data5)-> [component3]
+in6 (data6)-> [explicitName]
+```
+![merges](img/merges.svg)
+
+### Circles
+The flow DSL allows to create circles. As these are graphically challenging the
+tool breaks them up and replaces the component that completes the circle with a
+textual reference (`... back to: <component name>`).
+```flowdev
+in (data)-> [component1] (data)-> [Component2] (data)-> [component1]
+```
+![circle](img/circle.svg)
