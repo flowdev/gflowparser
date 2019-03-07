@@ -29,12 +29,12 @@ func NewTypeParser() (*TypeParser, error) {
 }
 
 // ParseType parses a type declaration including optional package.
-// Semantic result: The optional package name and the local type name
-//     including possible subtypes in case of a map or a list (data.Type).
+// * Semantic result: The optional package name and the local type name
+//   including possible subtypes in case of a map or a list (data.Type).
 //
 // flow:
-//     in (ParseData)-> [pOpt gparselib.ParseOptional [ParsePackageIdent]] -> out
-//     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseLocalTypeIdent]] -> out
+//     in (gparselib.ParseData)-> [pOpt gparselib.ParseOptional [ParsePackageIdent]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll [pOpt, ParseLocalTypeIdent]] -> out
 func (p *TypeParser) ParseType(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pCloseParen := gparselib.NewParseLiteralPlugin(TextSemantic, `)`)
@@ -129,12 +129,12 @@ func NewCompDeclParser() (*CompDeclParser, error) {
 }
 
 // ParseCompDecl parses a component declaration.
-// Semantic result: The name and the type (data.CompDecl).
+// * Semantic result: The name and the type (data.CompDecl).
 //
 // flow:
-//     in (ParseData)-> [pAll gparselib.ParseAll [ParseNameIdent, ParseASpc]] -> out
-//     in (ParseData)-> [pOpt gparselib.ParseOptional [pAll]] -> out
-//     in (ParseData)-> [gparselib.ParseAll [pOpt, ParseType]] -> out
+//     in (gparselib.ParseData)-> [pAll gparselib.ParseAll [ParseNameIdent, ParseASpc]] -> out
+//     in (gparselib.ParseData)-> [pOpt gparselib.ParseOptional [pAll]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll [pOpt, ParseType]] -> out
 func (p *CompDeclParser) ParseCompDecl(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pLong := gparselib.NewParseAllPlugin(
 		[]gparselib.SubparserOp{p.pName.ParseNameIdent, ParseASpc, p.pType.ParseType},
@@ -189,14 +189,14 @@ func NewTypeListParser() (*TypeListParser, error) {
 }
 
 // ParseTypeList parses types separated by commas.
-// Semantic result: []data.Type
+// * Semantic result: []data.Type
 //
 // flow:
-//     in (ParseData)-> [pAdditionalType gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pAdditionalType gparselib.ParseAll
 //                          [ParseSpaceComment, gparselib.ParseLiteral, ParseSpaceComment, ParseType]
 //                      ] -> out
-//     in (ParseData)-> [pAdditionalTypes gparselib.ParseMulti0 [pAdditionalType]] -> out
-//     in (ParseData)-> [gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pAdditionalTypes gparselib.ParseMulti0 [pAdditionalType]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll
 //                          [ParseType, pAdditionalTypes]
 //                      ] -> out
 func (p *TypeListParser) ParseTypeList(pd *gparselib.ParseData, ctx interface{},
@@ -257,14 +257,14 @@ func NewPluginParser() (*PluginParser, error) {
 
 // ParsePlugin parses a name followed by an equals sign and types separated by commas.
 // Alternatively a single type is parsed.
-// Semantic result: The title and a slice of data.Type (data.Plugin).
+// * Semantic result: The title and a slice of data.Type (data.Plugin).
 //
 // flow:
-//     in (ParseData)-> [pFullPlugin gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pFullPlugin gparselib.ParseAll
 //                          [ ParseNameIdent, ParseSpaceComment, gparselib.ParseLiteral,
 //                            ParseSpaceComment, ParseTypeList                          ]
 //                      ] -> out
-//     in (ParseData)-> [gparselib.ParseAny [pFullPlugin, ParseType]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAny [pFullPlugin, ParseType]] -> out
 func (p *PluginParser) ParsePlugin(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pEqual := gparselib.NewParseLiteralPlugin(nil, `=`)
@@ -313,15 +313,15 @@ func NewPluginListParser() (*PluginListParser, error) {
 }
 
 // ParsePluginList parses Plugins separated by a pipe '|' character.
-// Semantic result: A slice of data.Plugin.
+// * Semantic result: A slice of data.Plugin.
 //
 // flow:
-//     in (ParseData)-> [pAdditionalList gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pAdditionalList gparselib.ParseAll
 //                          [ ParseSpaceComment, gparselib.ParseLiteral,
 //                            ParseSpaceComment, ParsePlugin            ]
 //                      ] -> out
-//     in (ParseData)-> [pAdditionalLists gparselib.ParseMulti0 [pAdditionalList]] -> out
-//     in (ParseData)-> [gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pAdditionalLists gparselib.ParseMulti0 [pAdditionalList]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll
 //                          [ParsePlugin, pAdditionalLists]
 //                      ] -> out
 func (p *PluginListParser) ParsePluginList(
@@ -378,13 +378,13 @@ func NewFullPluginsParser() (*FullPluginsParser, error) {
 
 // ParseFullPlugins parses the plugins of an operation starting with a '[' followed
 // by a plugin list or a type list and a closing ']'.
-// Semantic result: A slice of data.Plugin.
+// * Semantic result: A slice of data.Plugin.
 //
 // flow:
-//     in (ParseData)-> [pList gparselib.ParseAny
+//     in (gparselib.ParseData)-> [pList gparselib.ParseAny
 //                          [ParsePluginList, ParseTypeList]
 //                      ] -> out
-//     in (ParseData)-> [gparselib.ParseAll
+//     in (gparselib.ParseData)-> [gparselib.ParseAll
 //                          [ gparselib.ParseLiteral, ParseSpaceComment, pList,
 //                            ParseSpaceComment, gparselib.ParseLiteral         ]
 //                      ] -> out
@@ -437,14 +437,14 @@ func NewParseComponent() (*ComponentParser, error) {
 }
 
 // ParseComponent parses a component including declaration and plugins.
-// Semantic result: A data.Component.
+// * Semantic result: A data.Component.
 //
 // flow:
-//     in (ParseData)-> [pPlugins gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pPlugins gparselib.ParseAll
 //                          [ParseSpaceComment, ParseFullPlugins]
 //                      ] -> out
-//     in (ParseData)-> [pOpt gparselib.ParseOptional [pPlugins]] -> out
-//     in (ParseData)-> [gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pOpt gparselib.ParseOptional [pPlugins]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll
 //                          [ gparselib.ParseLiteral, ParseSpaceComment, ParseCompDecl,
 //                            pOpt, ParseSpaceComment, gparselib.ParseLiteral          ]
 //                      ] -> out

@@ -1,2 +1,3 @@
 in (data1, data2, data3)-> [component1] (data4 | data5 | data6)-> [
 component2] (data1, data3 | data5, data6)-> out
+in2 -> [component1] -> [component2] -> out2

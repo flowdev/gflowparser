@@ -25,17 +25,15 @@ func NewPortParser() (*PortParser, error) {
 }
 
 // ParsePort parses a port including optional index.
-// Semantic result: data.Port
+// * Semantic result: data.Port
 //
 // flow:
-//     in (ParseData)-> [pColon gparselib.ParseLiteral] -> out
-//     in (ParseData)-> [pNumber gparselib.ParseNatural] -> out
-//     in (ParseData)-> [pIndex gparselib.ParseAll [pColon, pNumber]] -> out
-//     in (ParseData)-> [pOptIdx gparselib.ParseOptional [pIndex]] -> out
-//     in (ParseData)-> [pNormPort gparselib.ParseAll [ParseNameIdent, pOptIdx]] -> out
-//     in (ParseData)-> [pDots gparselib.ParseLiteral] -> out
-//     in (ParseData)-> [pContinuation gparselib.ParseAll [pDots, pNumber]] -> out
-//     in (ParseData)-> [gparselib.ParseAll [pNormPort, pContinuation]] -> out
+//     in (gparselib.ParseData)-> [pIndex gparselib.ParseAll [gparselib.ParseLiteral, gparselib.ParseNatural]] -> out
+//     in (gparselib.ParseData)-> [pOptIdx gparselib.ParseOptional [pIndex]] -> out
+//     in (gparselib.ParseData)-> [pNormPort gparselib.ParseAll [ParseNameIdent, pOptIdx]] -> out
+//     in (gparselib.ParseData)-> [pDots gparselib.ParseLiteral] -> out
+//     in (gparselib.ParseData)-> [pContinuation gparselib.ParseAll [pDots, gparselib.ParseNatural]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll [pContinuation, pNormPort]] -> out
 func (p *PortParser) ParsePort(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pColon := gparselib.NewParseLiteralPlugin(nil, `:`)
 	pNumber, err := gparselib.NewParseNaturalPlugin(nil, 10)
@@ -97,13 +95,14 @@ func NewMultiTypeListParser() (*MultiTypeListParser, error) {
 
 // ParseMultiTypeList parses multiple type lists (types separated
 // by ',') separated by '|'.
+// * Semantic result: []data.Type containing data.SeparatorType
 //
 // flow:
-//     in (ParseData)-> [pAdditionalTypeList gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pAdditionalTypeList gparselib.ParseAll
 //                          [ParseSpaceComment, gparselib.ParseLiteral, ParseSpaceComment, ParseTypeList]
 //                      ] -> out
-//     in (ParseData)-> [pAdditionalTypeLists gparselib.ParseMulti0 [pAdditionalTypeList]] -> out
-//     in (ParseData)-> [gparselib.ParseAll
+//     in (gparselib.ParseData)-> [pAdditionalTypeLists gparselib.ParseMulti0 [pAdditionalTypeList]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll
 //                          [ParseTypeList, pAdditionalTypeLists]
 //                      ] -> out
 func (p *MultiTypeListParser) ParseMultiTypeList(pd *gparselib.ParseData, ctx interface{},
@@ -137,28 +136,7 @@ func parseMultiTypeListSemantic(pd *gparselib.ParseData, ctx interface{}) (*gpar
 	return pd, ctx
 }
 
-// ArrowParser parses a flow arrow including ports and data types.
-// Semantic result: data.Arrow
-//
-// flow:
-//     in (ParseData)-> [pOptPort gparselib.ParseOptional [ParsePort]] -> out
-//     in (ParseData)-> [pLeftParen gparselib.ParseLiteral] -> out
-//     in (ParseData)-> [pRightParen gparselib.ParseLiteral] -> out
-//     in (ParseData)-> [pArrow gparselib.ParseLiteral] -> out
-//     in (ParseData)-> [pData gparselib.ParseAll
-//                          [pLeftParen, ParseSpaceComment,
-//                           ParseTypeList, ParseSpaceComment,
-//                           pRightParen, ParseOptSpc
-//                          ]
-//                      ] -> out
-//     in (ParseData)-> [pOptData gparselib.ParseOptional [pData]] -> out
-//     in (ParseData)-> [gparselib.ParseAll
-//                          [pOptPort, ParseOptSpc, pOptData,
-//                           pArrow, ParseOptSpc, pOptPort
-//                          ]
-//                      ] -> out
-//
-// Details:
+// ArrowParser is a parser for a flow arrow including ports and data types.
 type ArrowParser struct {
 	pPort *PortParser
 	pData *MultiTypeListParser
@@ -179,7 +157,26 @@ func NewArrowParser() (*ArrowParser, error) {
 	return &ArrowParser{pPort: pPort, pData: pData}, nil
 }
 
-// ParseArrow is the input port of the ArrowParser operation.
+// ParseArrow parses a flow arrow including ports and data types.
+// * Semantic result: data.Arrow
+//
+// flow:
+//     in (gparselib.ParseData)-> [pOptPort gparselib.ParseOptional [ParsePort]] -> out
+//     in (gparselib.ParseData)-> [pLeftParen gparselib.ParseLiteral] -> out
+//     in (gparselib.ParseData)-> [pRightParen gparselib.ParseLiteral] -> out
+//     in (gparselib.ParseData)-> [pArrow gparselib.ParseLiteral] -> out
+//     in (gparselib.ParseData)-> [pData gparselib.ParseAll
+//                          [pLeftParen, ParseSpaceComment,
+//                           ParseMultiTypeList, ParseSpaceComment,
+//                           pRightParen, ParseOptSpc
+//                          ]
+//                      ] -> out
+//     in (gparselib.ParseData)-> [pOptData gparselib.ParseOptional [pData]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll
+//                          [pOptPort, ParseOptSpc, pOptData,
+//                           pArrow, ParseOptSpc, pOptPort
+//                          ]
+//                      ] -> out
 func (p *ArrowParser) ParseArrow(pd *gparselib.ParseData, ctx interface{}) (*gparselib.ParseData, interface{}) {
 	pOptPort := gparselib.NewParseOptionalPlugin(p.pPort.ParsePort, nil)
 	pLeftParen := gparselib.NewParseLiteralPlugin(nil, `(`)
@@ -226,19 +223,7 @@ func parseArrowSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib.Pa
 	return pd, ctx
 }
 
-// FlowParser parses a complete flow.
-// Semantic result: data.Flow
-//
-// flow:
-//     in (ParseData)-> [pAnyPart gparselib.ParseAny [ParseArrow, ParseComponent]] -> out
-//     in (ParseData)-> [pFullPart gparselib.ParseAll [pAnyPart, ParseOptSpc]] -> out
-//     in (ParseData)-> [pPartString gparselib.ParseMulti [pFullPart]] -> out
-//     in (ParseData)-> [pPartLine gparselib.ParseAll
-//                          [pPartString, ParseStatementEnd]
-//                      ] -> out
-//     in (ParseData)-> [gparselib.ParseMulti1 [pPartLine]] -> out
-//
-// Details:
+// FlowParser is a parser for a complete flow.
 type FlowParser struct {
 	pArrow *ArrowParser
 	pComp  *ComponentParser
@@ -278,7 +263,18 @@ func NewFlowParser() (*FlowParser, error) {
 	return &FlowParser{pArrow: pArrow, pComp: pComp}, nil
 }
 
-// ParseFlow is the input port of the FlowParser operation.
+// ParseFlow parses a complete flow.
+// * Semantic result: data.Flow
+//
+// flow:
+//     in (gparselib.ParseData)-> [pAnyPart gparselib.ParseAny [ParseArrow, ParseComponent]] -> out
+//     in (gparselib.ParseData)-> [pFullPart gparselib.ParseAll [pAnyPart, ParseOptSpc]] -> out
+//     in (gparselib.ParseData)-> [pPartSequence gparselib.ParseMulti [pFullPart]] -> out
+//     in (gparselib.ParseData)-> [pPartLine gparselib.ParseAll
+//                          [pPartSequence, ParseStatementEnd]
+//                      ] -> out
+//     in (gparselib.ParseData)-> [pLines gparselib.ParseMulti1 [pPartLine]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll [pLines, gparselib.ParseEOF]] -> out
 func (p *FlowParser) ParseFlow(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pAnyPart := gparselib.NewParseAnyPlugin(
@@ -292,9 +288,9 @@ func (p *FlowParser) ParseFlow(pd *gparselib.ParseData, ctx interface{},
 			return pd3, ctx3
 		},
 	)
-	pPartString := gparselib.NewParseMultiPlugin(pFullPart, nil, 2, math.MaxInt32)
+	pPartSequence := gparselib.NewParseMultiPlugin(pFullPart, nil, 2, math.MaxInt32)
 	pPartLine := gparselib.NewParseAllPlugin(
-		[]gparselib.SubparserOp{pPartString, ParseStatementEnd},
+		[]gparselib.SubparserOp{pPartSequence, ParseStatementEnd},
 		parsePartLineSemantic,
 	)
 	pLines := gparselib.NewParseMulti1Plugin(pPartLine, parseFlowSemantic)
@@ -348,9 +344,10 @@ func parsePartLineSemantic(pd *gparselib.ParseData, ctx interface{}) (*gparselib
 	} else {
 		firstArrow = partLine[1].(data.Arrow)
 	}
-	if len(firstArrow.Data) == 0 {
-		pd.AddError(pd.Result.Pos, errMsgFirstData, nil)
-	}
+	// TODO: keep this lenient data parsing???
+	//if len(firstArrow.Data) == 0 {
+	//	pd.AddError(pd.Result.Pos, errMsgFirstData, nil)
+	//}
 	if lastArrow, ok := partLine[n-1].(data.Arrow); ok {
 		if lastArrow.ToPort == nil {
 			pd.AddError(pd.Result.Pos, errMsgLastPort, nil)

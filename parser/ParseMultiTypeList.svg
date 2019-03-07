@@ -22,42 +22,42 @@
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="312" y1="432" x2="320" y2="440"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="312" y1="448" x2="320" y2="440"/>
 
-	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="560" y1="440" x2="602" y2="440"/>
-	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="594" y1="432" x2="602" y2="440"/>
-	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="594" y1="448" x2="602" y2="440"/>
+	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="572" y1="440" x2="614" y2="440"/>
+	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="606" y1="432" x2="614" y2="440"/>
+	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="606" y1="448" x2="614" y2="440"/>
 
 	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="276" height="183" x="320" y="7" rx="10" ry="10"/>
 	<rect fill="rgb(32,224,32)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="276" height="111" x="320" y="67"/>
 	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="276" height="102" x="320" y="255" rx="10" ry="10"/>
 	<rect fill="rgb(32,224,32)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="276" height="30" x="320" y="315"/>
-	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="240" height="129" x="320" y="422" rx="10" ry="10"/>
-	<rect fill="rgb(32,224,32)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="240" height="57" x="320" y="482"/>
+	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="252" height="129" x="320" y="422" rx="10" ry="10"/>
+	<rect fill="rgb(32,224,32)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="252" height="57" x="320" y="482"/>
 
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="94" x2="596" y2="94"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="121" x2="596" y2="121"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="148" x2="596" y2="148"/>
-	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="509" x2="560" y2="509"/>
+	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="1.0" x1="320" y1="509" x2="572" y2="509"/>
 
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="31" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="17" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="31" textLength="180" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalType</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="31" textLength="228" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalTypeList</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="55" textLength="216" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseAll</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="88" textLength="204" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseSpaceComment</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="115" textLength="264" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseLiteral</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="142" textLength="204" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseSpaceComment</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="169" textLength="108" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseType</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="169" textLength="156" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseTypeList</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="641" y="31" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="279" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="265" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="279" textLength="192" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalTypes</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="279" textLength="240" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalTypeLists</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="303" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseMulti0</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="336" textLength="180" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalType</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="336" textLength="228" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalTypeList</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="641" y="279" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="3" y="446" textLength="22" lengthAdjust="spacingAndGlyphs" xml:space="preserve">in</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="41" y="432" textLength="252" lengthAdjust="spacingAndGlyphs" xml:space="preserve">(gparselib.ParseData)</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="446" textLength="96" lengthAdjust="spacingAndGlyphs" xml:space="preserve">parseAll</text>
 	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="332" y="470" textLength="216" lengthAdjust="spacingAndGlyphs" xml:space="preserve">gparselib.ParseAll</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="503" textLength="108" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseType</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="530" textLength="192" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalTypes</text>
-	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="605" y="446" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="503" textLength="156" lengthAdjust="spacingAndGlyphs" xml:space="preserve">ParseTypeList</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="326" y="530" textLength="240" lengthAdjust="spacingAndGlyphs" xml:space="preserve">pAdditionalTypeLists</text>
+	<text fill="rgb(0,0,0)" fill-opacity="1.0" font-family="monospace" font-size="16" x="617" y="446" textLength="34" lengthAdjust="spacingAndGlyphs" xml:space="preserve">out</text>
 </svg>

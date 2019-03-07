@@ -21,7 +21,9 @@ So a very simple flow looks like this:
 in (data)-> [component1] (data)-> [component2] (data)-> out
 ```
 and is rendered to:
+
 ![simple flow](img/simple.svg)
+
 As you can see, the ports at the outer level (usually at the very start and end
 of a flow line) have to be stated explicitly even if they are the standard
 ports.
@@ -31,10 +33,12 @@ within parentheses (`(` and `)`) and square brackets (`[` and `]`).
 
 ### Data and data types
 Multiple data for arrows are supported and can either be seperated by a comma (`,`)
-to keep them on the same line or by a pipe (`|`) to have multiple lines:
+to keep them on the same line or by a pipe (`|`) to have multiple lines.
+The data types can be left out, too.
 ```flowdev
 in (data1, data2, data3)-> [component1] (data4 | data5 | data6)-> [
 component2] (data1, data3 | data5, data6)-> out
+in2 -> [component1] -> [component2] -> out2
 ```
 ![multiple data](img/multiData.svg)
 

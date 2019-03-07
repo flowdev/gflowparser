@@ -178,11 +178,11 @@ func TestParseFlow(t *testing.T) {
 			givenContent:     `aPort (pack.Data)-> bPort;`,
 			expectedValue:    nil,
 			expectedErrCount: 5,
-		}, {
-			givenName:        "data of first arrow missing",
-			givenContent:     `[A]->out;`,
-			expectedValue:    nil,
-			expectedErrCount: 2,
+			//}, {
+			//	givenName:        "data of first arrow missing",
+			//	givenContent:     `[A]->out;`,
+			//	expectedValue:    nil,
+			//	expectedErrCount: 2,
 		}, {
 			givenName:        "last output port missing",
 			givenContent:     `a(b)->[c]->;`,
@@ -221,6 +221,27 @@ func TestParseFlow(t *testing.T) {
 								SrcPos:    7,
 							},
 							SrcPos: 6,
+						},
+					},
+				},
+			},
+			expectedErrCount: 0,
+		}, { // TODO: keep this lenient data parsing???
+			givenName:    "no data",
+			givenContent: `[A]->out`,
+			expectedValue: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Component{
+							Decl: data.CompDecl{
+								Name:   "a",
+								Type:   data.Type{LocalType: "A", SrcPos: 1},
+								SrcPos: 1,
+							},
+						},
+						data.Arrow{
+							ToPort: &data.Port{Name: "out", SrcPos: 5},
+							SrcPos: 3,
 						},
 					},
 				},
