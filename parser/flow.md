@@ -10,11 +10,6 @@ ParsePort parses a port including optional index.
 Components | Data
 ---------- | -----
 [ParseNameIdent](utils.md#flow-parsenameident) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-pContinuation | 
-pDots | 
-pIndex | 
-pNormPort | 
-pOptIdx | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
 [gparselib.ParseNatural](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L49L91) | 
@@ -32,8 +27,6 @@ Components | Data
 ---------- | -----
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParseTypeList](component.md#flow-parsetypelist) | 
-pAdditionalTypeList | 
-pAdditionalTypeLists | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
 [gparselib.ParseMulti0](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L66L71) | 
@@ -51,12 +44,6 @@ Components | Data
 [ParseOptSpc](utils.md#flow-parseoptspc) | 
 [ParsePort](#flow-parseport) | 
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | 
-pArrow | 
-pData | 
-pLeftParen | 
-pOptData | 
-pOptPort | 
-pRightParen | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
 [gparselib.ParseOptional](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L100L116) | 
@@ -74,11 +61,6 @@ Components | Data
 [ParseComponent](component.md#flow-parsecomponent) | 
 [ParseOptSpc](utils.md#flow-parseoptspc) | 
 [ParseStatementEnd](utils.md#flow-parsestatementend) | 
-pAnyPart | 
-pFullPart | 
-pLines | 
-pPartLine | 
-pPartSequence | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseAny](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L164L196) | 
 [gparselib.ParseEOF](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L108L127) | 

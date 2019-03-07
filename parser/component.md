@@ -12,7 +12,6 @@ Components | Data
 ---------- | -----
 [ParseLocalTypeIdent](utils.md#flow-parselocaltypeident) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParsePackageIdent](utils.md#flow-parsepackageident) | 
-pOpt | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseOptional](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L100L116) | 
 
@@ -28,8 +27,6 @@ Components | Data
 [ParseASpc](utils.md#flow-parseaspc) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParseNameIdent](utils.md#flow-parsenameident) | 
 [ParseType](#flow-parsetype) | 
-pAll | 
-pOpt | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseOptional](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L100L116) | 
 
@@ -44,8 +41,6 @@ Components | Data
 ---------- | -----
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParseType](#flow-parsetype) | 
-pAdditionalType | 
-pAdditionalTypes | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
 [gparselib.ParseMulti0](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L66L71) | 
@@ -64,7 +59,6 @@ Components | Data
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | 
 [ParseType](#flow-parsetype) | 
 [ParseTypeList](#flow-parsetypelist) | 
-pFullPlugin | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseAny](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L164L196) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
@@ -80,8 +74,6 @@ Components | Data
 ---------- | -----
 [ParsePlugin](#flow-parseplugin) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | 
-pAdditionalList | 
-pAdditionalLists | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
 [gparselib.ParseMulti0](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L66L71) | 
@@ -99,7 +91,6 @@ Components | Data
 [ParsePluginList](#flow-parsepluginlist) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | 
 [ParseTypeList](#flow-parsetypelist) | 
-pList | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseAny](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L164L196) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
@@ -116,8 +107,6 @@ Components | Data
 [ParseCompDecl](#flow-parsecompdecl) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [ParseFullPlugins](#flow-parsefullplugins) | 
 [ParseSpaceComment](utils.md#flow-parsespacecomment) | 
-pOpt | 
-pPlugins | 
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 
 [gparselib.ParseOptional](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L100L116) | 

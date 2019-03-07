@@ -10,8 +10,7 @@ ParseNameIdent parses a name identifier.
 
 Components | Data
 ---------- | -----
-[TextSemantic](utils.go#L204L207) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-[gparselib.ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L188L209) | 
+[gparselib.ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L188L209) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 
 
 ## Flow: [ParsePackageIdent](utils.go#L52L60)
@@ -23,8 +22,7 @@ ParsePackageIdent parses a package identifier.
 
 Components | Data
 ---------- | -----
-[TextSemantic](utils.go#L204L207) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-[gparselib.ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L188L209) | 
+[gparselib.ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L188L209) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 
 
 ## Flow: [ParseLocalTypeIdent](utils.go#L78L81)
@@ -36,11 +34,10 @@ ParseLocalTypeIdent parses a local (without package) type identifier.
 
 Components | Data
 ---------- | -----
-[TextSemantic](utils.go#L204L207) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-[gparselib.ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L188L209) | 
+[gparselib.ParseRegexp](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L188L209) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 
 
-## Flow: [ParseOptSpc](utils.go#L89L91)
+## Flow: [ParseOptSpc](utils.go#L88L90)
 ParseOptSpc parses optional space but no newline.
 * Semantic result: The parsed text.
 
@@ -49,11 +46,10 @@ ParseOptSpc parses optional space but no newline.
 Components | Data
 ---------- | -----
 [ParseASpc](#flow-parseaspc) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-[TextSemantic](utils.go#L204L207) | 
 [gparselib.ParseOptional](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L100L116) | 
 
 
-## Flow: [ParseASpc](utils.go#L98L100)
+## Flow: [ParseASpc](utils.go#L97L99)
 ParseASpc parses space but no newline.
 * Semantic result: The parsed text.
 
@@ -61,34 +57,27 @@ ParseASpc parses space but no newline.
 
 Components | Data
 ---------- | -----
-[TextSemantic](utils.go#L204L207) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-[gparselib.ParseSpace](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L139L161) | 
+[gparselib.ParseSpace](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L139L161) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 
 
-## Flow: [ParseSpaceComment](utils.go#L135L150)
+## Flow: [ParseSpaceComment](utils.go#L129L144)
 ParseSpaceComment parses any amount of space (including newline) and line
 (`//` ... <NL>) and block (`/*` ... `*/`) comments.
 * Semantic result: The parsed text plus a signal whether a newline was
-  parsed.
+  parsed (SpaceCommentSemValue).
 
 ![Flow: ParseSpaceComment](./ParseSpaceComment.svg)
 
 Components | Data
 ---------- | -----
-[TextSemantic](utils.go#L204L207) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-pAny | 
-pBlkCmnt | 
-pLnCmnt | 
-pSpc | 
-[spaceCommentSemantic](utils.go#L113L118) | 
-[gparselib.ParseAny](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L164L196) | 
+[gparselib.ParseAny](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L164L196) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [gparselib.ParseBlockComment](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L284L371) | 
 [gparselib.ParseLineComment](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L229L260) | 
 [gparselib.ParseMulti0](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L66L71) | 
 [gparselib.ParseSpace](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L139L161) | 
 
 
-## Flow: [ParseStatementEnd](utils.go#L174L201)
+## Flow: [ParseStatementEnd](utils.go#L164L191)
 ParseStatementEnd parses optional space and comments as defined by
 `ParseSpaceComment` followed by a semicolon (`;`) and more optional space
 and comments.
@@ -100,15 +89,7 @@ at the end of the input.
 
 Components | Data
 ---------- | -----
-BooleanSemantic | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
-[ParseSpaceComment](#flow-parsespacecomment) | 
-[TextSemantic](utils.go#L204L207) | 
-checkSemicolonOrNewLineOrEOF | 
-nil | 
-pEOF | 
-pOptEOF | 
-pOptSemi | 
-pSemicolon | 
+[ParseSpaceComment](#flow-parsespacecomment) | [gparselib.ParseData](https://github.com/flowdev/gparselib/blob/master/base.go#L105L109)
 [gparselib.ParseAll](https://github.com/flowdev/gparselib/blob/master/complex_parser.go#L127L151) | 
 [gparselib.ParseEOF](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L108L127) | 
 [gparselib.ParseLiteral](https://github.com/flowdev/gparselib/blob/master/simple_parser.go#L15L34) | 

@@ -64,7 +64,7 @@ func extractTypes(flow data.Flow) (compTypes []data.Type, dataTypes []data.Type)
 					compNames[p.Decl.Name] = true
 				}
 				for _, plugin := range p.Plugins {
-					compMap = addTypes(compMap, plugin.Types)
+					compMap = addPluginTypes(compMap, compNames, plugin.Types)
 				}
 			}
 		}
@@ -77,6 +77,15 @@ func valuesOf(typeMap map[string]data.Type) []data.Type {
 		types = append(types, t)
 	}
 	return types
+}
+func addPluginTypes(compMap map[string]data.Type, compNames map[string]bool, types []data.Type,
+) map[string]data.Type {
+	for _, t := range types {
+		if t.Package != "" || !compNames[t.LocalType] {
+			compMap = addType(compMap, t)
+		}
+	}
+	return compMap
 }
 func addTypes(typeMap map[string]data.Type, types []data.Type) map[string]data.Type {
 	for _, t := range types {
