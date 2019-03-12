@@ -4,9 +4,12 @@ Flow DSL parser for the Go programming language build with flowdev/gparselib.
 ## Status
 This project is already quite useful (especially when used via the `go2md` project).
 But the following points are still missing:
-1. [ ] Complete documentation
+1. [x] Fully document parser package
+1. [x] Fix rare bug with splitted and merged flows
 1. [ ] Refactor the `data2svg` package into flows
-1. [ ] Add missing tests and fix bugs
+1. [ ] Fully document and test package `data2svg`
+1. [ ] Fully document and test package `svg`
+1. [ ] Fully document and test `converter.go`
 
 ## Flow DSL
 The flow DSL is used to show the flow of data between components. So it consists of two main objects:

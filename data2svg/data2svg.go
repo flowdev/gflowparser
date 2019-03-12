@@ -51,7 +51,7 @@ type split struct {
 // Components are special since they can be translated in 3 ways:
 // 1. Into a decl struct if it is a declaration (the first occurence).
 // 2. Into a merge if there are more parts before it.
-// 3. Into a split if it is only used for a split.
+// 3. Into a split if there are only parts after it.
 func parserPartsToSVGData(flowDat data.Flow, w Whereer,
 ) (shapes [][]interface{}, decls map[string]*decl, clsts clusters, err error) {
 	svgDat := make([][]interface{}, len(flowDat.Parts))
@@ -326,13 +326,21 @@ func handleMerges(allShapes [][]interface{}, myShapes [][]interface{},
 					s.svgMerge = nil
 					continue
 				}
-				found := addDeclLineAfterLastMerge(
+				found, declLine := addDeclLineAfterLastMerge(
 					allShapes,
 					copyShapeLine(sl[j:]),
 					s.name,
 				)
 				if !found {
 					panic("Unable to find merge with ID: " + s.name)
+				}
+				if declLine != nil {
+					sl = declLine
+					myShapes[i] = declLine
+					if j == 0 {
+						allShapes = myShapes
+					}
+					continue
 				}
 				if j > 0 {
 					myShapes[i] = append(sl[:j], s.svgMerge)
@@ -353,7 +361,7 @@ func handleMerges(allShapes [][]interface{}, myShapes [][]interface{},
 // - No clusters are modified.
 // - shapes itself doesn't change (only one of its rows might be modified).
 func addDeclLineAfterLastMerge(shapes [][]interface{}, dl []interface{}, name string,
-) (found bool) {
+) (found bool, declLine []interface{}) {
 	for i := len(shapes) - 1; i >= 0; i-- {
 		sl := shapes[i]
 		for j := len(sl) - 1; j >= 0; j-- {
@@ -365,23 +373,30 @@ func addDeclLineAfterLastMerge(shapes [][]interface{}, dl []interface{}, name st
 					} else {
 						shapes[i] = append(copyShapeLine(sl), dl...)
 					}
-					return true
+					return true, nil
 				}
 			case *decl:
+				if s.svgMerge != nil && s.name == name { // the last merge is the decl itself!
+					poLine := copyShapeLine(sl[j+1:])
+					shapes[i] = append(copyShapeLine(sl[:j]), s.svgMerge, s)
+					shapes[i] = append(shapes[i], poLine...)
+					s.svgMerge = nil
+					return true, shapes[i]
+				}
 				if s.svgSplit != nil {
-					found = addDeclLineAfterLastMerge(
+					found, declLine = addDeclLineAfterLastMerge(
 						s.svgSplit.Shapes,
 						dl,
 						name,
 					)
 					if found {
-						return true
+						return true, declLine
 					}
 				}
 			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 // addEmptyRows adds empty lines on the top level to form visible clusters.

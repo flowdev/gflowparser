@@ -39,6 +39,7 @@ func ConvertFlowDSLToSVG(flowContent, flowName string,
 	}
 	compTypes, dataTypes = extractTypes(flow)
 
+	//fmt.Fprintf(os.Stderr, "DEBUG: svgFlow=`%s`\n", spew.Sdump(sf))
 	buf, err := svg.FromFlowData(sf)
 	if err != nil {
 		return nil, nil, nil, "", err

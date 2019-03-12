@@ -274,7 +274,7 @@ func NewFlowParser() (*FlowParser, error) {
 //                          [pPartSequence, ParseStatementEnd]
 //                      ] -> out
 //     in (gparselib.ParseData)-> [pLines gparselib.ParseMulti1 [pPartLine]] -> out
-//     in (gparselib.ParseData)-> [gparselib.ParseAll [pLines, gparselib.ParseEOF]] -> out
+//     in (gparselib.ParseData)-> [gparselib.ParseAll [ParseSpaceComment, pLines, gparselib.ParseEOF]] -> out
 func (p *FlowParser) ParseFlow(pd *gparselib.ParseData, ctx interface{},
 ) (*gparselib.ParseData, interface{}) {
 	pAnyPart := gparselib.NewParseAnyPlugin(
@@ -296,9 +296,9 @@ func (p *FlowParser) ParseFlow(pd *gparselib.ParseData, ctx interface{},
 	pLines := gparselib.NewParseMulti1Plugin(pPartLine, parseFlowSemantic)
 	pEOF := gparselib.NewParseEOFPlugin(nil)
 	return gparselib.ParseAll(pd, ctx,
-		[]gparselib.SubparserOp{pLines, pEOF},
+		[]gparselib.SubparserOp{ParseSpaceComment, pLines, pEOF},
 		func(pd2 *gparselib.ParseData, ctx2 interface{}) (*gparselib.ParseData, interface{}) {
-			pd2.Result.Value = pd2.SubResults[0].Value
+			pd2.Result.Value = pd2.SubResults[1].Value
 			return pd2, ctx2
 		},
 	)
