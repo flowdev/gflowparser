@@ -14,7 +14,9 @@
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="648" y1="17" x2="656" y2="25"/>
 	<line stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" x1="648" y1="33" x2="656" y2="25"/>
 
+	<a href="https://google.com">
 	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="144" height="48" x="140" y="7" rx="10" ry="10"/>
+	</a>
 	<rect fill="rgb(96,196,255)" fill-opacity="1.0" stroke="rgb(0,0,0)" stroke-opacity="1.0" stroke-width="2.5" width="144" height="60" x="398" y="7" rx="10" ry="10"/>
 
 
