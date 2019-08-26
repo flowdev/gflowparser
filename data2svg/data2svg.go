@@ -10,8 +10,6 @@ import (
 
 // Error messages.
 const (
-	errMsgDeclAndRef = "Circular flows aren't allowed yet, but the component " +
-		"'%s' is declared here:\n%s\n... and referenced again here:\n%s"
 	errMsg2Decls = "A component with the name '%s' is declared two times, " +
 		"here:\n%s\n... and again here:\n%s"
 	errMsgPartType = "Found illegal flow part type '%T' at index [%d, %d]"
@@ -100,7 +98,7 @@ func parserPartsToSVGData(flowDat data.Flow, w Whereer,
 					svgLine[j] = dcl
 				}
 			default:
-				panic(fmt.Sprintf(errMsgPartType, part, i, j))
+				return nil, nil, nil, fmt.Errorf(errMsgPartType, part, i, j)
 			}
 		}
 		svgDat[i] = svgLine
