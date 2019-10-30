@@ -1,12 +1,12 @@
-package data2svg_test
+package data2svg
 
 import (
+	"fmt"
 	"io/ioutil"
 	"reflect"
 	"testing"
 
 	"github.com/flowdev/gflowparser/data"
-	"github.com/flowdev/gflowparser/data2svg"
 	"github.com/flowdev/gflowparser/svg"
 	"github.com/flowdev/gparselib"
 	"github.com/sanity-io/litter"
@@ -1025,23 +1025,116 @@ func TestConvert(t *testing.T) {
 	}
 
 	for _, spec := range specs {
-		t.Logf("Testing spec: %s\n", spec.name)
-		got, err := data2svg.Convert(
-			spec.given,
-			gparselib.NewSourceData("test data", "sad but true: <undefined>"),
-		)
-		if spec.hasError && err != nil {
-			continue
-		} else if spec.hasError && err == nil {
-			t.Error("Expected an error but didn't get one.")
-			continue
-		} else if !spec.hasError && err != nil {
-			t.Errorf("Expected no error but got: %s", err)
-			continue
-		}
+		t.Run(spec.name, func(t *testing.T) {
+			got, err := Convert(
+				spec.given,
+				gparselib.NewSourceData("test data", "sad but true: <undefined>"),
+			)
+			if spec.hasError && err != nil {
+				return
+			} else if spec.hasError && err == nil {
+				t.Error("Expected an error but didn't get one.")
+				return
+			} else if !spec.hasError && err != nil {
+				t.Errorf("Expected no error but got: %v", err)
+				return
+			}
 
-		checkValue(spec.expected, got, spec.name, t)
+			checkValue(spec.expected, got, spec.name, t)
+		})
 	}
+}
+
+func TestParserPartsToSVGData(t *testing.T) {
+	specs := []struct {
+		name           string
+		givenFlowDat   data.Flow
+		wantedShapes   [][]interface{}
+		wantedDecls    []string
+		wantedClusters clusters
+		hasError       bool
+	}{
+		{
+			name: "simple",
+			givenFlowDat: data.Flow{
+				Parts: [][]interface{}{
+					{
+						data.Arrow{
+							FromPort: &data.Port{Name: "a"},
+							Data:     []data.Type{data.Type{LocalType: "b"}},
+						},
+						data.Component{
+							Decl: data.CompDecl{
+								Name:      "c",
+								Type:      data.Type{LocalType: "c"},
+								VagueType: true,
+							},
+						},
+					},
+				},
+			},
+			wantedShapes: [][]interface{}{
+				{
+					&svg.Arrow{
+						DataType: []string{"(b)"},
+						HasSrcOp: false, SrcPort: "a",
+						HasDstOp: true,
+					},
+					&decl{
+						name:   "c",
+						srcPos: 0,
+						i:      0,
+						j:      1,
+						svgOp: &svg.Op{
+							Main: &svg.Rect{
+								Text: []string{"c"},
+							},
+							Plugins: []*svg.Plugin{},
+						},
+						svgMerge: &svg.Merge{
+							ID:   "c",
+							Size: 1,
+						},
+					},
+				},
+			},
+			wantedDecls: []string{
+				"c",
+			},
+			hasError: false,
+		},
+	}
+
+	whereer := testWhereer{}
+	for _, spec := range specs {
+		t.Run(spec.name, func(t *testing.T) {
+			gotShapes, gotDecls, gotClusters, err := parserPartsToSVGData(
+				spec.givenFlowDat, whereer)
+			if spec.hasError && err != nil {
+				return
+			} else if spec.hasError && err == nil {
+				t.Error("Expected an error but didn't get one.")
+				return
+			} else if !spec.hasError && err != nil {
+				t.Errorf("Expected no error but got: %v", err)
+				return
+			}
+
+			checkValue(spec.wantedShapes, gotShapes, spec.name+"_shapes", t)
+			checkValue(spec.wantedDecls, orderedKeys(gotDecls), spec.name+"_decls", t)
+			checkValue(spec.wantedClusters, gotClusters, spec.name+"_clusters", t)
+		})
+	}
+}
+
+func orderedKeys(decls map[string]*decl) []string {
+	keys := make([]string, len(decls))
+	i := 0
+	for k := range decls {
+		keys[i] = k
+		i++
+	}
+	return keys
 }
 
 func checkValue(expected, got interface{}, name string, t *testing.T) {
@@ -1053,7 +1146,7 @@ func checkValue(expected, got interface{}, name string, t *testing.T) {
 			HomePackage:       "data2svg",
 			StripPackageNames: false,
 		}
-		t.Errorf("The acutal value isn't equal to the expected one. Please diff '%s.exp' and '%s.got'.", name, name)
+		t.Errorf("The acutal value isn't equal to the expected one. Please: diff '%s.exp' '%s.got'", name, name)
 		if err := ioutil.WriteFile(name+".exp", []byte(goprint.Sdump(expected)), 0644); err != nil {
 			panic("Unable to write file: " + name + ".exp")
 		}
@@ -1061,4 +1154,10 @@ func checkValue(expected, got interface{}, name string, t *testing.T) {
 			panic("Unable to write file: " + name + ".got")
 		}
 	}
+}
+
+type testWhereer struct{}
+
+func (w testWhereer) Where(pos int) string {
+	return fmt.Sprintf("Source position: %d\n", pos)
 }
